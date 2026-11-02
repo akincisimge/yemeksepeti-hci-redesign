@@ -1,44 +1,49 @@
-# Yemeksepeti HCI Redesign
+# Yemeksepeti HCI Redesign — Eğitim Simülasyonu
 
-Dört kişilik HCI (İnsan-Bilgisayar Etkileşimi) projemiz kapsamında React, TypeScript ve Tailwind CSS ile geliştirilecek etkileşimli Yemeksepeti simülasyonu.
+Muğla Sıtkı Koçman Üniversitesi HCI dersi için dört kişilik ekip tarafından geliştirilen **çalışan web simülasyonu**. Resmî Yemeksepeti ürünü değildir. Gerçek sipariş veya ödeme alınmaz.
 
-## Amaç
+## Projeyi çalıştırma
 
-Kullanıcıların yemek ve market alışverişi akışlarını daha anlaşılır, tutarlı ve erişilebilir hâle getirmek; tasarım kararlarını HCI ilkeleri ve kullanılabilirlik değerlendirmeleriyle açıklamak.
+Gereksinim: Node.js 20.19+ (veya Vite 7 ile uyumlu güncel Node.js).
 
-## Planlanan teknoloji yığını
+1. Bu repoyu bilgisayarına klonla.
+2. Terminalde npm install çalıştır.
+3. npm run dev komutunu çalıştır.
+4. Terminalde gösterilen yerel adresi tarayıcıda aç (genellikle http://localhost:5173).
+5. Kontrol: npm run build.
 
-- **React:** bileşen tabanlı kullanıcı arayüzü.
-- **TypeScript:** veri modelleri ve bileşenler için tip güvenliği.
-- **Tailwind CSS:** ortak tasarım kuralları ve duyarlı arayüz.
+## İlk demo akışları
+- Giriş ekranından **YEMEK** veya **MARKET** seç.
+- Örnek restoran/market ürünlerini ara, filtrele ve sepete ekle.
+- Yemek ve Market sepetlerinin ayrı kaldığını gör.
+- Ortak checkout'ta yalnız **sahte** isim ve adres gir; demo ödeme yöntemi seç.
+- Demo sipariş onayını görüntüle. Kart numarası veya gerçek veri girme.
 
-## Planlanan kapsam
+**Önemli:** İlk sürüm çalışan bir başlangıç iskeletidir; nihai 12 ekranın tamamının bitmiş hâli değildir. Hakan, Beyda ve Melisa kendilerine ait sayfaları geliştirerek bu akışları genişletecektir.
 
-- Açılış ekranında belirgin **YEMEK** ve **MARKET** seçenekleri.
-- Yemek bölümünde restoran listeleme, arama, filtreleme ve menü görüntüleme.
-- Market bölümünde kategori ve ürün görüntüleme.
-- Sepete ekleme, miktar değiştirme, ürün kaldırma ve örnek sipariş tamamlama.
-- Yüklenme, boş sonuç, hata ve işlem başarısı için anlaşılır geri bildirim.
-- Mobil ve masaüstü ekranlara uyum; klavye kullanımı ve görünür odak durumları.
+## Teknoloji
+React 19, TypeScript, Vite, Tailwind CSS 4 ve React Router. Backend/database yok; örnek katalog verileri ve localStorage ile demo sepeti.
 
-Bu proje eğitim amaçlı bir simülasyondur; Yemeksepeti'nin resmî ürünü değildir. Örnek veriler kullanılacak, gerçek ödeme veya sipariş alınmayacaktır.
+## Başlangıç belgeleri
+- docs/PROJECT_SCOPE.md — MVP, kapsam dışı özellikler, kararlar.
+- docs/UX_AUDIT.md — Simge'nin ekran görüntülerine dayalı ön araştırması.
+- docs/HCI_8_RULES.md — 8 kuralın örnekleri, çözüm ve test ölçütleri.
+- docs/DESIGN_SYSTEM.md — Figma ve React için ortak tasarım standardı.
+- docs/SCREEN_REQUIREMENTS.md — 12 ekran ve sahipleri.
+- docs/USER_FLOWS.md — iki sepet ve tek checkout sözleşmesi.
+- docs/TEST_PLAN.md — Melisa için kullanılabilirlik testleri.
+- docs/AI_AGENT_RULES.md — farklı AI agent'larıyla çalışırken değişmeyen kurallar.
 
-## Tasarım yaklaşımı
+## Görev dağılımı
+| Sorumlu | Alan |
+|---|---|
+| **Simge** | UX araştırması, HCI denetimi, YEMEK/MARKET giriş sayfası |
+| **Hakan** | Yemek keşfi, restoran/menü, yemek sepeti |
+| **Beyda** | Market mağaza/ürün keşfi, market sepeti |
+| **Melisa** | Teslimat adresi, ödeme simülasyonu, sipariş onayı, testler |
 
-Ders kapsamında belirlenen sekiz HCI kuralı, tasarım ve değerlendirme çalışmalarının temelini oluşturacaktır. Her iyileştirme için mevcut sorun, ilgili kural, önerilen çözüm ve doğrulama senaryosu belgelenecektir.
+## GitHub çalışma düzeni
+Her üye ayrı feature branch'inde çalışır. Pull Request açılır, en az bir ekip üyesi inceler. Main'e doğrudan push yapılmaz. PR şablonunda HCI kuralı, test ve ekran görüntüsü bulunur. Ortak tip ve token değişikliği ekip onayı gerektirir.
 
-Ortak bileşenlerde renk, yazı boyutu, boşluk, buton, form ve geri bildirim davranışları tutarlı uygulanacaktır. İşlemlerin geri alınabilmesi, hataların önlenmesi ve kullanıcının kontrolü önceliklidir.
-
-## Dört kişilik ekip çalışma düzeni
-
-- İşler GitHub Issues üzerinden tanımlanır; sorumlu ve kabul ölçütleri belirtilir.
-- Her görev için `feat/gorev-adi`, `fix/hata-adi` veya `docs/konu` biçiminde ayrı branch açılır.
-- Değişiklikler Pull Request ile sunulur ve bir ekip arkadaşı tarafından incelenir.
-- Ortak bileşen veya tasarım kuralı değişiklikleri diğer ekip üyeleriyle koordine edilir.
-- Birleştirmeden önce ilgili kullanıcı akışı ve farklı ekran boyutları kontrol edilir.
-
-Kişi bazlı görevler ve ekran sahipliği, ekip tarafından netleştirildikçe eklenecektir.
-
-## Mevcut durum
-
-Repository ve proje açıklaması hazırdır. Uygulama kodu henüz eklenmemiştir; bu nedenle şu anda çalıştırılabilir bir arayüz yoktur. Proje kurulunca kurulum, geliştirme ve derleme komutları bu bölüme eklenecektir.
+## Sınırlamalar ve güvenlik
+Test amaçlı kurgu veri kullanılır; gerçek kişisel bilgiler, kart bilgileri ve ödeme işlenmez. Kullanıcı ekran görüntülerindeki hassas bilgiler GitHub'a yüklenmez. Gerçek ödeme entegrasyonu veya Yemeksepeti API'si bulunmaz.
