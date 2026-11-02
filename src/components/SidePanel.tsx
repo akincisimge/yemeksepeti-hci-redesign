@@ -33,7 +33,7 @@ type Message = { sender: "visitor" | "assistant"; text: string };
 
 function PanelRow({ label, detail, onClick }: { label: string; detail?: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex min-h-14 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-brand hover:bg-pink-50 focus-visible:outline-3">
+    <button type="button" onClick={onClick} className="flex min-h-14 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-brand hover:bg-[#FFF1F6] focus-visible:outline-3">
       <span><span className="block font-semibold text-slate-900">{label}</span>{detail && <span className="mt-1 block text-sm text-slate-600">{detail}</span>}</span>
       <span className="text-xl text-brand" aria-hidden="true">›</span>
     </button>
@@ -53,7 +53,7 @@ function AddressView({ address, onAddressChange, onClose }: Pick<PanelProps, "ad
   }
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-pink-50 p-4">
+      <div className="rounded-2xl bg-[#FFF1F6] p-4">
         <p className="font-semibold text-slate-900">Teslimat konumunu seç</p>
         <p className="mt-1 text-sm text-slate-700">Bu ekranda yalnızca örnek il ve ilçe bilgileri kullanılır. Tam adresi demo sipariş sırasında girebilirsin.</p>
       </div>
@@ -65,14 +65,14 @@ function AddressView({ address, onAddressChange, onClose }: Pick<PanelProps, "ad
       <fieldset className="space-y-2">
         <legend className="mb-3 font-semibold text-slate-900">Örnek teslimat konumları</legend>
         {matches.length > 0 ? matches.map((location) => (
-          <label key={location} className={"flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 " + (picked === location ? "border-brand bg-pink-50" : "border-slate-300 bg-white hover:border-brand")}>
+          <label key={location} className={"flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 " + (picked === location ? "border-brand bg-[#FFF1F6]" : "border-slate-300 bg-white hover:border-brand")}>
             <input type="radio" name="delivery-location" className="accent-[#D90049]" checked={picked === location} onChange={() => { setPicked(location); setNotice(""); }} />
             <span className="font-medium">{location}</span>
-            {picked === location && <span className="ml-auto font-semibold text-green-800">Seçildi</span>}
+            {picked === location && <span className="ml-auto font-semibold text-[#166534]">Seçildi</span>}
           </label>
         )) : <p role="status" className="rounded-xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Bu aramayla eşleşen örnek konum yok. Başka bir il veya ilçe dene.</p>}
       </fieldset>
-      {notice && <p role="status" className="text-green-800">{notice}</p>}
+      {notice && <p role="status" className="text-[#166534]">{notice}</p>}
       <div className="space-y-3 border-t border-slate-200 pt-5">
         <button type="button" className="btn-primary w-full" disabled={!picked} onClick={confirm}>Bu konumu kullan</button>
         {!picked && <p className="text-sm text-slate-600">Devam etmek için bir konum seç.</p>}
@@ -99,11 +99,11 @@ function AccountView({ account, onSaveAccount, onNavigate }: Pick<PanelProps, "a
   }
   return (
     <form onSubmit={save} className="space-y-5" noValidate>
-      <p className="rounded-xl bg-pink-50 p-4 text-sm text-slate-700">Örnek hesap oluşturma ekranı. Gerçek e-posta veya telefon bilgisi girmeyin. Bilgiler yalnızca bu sayfa açıkken tutulur; sunucuya gönderilmez.</p>
+      <p className="rounded-xl bg-[#FFF1F6] p-4 text-sm text-slate-700">Örnek hesap oluşturma ekranı. Gerçek e-posta veya telefon bilgisi girmeyin. Bilgiler yalnızca bu sayfa açıkken tutulur; sunucuya gönderilmez.</p>
       <label className="block"><span className="mb-2 block font-semibold">Ad soyad</span><input className="field min-h-12" value={name} onChange={(e) => setName(e.target.value)} placeholder="Örnek Kullanıcı" autoComplete="off" required /></label>
       <label className="block"><span className="mb-2 block font-semibold">E-posta</span><input className="field min-h-12" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ornek@example.com" autoComplete="off" required /></label>
       <label className="block"><span className="mb-2 block font-semibold">Telefon numarası</span><input className="field min-h-12" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0500 000 00 00" autoComplete="off" required /></label>
-      {error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-3 font-semibold text-red-900">{error}</p>}
+      {error && <p role="alert" className="rounded-xl border border-[#991B1B] bg-white p-3 font-semibold text-[#991B1B]">{error}</p>}
       <button type="submit" className="btn-primary w-full">Demo profilini kaydet</button>
     </form>
   );
@@ -124,7 +124,7 @@ function HelpView() {
   }
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="mb-4 rounded-xl border border-slate-200 bg-pink-50 p-4">
+      <div className="mb-4 rounded-xl border border-slate-200 bg-[#FFF1F6] p-4">
         <p className="font-semibold text-slate-900">Canlı yardım simülasyonu</p>
         <p className="mt-1 text-sm text-slate-700">Otomatik örnek yanıtlar. Gerçek bir temsilciyle görüşme yapılmaz.</p>
       </div>
@@ -137,15 +137,15 @@ function HelpView() {
         <div ref={bottomRef} />
       </div>
       {finished ? (
-        <div className="mt-4 space-y-3 rounded-xl border border-green-200 bg-green-50 p-4">
-          <p role="status" className="font-semibold text-green-800">Demo görüşmesi tamamlandı.</p>
+        <div className="mt-4 space-y-3 rounded-xl border border-[#166534] bg-white p-4">
+          <p role="status" className="font-semibold text-[#166534]">Demo görüşmesi tamamlandı.</p>
           <button type="button" className="btn-primary w-full" onClick={() => { setMessages([{ sender: "assistant", text: "Yeni demo görüşmesi başladı. Nasıl yardımcı olabilirim?" }]); setFinished(false); }}>Yeni görüşme başlat</button>
         </div>
       ) : (
         <>
           <div className="mt-4 space-y-2" aria-label="Sık kullanılan yardım başlıkları">
             {TOPICS.map((topic) => (
-              <button type="button" key={topic.name} onClick={() => send(topic.name, topic.answer)} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-slate-800 hover:border-brand hover:bg-pink-50">{topic.name}</button>
+              <button type="button" key={topic.name} onClick={() => send(topic.name, topic.answer)} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-slate-800 hover:border-brand hover:bg-[#FFF1F6]">{topic.name}</button>
             ))}
           </div>
           <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="mt-4 flex items-end gap-2">
@@ -197,7 +197,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, onAddres
         <div className={"min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 " + (view === "help" ? "flex flex-col" : "")}>
           {view === "address" && <AddressView address={address} onAddressChange={onAddressChange} onClose={onClose} />}
           {view === "profile" && <div className="space-y-3">
-            <div className="mb-5 rounded-2xl bg-pink-50 p-5">
+            <div className="mb-5 rounded-2xl bg-[#FFF1F6] p-5">
               <p className="text-sm font-semibold text-brand">HOŞ GELDİN</p>
               <p className="mt-2 text-xl font-bold text-slate-900">{account?.name ?? "Misafir kullanıcı"}</p>
               <p className="mt-1 text-sm text-slate-700">{account ? "Demo profilin oluşturuldu." : "Adreslerini, siparişlerini ve kuponlarını tek yerden yönet."}</p>
