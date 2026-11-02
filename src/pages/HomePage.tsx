@@ -46,7 +46,7 @@ export default function HomePage() {
   return (
     <div className="space-y-10 sm:space-y-12">
       <section className="mx-auto max-w-4xl pt-6 text-center sm:pt-10">
-        <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">HOŞ GELDİN</p>
+        <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">Hoş geldin</p>
         <h1 className="text-[32px] font-bold leading-[40px] tracking-tight text-slate-900 sm:text-[40px] sm:leading-[48px]">Bugün ne sipariş etmek istersin?</h1>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-6 text-slate-600">
           Teslimat konumunu belirle, ardından ihtiyacına uygun bölümü seç.
