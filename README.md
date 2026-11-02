@@ -1,49 +1,58 @@
-# Yemeksepeti HCI Redesign — Eğitim Simülasyonu
+# Yemeksepeti HCI Redesign — Çalışan eğitim simülasyonu
 
-Muğla Sıtkı Koçman Üniversitesi HCI dersi için dört kişilik ekip tarafından geliştirilen **çalışan web simülasyonu**. Resmî Yemeksepeti ürünü değildir. Gerçek sipariş veya ödeme alınmaz.
+**ÖNCE BURADAN BAŞLAYIN:** [EKİP BAŞLANGIÇ REHBERİ — her üyenin görevleri, değiştirilecek ekranlar ve Figma kuralları](docs/START_HERE.md)
 
-## Projeyi çalıştırma
+Bu repository HCI dersi kapsamında dört kişilik ekipçe geliştirilen **React + TypeScript + Tailwind CSS** simülasyonudur. **Resmî Yemeksepeti ürünü değildir. Gerçek ödeme veya sipariş alınmaz.**
 
-Gereksinim: Node.js 20.19+ (veya Vite 7 ile uyumlu güncel Node.js).
+## 1. Ekibe özel — kendi görevinize tıklayın
 
-1. Bu repoyu bilgisayarına klonla.
-2. Terminalde npm install çalıştır.
-3. npm run dev komutunu çalıştır.
-4. Terminalde gösterilen yerel adresi tarayıcıda aç (genellikle http://localhost:5173).
-5. Kontrol: npm run build.
+| Sorumlu | Sizin sorumlu olduğunuz tasarımlar | Görev rehberi |
+|---|---|---|
+| **Simge** | UX araştırması, 8 HCI kuralı incelemesi, YEMEK/MARKET giriş | [Simge'nin görevleri](docs/team/SIMGE.md) |
+| **Hakan** | Yemek ana sayfa, restoran liste/filtre, detay/menü, yemek sepeti | [Hakan'ın görevleri](docs/team/HAKAN.md) |
+| **Beyda** | Market ana sayfa, mağaza/ürün liste, ürün detay, market sepeti | [Beyda'nın görevleri](docs/team/BEYDA.md) |
+| **Melisa** | Adres/özet, ödeme simülasyonu, onay ekranı ve kullanılabilirlik testleri | [Melisa'nın görevleri](docs/team/MELISA.md) |
 
-## İlk demo akışları
-- Giriş ekranından **YEMEK** veya **MARKET** seç.
-- Örnek restoran/market ürünlerini ara, filtrele ve sepete ekle.
-- Yemek ve Market sepetlerinin ayrı kaldığını gör.
-- Ortak checkout'ta yalnız **sahte** isim ve adres gir; demo ödeme yöntemi seç.
-- Demo sipariş onayını görüntüle. Kart numarası veya gerçek veri girme.
+Her kişisel rehberde **mevcut Yemeksepeti'nden gözlenen UX riski → ilgili HCI ilkesi → Figma'da değiştirilecek tasarım → React davranışı → test/kabul koşulu** yazıyor. Görüntü bazlı tespitler test edilene kadar kullanılabilirlik *hipotezidir*.
 
-**Önemli:** İlk sürüm çalışan bir başlangıç iskeletidir; nihai 12 ekranın tamamının bitmiş hâli değildir. Hakan, Beyda ve Melisa kendilerine ait sayfaları geliştirerek bu akışları genişletecektir.
+## 2. Ortak kurallar — herkes bunları okumalı
 
-## Teknoloji
-React 19, TypeScript, Vite, Tailwind CSS 4 ve React Router. Backend/database yok; örnek katalog verileri ve localStorage ile demo sepeti.
+- **[Figma Design System](docs/DESIGN_SYSTEM.md):** renk kodları, font ve yazı boyutları, grid, spacing, Auto Layout, buton, input, kart, modal, durumlar ve responsive tasarım.
+- **[Hocanın 8 HCI kuralı](docs/HCI_8_RULES.md):** Shneiderman'ın 8 kuralı, mevcut ekran örnekleri ve test.
+- **[12 ekran ve kabul kriterleri](docs/SCREEN_REQUIREMENTS.md):** neyi, kimin tasarlaması ve geliştirmesi gerektiği.
+- **[UX araştırması](docs/UX_AUDIT.md):** Simge'nin ekran görüntülerine dayalı ön analizi.
+- **[Proje kapsamı](docs/PROJECT_SCOPE.md):** yapılacak/yapılmayacak özellikler.
+- **[Kullanıcı akışları](docs/USER_FLOWS.md):** ayrı Yemek/Market sepetleri, ortak checkout.
+- **[AI agent kuralları](docs/AI_AGENT_RULES.md):** farklı AI araçlarıyla tutarlı kod yazma.
+- **[Test planı](docs/TEST_PLAN.md):** Melisa'nın görev bazlı testi.
 
-## Başlangıç belgeleri
-- docs/PROJECT_SCOPE.md — MVP, kapsam dışı özellikler, kararlar.
-- docs/UX_AUDIT.md — Simge'nin ekran görüntülerine dayalı ön araştırması.
-- docs/HCI_8_RULES.md — 8 kuralın örnekleri, çözüm ve test ölçütleri.
-- docs/DESIGN_SYSTEM.md — Figma ve React için ortak tasarım standardı.
-- docs/SCREEN_REQUIREMENTS.md — 12 ekran ve sahipleri.
-- docs/USER_FLOWS.md — iki sepet ve tek checkout sözleşmesi.
-- docs/TEST_PLAN.md — Melisa için kullanılabilirlik testleri.
-- docs/AI_AGENT_RULES.md — farklı AI agent'larıyla çalışırken değişmeyen kurallar.
+**Başlangıç tasarım standartları ekip onayına sunulmuş önerilerdir;** herkes kendi başına farklı buton, font veya renk tanımlamamalıdır. Ortak kararlar [Issue #6](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/6) üzerinden netleştirilir.
 
-## Görev dağılımı
-| Sorumlu | Alan |
-|---|---|
-| **Simge** | UX araştırması, HCI denetimi, YEMEK/MARKET giriş sayfası |
-| **Hakan** | Yemek keşfi, restoran/menü, yemek sepeti |
-| **Beyda** | Market mağaza/ürün keşfi, market sepeti |
-| **Melisa** | Teslimat adresi, ödeme simülasyonu, sipariş onayı, testler |
+## 3. Projeyi bilgisayarınızda çalıştırma
 
-## GitHub çalışma düzeni
-Her üye ayrı feature branch'inde çalışır. Pull Request açılır, en az bir ekip üyesi inceler. Main'e doğrudan push yapılmaz. PR şablonunda HCI kuralı, test ve ekran görüntüsü bulunur. Ortak tip ve token değişikliği ekip onayı gerektirir.
+Node.js 20.19+ veya Vite 7 uyumlu güncel Node.js sürümü önerilir.
 
-## Sınırlamalar ve güvenlik
-Test amaçlı kurgu veri kullanılır; gerçek kişisel bilgiler, kart bilgileri ve ödeme işlenmez. Kullanıcı ekran görüntülerindeki hassas bilgiler GitHub'a yüklenmez. Gerçek ödeme entegrasyonu veya Yemeksepeti API'si bulunmaz.
+~~~bash
+git clone https://github.com/akincisimge/yemeksepeti-hci-redesign.git
+cd yemeksepeti-hci-redesign
+npm install
+npm run dev
+~~~
+
+Tarayıcıda terminalin gösterdiği yerel adresi açın (genellikle http://localhost:5173). Kontrol komutu: npm run build.
+
+Mevcut başlangıç iskeleti iki hizmetli giriş, örnek arama/ürün kataloğu, ayrı sepetler ve **demo ödeme** içeren ortak checkout'u çalıştırır. **Nihai 12 ekranın tamamı henüz geliştirilmedi.**
+
+## 4. Nasıl birlikte çalışacağız?
+
+1. Kendi GitHub Issue ve görev rehberinizi okuyun, Figma ekranını wireframe olarak tasarlayın.
+2. Aynı kurallarla yüksek detaylı Figma ekranı üretip React bileşenine dönüştürün.
+3. Kendi branch'inizde çalışın: ör. feat/hakan-food-list, feat/beyda-market, feat/melisa-checkout.
+4. Değişiklikten sonra npm run build çalıştırıp Pull Request açın. HCI kuralı, ekran görüntüsü ve test sonucunu açıklayın.
+5. En az bir ekip üyesi incelemeden main'e birleştirmeyin.
+
+**Public repo herkese görüntüleme izni verir; doğrudan kod yazma yetkisi vermez.** Ekip üyeleri için Write collaborator daveti veya fork + PR gerekir.
+
+## 5. Güvenlik ve kapsam
+
+Gerçek kişisel bilgiler, gerçek adres/telefon, banka/kart verileri ya da hassas ekran görüntüleri Public repoya eklenmez. Mock verilerle simülasyon yapılır. Backend, ödeme sağlayıcısı, gerçek restoran API'si yoktur.
