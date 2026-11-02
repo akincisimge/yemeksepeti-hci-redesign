@@ -39,7 +39,7 @@ export default function Layout() {
             yemeksepeti
           </Link>
           <nav aria-label="Hesap ve teslimat işlemleri" className="flex items-center gap-2 sm:gap-3">
-            <button type="button" onClick={() => open("address")} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 transition hover:border-brand hover:bg-pink-50 sm:px-4" aria-label={"Teslimat konumu: " + (address ?? "Adres seç") + ". Değiştirmek için aç"}>
+            <button type="button" onClick={() => open("address")} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 transition hover:border-brand hover:bg-[#FFF1F6] sm:px-4" aria-label={"Teslimat konumu: " + (address ?? "Adres seç") + ". Değiştirmek için aç"}>
               <svg aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
               <span className="max-w-28 truncate text-sm sm:max-w-48">{address ?? "Adres seç"}</span>
             </button>
