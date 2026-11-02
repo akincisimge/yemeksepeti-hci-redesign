@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { readDemoOrder } from "../state/demoOrder";
 
 export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | "help" | null;
 export type DemoAccount = { name: string; email: string; phone: string };
@@ -22,7 +23,7 @@ const SAMPLE_LOCATIONS = [
 ];
 
 const TOPICS = [
-  { name: "Siparişimi takip etmek istiyorum", answer: "Bu sürümde yalnızca örnek sipariş oluşturuluyor. Siparişin tamamlandığında ekrandaki demo sipariş numarasını görebilirsin." },
+  { name: "Siparişimi takip etmek istiyorum", answer: "Demo sipariş tamamlandıktan sonra takip ekranında dört örnek aşamayı izleyebilirsin. Son siparişine Profil → Önceki siparişlerim bölümünden de dönebilirsin." },
   { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Ana sayfadaki Adres seç butonundan örnek teslimat konumunu değiştirebilirsin. Siparişi tamamlarken ayrıntılı demo adresini ayrıca düzenleyebilirsin." },
   { name: "Kuponumla ilgili yardım istiyorum", answer: "Bu öğrenci prototipinde gerçek kupon kullanımı yok. Kuponlarım alanında örnek kupon durumları gösteriliyor." },
   { name: "Siparişimi iptal veya iade etmek istiyorum", answer: "Bu uygulama gerçek sipariş oluşturmadığı için para çekme, iptal veya iade işlemi yapılmaz." },
@@ -184,6 +185,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, onAddres
     orders: "Önceki siparişlerim", coupons: "Kuponlarım", help: "Yardım ve canlı destek"
   };
   const subpage = view !== "profile" && view !== "address";
+  const lastOrder = view === "orders" ? readDemoOrder() : null;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -217,8 +219,17 @@ export default function SidePanel({ view, onClose, onNavigate, address, onAddres
           </div>}
           {view === "account" && <AccountView account={account} onSaveAccount={onSaveAccount} onNavigate={onNavigate} />}
           {view === "orders" && <div className="space-y-4">
-            <p className="rounded-xl bg-slate-50 p-4 text-slate-700">Bu başlangıç sürümünde kalıcı sipariş geçmişi bulunmuyor. Demo sipariş tamamlandığında onay ekranında örnek sipariş numarası gösterilir.</p>
-            <Link to="/food" onClick={onClose} className="btn-primary w-full">Yemekleri keşfet</Link>
+            {lastOrder ? <>
+              <p className="rounded-xl bg-[#FFF1F6] p-4 text-slate-700">Bu tarayıcı sekmesinde son oluşturduğun demo sipariş:</p>
+              <dl className="space-y-3 rounded-xl border border-slate-300 bg-white p-4">
+                <div><dt className="text-sm text-slate-600">Sipariş numarası</dt><dd className="font-bold">{lastOrder.orderId}</dd></div>
+                <div><dt className="text-sm text-slate-600">Hizmet</dt><dd className="font-semibold">{lastOrder.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
+              </dl>
+              <Link to="/success" onClick={onClose} className="btn-primary w-full">Sipariş takibini aç</Link>
+            </> : <>
+              <p className="rounded-xl bg-slate-50 p-4 text-slate-700">Henüz demo sipariş oluşturmadın. Sipariş tamamlandıktan sonra takip ekranına buradan tekrar erişebilirsin.</p>
+              <Link to="/food" onClick={onClose} className="btn-primary w-full">Yemekleri keşfet</Link>
+            </>}
           </div>}
           {view === "coupons" && <div className="space-y-4">
             <p className="rounded-xl bg-slate-50 p-4 text-slate-700">Bu eğitim simülasyonunda henüz tanımlı gerçek veya kullanılabilir kupon yok.</p>
