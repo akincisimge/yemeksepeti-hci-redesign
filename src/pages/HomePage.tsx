@@ -46,7 +46,7 @@ export default function HomePage() {
   return (
     <div className="space-y-10 sm:space-y-12">
       <section className="mx-auto max-w-4xl pt-6 text-center sm:pt-10">
-        <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">İKİ NET SEÇENEK, TEK KOLAY DENEYİM</p>
+        <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">HOŞ GELDİN</p>
         <h1 className="text-[32px] font-bold leading-[40px] tracking-tight text-slate-900 sm:text-[40px] sm:leading-[48px]">Bugün ne sipariş etmek istersin?</h1>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-6 text-slate-600">
           Teslimat konumunu belirle, ardından ihtiyacına uygun bölümü seç.
@@ -89,18 +89,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      <section aria-label="Sipariş nasıl çalışır" className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-slate-900">Nasıl çalışır?</h2>
-        <ol className="mt-5 grid gap-5 md:grid-cols-3">
-          {[["01", "Hizmetini seç"], ["02", "Ürünleri keşfet"], ["03", "Demo siparişini tamamla"]].map(([n, step]) => (
-            <li key={n} className="flex items-center gap-3">
-              <strong className="text-2xl text-brand">{n}</strong>
-              <span className="text-base font-medium text-slate-800">{step}</span>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-5 text-sm text-slate-600">Bu bir öğrenci simülasyonudur; gerçek sipariş veya ödeme alınmaz.</p>
-      </section>
     </div>
   );
 }
