@@ -14,10 +14,10 @@ Bu sayfa Figma tasarımı ve çalışan React simülasyonu için ortak başlang�
 ## Kişi bazlı başlangıç linkleri
 | Sorumlu | Ekranlar | Ayrıntılı görev dosyası | GitHub görevi |
 |---|---|---|---|
-| **Simge** | YEMEK / MARKET giriş + UX araştırması | [SIMGE.md](team/SIMGE.md) | [#2](../issues/2) |
-| **Hakan** | Yemek ana sayfa, restoran filtre/liste, detay/menü, sepet | [HAKAN.md](team/HAKAN.md) | [#3](../issues/3) |
-| **Beyda** | Market ana sayfa, mağaza/ürün liste, ürün detay, sepet | [BEYDA.md](team/BEYDA.md) | [#4](../issues/4) |
-| **Melisa** | Adres/özet, demo ödeme, sipariş onayı, test | [MELISA.md](team/MELISA.md) | [#5](../issues/5) |
+| **Simge** | YEMEK / MARKET giriş + UX araştırması | [SIMGE.md](team/SIMGE.md) | [#2](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/2) |
+| **Hakan** | Yemek ana sayfa, restoran filtre/liste, detay/menü, sepet | [HAKAN.md](team/HAKAN.md) | [#3](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/3) |
+| **Beyda** | Market ana sayfa, mağaza/ürün liste, ürün detay, sepet | [BEYDA.md](team/BEYDA.md) | [#4](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/4) |
+| **Melisa** | Adres/özet, demo ödeme, sipariş onayı, test | [MELISA.md](team/MELISA.md) | [#5](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/5) |
 
 > Bu yolları GitHub dosya bağlantılarıyla açabilirsiniz. Hedef 12 ana ekran: Simge 1, Hakan 4, Beyda 4, Melisa 3. Simge ayrıca araştırma ve ortak UX incelemesinden sorumlu.
 
@@ -54,7 +54,7 @@ Bu sayfa Figma tasarımı ve çalışan React simülasyonu için ortak başlang�
 ## Ekip çalışma akışı
 - GitHub Issue içeriğini oku → kendi branch'in → kendi Figma frame'in → React kodu → npm run build → PR.
 - PR'da hangi HCI sorununun çözüldüğünü, önce/sonra ekran görselini ve nasıl test edildiğini yaz.
-- [Ortak kapsam ve Design System onayı #6](../issues/6) herkesçe tamamlanmalı.
+- [Ortak kapsam ve Design System onayı #6](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/6) herkesçe tamamlanmalı.
 - Test raporunu Melisa koordine eder; Simge HCI bulgularını günceller.
 - Kişisel bilgiler içeren gerçek ekran görüntülerini Public GitHub'a yüklemeyin.
 
