@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../state/CartContext";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
+import { saveDemoOrder, type DemoOrder } from "../state/demoOrder";
 
 export default function CheckoutPage() {
   const { service: segment } = useParams();
@@ -23,8 +24,10 @@ export default function CheckoutPage() {
     }
     setError("");
     const orderId = "DEMO-" + Date.now().toString().slice(-7);
+    const order: DemoOrder = { orderId, amount, service, method, stage: 0, createdAt: new Date().toISOString() };
+    saveDemoOrder(order);
     clear(service);
-    navigate("/success", { state: { orderId, amount, service, method }, replace: true });
+    navigate("/success", { state: order, replace: true });
   };
   return <div className="mx-auto max-w-4xl space-y-7">
     <div><p className="font-semibold text-brand">Adım 2 / 2</p><h1 className="text-3xl font-bold">Siparişi tamamla</h1>
