@@ -1,0 +1,161 @@
+
+import type { Product, Store } from "../../../types/domain";
+
+export const marketStores: Store[] = [
+  {
+    id: "ymarket-1",
+    name: "Yemeksepeti Market",
+    description: "Günlük ihtiyaçların kapında",
+    service: "market",
+    group: "ymarket",
+    logo: "/logos/yemeksepetimarket.png",
+    minBasket: 150,
+    deliveryFee: 29.99,
+    deliveryTime: "20-30 dk",
+  },
+  {
+    id: "carrefour-1",
+    name: "CarrefourSA",
+    description: "Kaliteli ve avantajlı alışveriş",
+    service: "market",
+    group: "other",
+    logo: "/logos/carrefour-market.png",
+    minBasket: 250,
+    deliveryFee: 39.99,
+    deliveryTime: "30-45 dk",
+  },
+  {
+    id: "bim-1",
+    name: "BİM",
+    description: "Uygun fiyatlı alışveriş",
+    service: "market",
+    group: "other",
+    logo: "/logos/bim.png",
+    minBasket: 200,
+    deliveryFee: 24.99,
+    deliveryTime: "30-45 dk",
+  },
+];
+
+export const marketProducts: Product[] = [
+  // Yemeksepeti Market
+  {
+    id: "m1",
+    name: "Sütaş Süzme Peynir",
+    description: "500 g",
+    price: 190.90,
+    category: "Süt ve Kahvaltılık",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image:"/logos/peynir3.png",
+  },
+  {
+    id: "m2",
+    name: "Yummy Yumurta 15'li",
+    description: "L Yumurta 63-72 g",
+    price: 79.9,
+    category: "Süt ve Kahvaltılık",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image:"/logos/yumurta3.png",
+  },
+  {
+    id: "m3",
+    name: "Ekmek",
+    description: "Günlük taze ekmek",
+    price: 15,
+    category: "Fırın",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image:"/logos/ekmek.png",
+  },
+  {
+    id: "m4",
+    name: "Muz 1 kg",
+    description: "Taze ve lezzetli muz",
+    price: 69.9,
+    category: "Meyve ve Sebze",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500",
+  },
+  
+
+  // CarrefourSA
+  {
+  id: "c1",
+  name: "CarrefourSA Olgunlaştırılmış Beyaz Peynir 350 g",
+  description: "Olgunlaştırılmış beyaz peynir",
+  price: 195.50,
+  category: "Süt ve Kahvaltılık",
+  storeId: "carrefour-1",
+  storeName: "CarrefourSA",
+  service: "market",
+  image: "/logos/carrefour-peynir.png",
+},
+  {
+    id: "c2",
+    name: "CarrefourSA Yumurta 10'lu",
+    description: "M boy yumurta",
+    price: 82.5,
+    category: "Süt ve Kahvaltılık",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image: "/logos/yumurta2.png",
+  },
+  {
+    id: "c3",
+    name: "CarrefourSA Ekmek",
+    description: "Taze günlük ekmek",
+    price: 16,
+    category: "Fırın",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image:"/logos/ekmek.png" ,
+  },
+
+  // BİM
+  {
+  id: "b1",
+  name: "Dost Beyaz Peynir 500 g",
+  description: "Klasik beyaz peynir",
+  price: 125,
+  category: "Süt ve Kahvaltılık",
+  storeId: "bim-1",
+  storeName: "BİM",
+  service: "market",
+  image: "/logos/peynir.png",
+},
+  {
+    id: "b2",
+    name: "BİM Ekmek",
+    description: "Günlük taze ekmek",
+    price: 20,
+    category: "Fırın",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/logos/ekmek.png",
+  },
+  {
+    id: "b3",
+    name: "Yumurta 15'li",
+    description: "15 adet yumurta",
+    price: 89.9,
+    category: "Süt ve Kahvaltılık",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/logos/yumurta.png",
+  },
+];
+
+
+
+
