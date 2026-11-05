@@ -1,4 +1,5 @@
 
+
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { marketProducts, marketStores } from "../data/marketData";
@@ -18,9 +19,7 @@ export default function MarketCatalogPage() {
   const [category, setCategory] = useState("all");
 
   const products = useMemo(() => {
-    return marketProducts.filter(
-      (product) => product.storeId === storeId
-    );
+    return marketProducts.filter((product) => product.storeId === storeId);
   }, [storeId]);
 
   const categories = useMemo(() => {
@@ -44,9 +43,11 @@ export default function MarketCatalogPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
         <div className="mb-4 text-5xl">🏪</div>
+
         <h1 className="text-2xl font-bold text-slate-900">
           Market bulunamadı
         </h1>
+
         <button
           onClick={() => navigate("/market")}
           className="mt-6 rounded-xl bg-[#D90049] px-6 py-3 font-semibold text-white transition hover:bg-[#B6003C]"
@@ -57,10 +58,13 @@ export default function MarketCatalogPage() {
     );
   }
 
+  const deliveryFee = store.deliveryFee ?? 0;
+  const minBasket = store.minBasket ?? 0;
+  const deliveryTime = store.deliveryTime ?? "Hesaplanacak";
+
   return (
     <div className="min-h-screen bg-[#F8F8FA]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-
         {/* Back Button */}
         <button
           onClick={() => navigate("/market")}
@@ -73,7 +77,6 @@ export default function MarketCatalogPage() {
         {/* Store Header */}
         <section className="mb-8 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
           <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-8">
-
             {/* Logo */}
             <div className="flex h-24 w-32 shrink-0 items-center justify-center rounded-2xl bg-slate-50 p-4">
               {store.logo ? (
@@ -103,13 +106,15 @@ export default function MarketCatalogPage() {
 
               <div className="mt-4 flex flex-wrap gap-3">
                 <span className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
-                  ⚡ {store.deliveryTime}
+                  ⚡ {deliveryTime}
                 </span>
+
                 <span className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
-                  🚚 {formatTRY(store.deliveryFee)} teslimat
+                  🚚 {formatTRY(deliveryFee)} teslimat
                 </span>
+
                 <span className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
-                  🛒 Min. {formatTRY(store.minBasket)}
+                  🛒 Min. {formatTRY(minBasket)}
                 </span>
               </div>
             </div>
@@ -145,6 +150,7 @@ export default function MarketCatalogPage() {
             <h2 className="text-xl font-extrabold text-slate-900">
               Ürünler
             </h2>
+
             <p className="mt-1 text-sm text-slate-500">
               {filteredProducts.length} ürün listeleniyor
             </p>
@@ -201,7 +207,5 @@ export default function MarketCatalogPage() {
     </div>
   );
 }
-
-
 
 

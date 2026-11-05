@@ -1,4 +1,5 @@
 
+
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY } from "../../../types/domain";
@@ -18,6 +19,7 @@ export default function MarketCartPage() {
       : undefined;
 
   const minBasket = store?.minBasket ?? 0;
+  const deliveryFee = store?.deliveryFee ?? 0;
   const remaining = Math.max(0, minBasket - subtotal);
   const canCheckout = subtotal >= minBasket;
 
@@ -50,7 +52,6 @@ export default function MarketCartPage() {
   return (
     <div className="min-h-screen bg-[#F8F8FA]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-
         {/* Back */}
         <button
           onClick={() => navigate("/market")}
@@ -90,7 +91,6 @@ export default function MarketCartPage() {
         </div>
 
         <div className="grid items-start gap-6 lg:grid-cols-[1fr_360px]">
-
           {/* Cart Items */}
           <section className="space-y-4">
             {lines.map((line) => (
@@ -100,9 +100,7 @@ export default function MarketCartPage() {
               >
                 {/* Product Image */}
                 <button
-                  onClick={() =>
-                    navigate(`/market/product/${line.product.id}`)
-                  }
+                  onClick={() => navigate(`/market/product/${line.product.id}`)}
                   className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-2 sm:h-28 sm:w-28 sm:p-3"
                 >
                   {line.product.image ? (
@@ -163,9 +161,7 @@ export default function MarketCartPage() {
                   </p>
 
                   <button
-                    onClick={() =>
-                      change("market", line.product.id, -line.quantity)
-                    }
+                    onClick={() => change("market", line.product.id, -line.quantity)}
                     className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-500"
                   >
                     ✕ Sil
@@ -199,24 +195,23 @@ export default function MarketCartPage() {
             <div className="mt-4 flex justify-between text-sm text-slate-500">
               <span>Teslimat ücreti</span>
               <span className="font-medium text-slate-700">
-                {store ? formatTRY(store.deliveryFee) : "Hesaplanacak"}
+                {store ? formatTRY(deliveryFee) : "Hesaplanacak"}
               </span>
             </div>
 
             <div className="mt-5 flex justify-between border-t border-slate-100 pt-5">
               <span className="font-bold text-slate-900">Ara toplam</span>
               <span className="text-xl font-extrabold text-slate-900">
-                {formatTRY(subtotal + (store?.deliveryFee ?? 0))}
+                {formatTRY(subtotal + deliveryFee)}
               </span>
             </div>
 
             {/* Minimum Basket Warning */}
             {remaining > 0 && (
               <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm leading-5 text-amber-700">
-                Minimum sepet tutarı{" "}
-                <strong>{formatTRY(minBasket)}</strong>.
-                Sipariş verebilmek için{" "}
-                <strong>{formatTRY(remaining)}</strong> daha ürün eklemelisin.
+                Minimum sepet tutarı <strong>{formatTRY(minBasket)}</strong>.
+                Sipariş verebilmek için <strong>{formatTRY(remaining)}</strong>{" "}
+                daha ürün eklemelisin.
               </div>
             )}
 
@@ -255,5 +250,6 @@ export default function MarketCartPage() {
     </div>
   );
 }
+
 
 

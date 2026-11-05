@@ -1,3 +1,4 @@
+
 export type Service = "food" | "market";
 export type PaymentMethod = "cash-demo" | "card-demo";
 
@@ -13,19 +14,17 @@ export interface Product {
   service: Service;
 }
 
-
 export interface Store {
   id: string;
   name: string;
   description: string;
-  service: "market";
-  group: "ymarket" | "other";
+  service: Service;
+  group?: "ymarket" | "other";
   logo?: string;
-  minBasket: number;
-  deliveryFee: number;
-  deliveryTime: string;
+  minBasket?: number;
+  deliveryFee?: number;
+  deliveryTime?: string;
 }
-
 
 export interface CartLine {
   product: Product;
@@ -35,4 +34,8 @@ export interface CartLine {
 export type Carts = Record<Service, CartLine[]>;
 
 export const formatTRY = (value: number) =>
-  new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(value);
+  new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+  }).format(value);
+

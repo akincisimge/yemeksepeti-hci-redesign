@@ -13,6 +13,10 @@ export default function MarketStoreCard({
 }: MarketStoreCardProps) {
   const isYMarket = store.group === "ymarket";
 
+  const deliveryFee = store.deliveryFee ?? 0;
+  const minBasket = store.minBasket ?? 0;
+  const deliveryTime = store.deliveryTime ?? "Hesaplanacak";
+
   return (
     <button
       onClick={onSelect}
@@ -63,7 +67,7 @@ export default function MarketStoreCard({
           <div className="px-1 text-center">
             <span className="text-lg">⚡</span>
             <p className="mt-1 text-xs font-semibold text-slate-700">
-              {store.deliveryTime}
+              {deliveryTime}
             </p>
             <p className="mt-0.5 text-[10px] text-slate-400">Teslimat</p>
           </div>
@@ -71,15 +75,17 @@ export default function MarketStoreCard({
           <div className="px-1 text-center">
             <span className="text-lg">🚚</span>
             <p className="mt-1 text-xs font-semibold text-slate-700">
-              {formatTRY(store.deliveryFee)}
+              {formatTRY(deliveryFee)}
             </p>
-            <p className="mt-0.5 text-[10px] text-slate-400">Teslimat ücreti</p>
+            <p className="mt-0.5 text-[10px] text-slate-400">
+              Teslimat ücreti
+            </p>
           </div>
 
           <div className="px-1 text-center">
             <span className="text-lg">🛒</span>
             <p className="mt-1 text-xs font-semibold text-slate-700">
-              {formatTRY(store.minBasket)}
+              {formatTRY(minBasket)}
             </p>
             <p className="mt-0.5 text-[10px] text-slate-400">Min. sepet</p>
           </div>
@@ -88,12 +94,15 @@ export default function MarketStoreCard({
         {/* CTA */}
         <div className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#D90049] py-3 text-sm font-bold text-white transition-colors group-hover:bg-[#B8003D]">
           Alışverişe başla
-          <span className="transition-transform group-hover:translate-x-1">→</span>
+          <span className="transition-transform group-hover:translate-x-1">
+            →
+          </span>
         </div>
       </div>
     </button>
   );
 }
+
 
 
 
