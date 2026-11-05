@@ -6,19 +6,26 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  image?: string;
   category: string;
   storeId: string;
   storeName: string;
   service: Service;
 }
 
+
 export interface Store {
   id: string;
   name: string;
   description: string;
-  service: Service;
-  group?: "ymarket" | "other";
+  service: "market";
+  group: "ymarket" | "other";
+  logo?: string;
+  minBasket: number;
+  deliveryFee: number;
+  deliveryTime: string;
 }
+
 
 export interface CartLine {
   product: Product;
