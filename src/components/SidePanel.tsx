@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import LocationPicker from "./LocationPicker";
 import { readDemoOrder } from "../state/demoOrder";
 
 export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | "help" | null;
@@ -10,17 +11,11 @@ type PanelProps = {
   onClose: () => void;
   onNavigate: (view: Exclude<PanelView, null>) => void;
   address: string | null;
-  onAddressChange: (address: string) => void;
   account: DemoAccount | null;
   onSaveAccount: (account: DemoAccount) => void;
   foodCount: number;
   marketCount: number;
 };
-
-const SAMPLE_LOCATIONS = [
-  "Muğla, Menteşe", "Adana, Seyhan", "İstanbul, Kadıköy",
-  "Ankara, Çankaya", "İzmir, Konak", "Antalya, Muratpaşa"
-];
 
 const TOPICS = [
   { name: "Siparişimi takip etmek istiyorum", answer: "Demo sipariş tamamlandıktan sonra takip ekranında dört örnek aşamayı izleyebilirsin. Son siparişine Profil → Önceki siparişlerim bölümünden de dönebilirsin." },
@@ -38,48 +33,6 @@ function PanelRow({ label, detail, onClick }: { label: string; detail?: string; 
       <span><span className="block font-semibold text-slate-900">{label}</span>{detail && <span className="mt-1 block text-sm text-slate-600">{detail}</span>}</span>
       <span className="text-xl text-brand" aria-hidden="true">›</span>
     </button>
-  );
-}
-
-function AddressView({ address, onAddressChange, onClose }: Pick<PanelProps, "address" | "onAddressChange" | "onClose">) {
-  const [query, setQuery] = useState("");
-  const [picked, setPicked] = useState<string | null>(address);
-  const [notice, setNotice] = useState("");
-  const matches = SAMPLE_LOCATIONS.filter((item) => item.toLocaleLowerCase("tr").includes(query.trim().toLocaleLowerCase("tr")));
-  function confirm() {
-    if (!picked) return;
-    onAddressChange(picked);
-    setNotice("Konum güncellendi.");
-    onClose();
-  }
-  return (
-    <div className="space-y-6">
-      <div className="rounded-2xl bg-[#FFF1F6] p-4">
-        <p className="font-semibold text-slate-900">Teslimat konumunu seç</p>
-        <p className="mt-1 text-sm text-slate-700">Bu ekranda yalnızca örnek il ve ilçe bilgileri kullanılır. Tam adresi demo sipariş sırasında girebilirsin.</p>
-      </div>
-      {address && <p className="text-sm text-slate-600">Şu an seçili: <strong className="text-slate-900">{address}</strong></p>}
-      <label className="block">
-        <span className="mb-2 block font-semibold text-slate-900">İl veya ilçe ara</span>
-        <input className="field min-h-12" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Örn. Muğla, Menteşe" />
-      </label>
-      <fieldset className="space-y-2">
-        <legend className="mb-3 font-semibold text-slate-900">Örnek teslimat konumları</legend>
-        {matches.length > 0 ? matches.map((location) => (
-          <label key={location} className={"flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 " + (picked === location ? "border-brand bg-[#FFF1F6]" : "border-slate-300 bg-white hover:border-brand")}>
-            <input type="radio" name="delivery-location" className="accent-[#D90049]" checked={picked === location} onChange={() => { setPicked(location); setNotice(""); }} />
-            <span className="font-medium">{location}</span>
-            {picked === location && <span className="ml-auto font-semibold text-[#166534]">Seçildi</span>}
-          </label>
-        )) : <p role="status" className="rounded-xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Bu aramayla eşleşen örnek konum yok. Başka bir il veya ilçe dene.</p>}
-      </fieldset>
-      {notice && <p role="status" className="text-[#166534]">{notice}</p>}
-      <div className="space-y-3 border-t border-slate-200 pt-5">
-        <button type="button" className="btn-primary w-full" disabled={!picked} onClick={confirm}>Bu konumu kullan</button>
-        {!picked && <p className="text-sm text-slate-600">Devam etmek için bir konum seç.</p>}
-        <button type="button" onClick={onClose} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50">Şimdilik geç</button>
-      </div>
-    </div>
   );
 }
 
@@ -160,7 +113,7 @@ function HelpView() {
   );
 }
 
-export default function SidePanel({ view, onClose, onNavigate, address, onAddressChange, account, onSaveAccount, foodCount, marketCount }: PanelProps) {
+export default function SidePanel({ view, onClose, onNavigate, address, account, onSaveAccount, foodCount, marketCount }: PanelProps) {
   const panelRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     const oldOverflow = document.body.style.overflow;
@@ -169,7 +122,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, onAddres
     function keyDown(event: KeyboardEvent) {
       if (event.key === "Escape") { event.preventDefault(); onClose(); }
       if (event.key !== "Tab" || !panelRef.current) return;
-      const nodes = Array.from(panelRef.current.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"));
+      const nodes = Array.from(panelRef.current.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex='-1'])"));
       if (!nodes.length) return;
       const first = nodes[0];
       const last = nodes[nodes.length - 1];
@@ -197,7 +150,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, onAddres
           <button data-close type="button" onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-xl text-slate-700 hover:bg-slate-50" aria-label="Paneli kapat">×</button>
         </header>
         <div className={"min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 " + (view === "help" ? "flex flex-col" : "")}>
-          {view === "address" && <AddressView address={address} onAddressChange={onAddressChange} onClose={onClose} />}
+          {view === "address" && <LocationPicker onDone={onClose} />}
           {view === "profile" && <div className="space-y-3">
             <div className="mb-5 rounded-2xl bg-[#FFF1F6] p-5">
               <p className="text-sm font-semibold text-brand">HOŞ GELDİN</p>

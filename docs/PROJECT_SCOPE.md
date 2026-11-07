@@ -47,3 +47,10 @@ Node.js 20.19+ veya uyumlu sürüm önerilir.
 - npm run preview
 
 İlk geliştirme dalında hazırlanan uygulama, diğer ekip üyelerinin ekranları için entegrasyon sözleşmesi sağlar; herkes kendi modülünü ayrı PR ile geliştirecek.
+
+## Konuma bağlı keşif — 7 Kasım 2026
+- İşletmeler gösterilmeden önce il, ilçe ve mahalle seçilir. Seçim bu tarayıcının localStorage alanında saklanır; tam adres veya GPS toplanmaz.
+- Örnek konumlar: Muğla/Menteşe/Kötekli ve Orhaniye, Muğla/Bodrum/Çarşı, Adana/Seyhan/Reşatbey. Reşatbey, hizmet bulunmayan bölge durumunu göstermek için kullanılır.
+- Restoran ve MARKET listeleri aynı teslimat kapsamı kontrolünü kullanır. Doğrudan mağaza/ürün bağlantısı ve checkout da uygunluk kontrolünden geçer.
+- Konum değişiminde hizmet veremeyen mağazaların sepetleri için onay istenir. İptalde konum ve sepetler korunur; onayda yalnız etkilenen servis sepetleri temizlenir.
+- Bölge/işletme eşleştirmeleri `src/data/delivery.ts` içindeki kurgu demo verisidir. Gerçek marka teslimat kapsamını temsil etmez; harita veya ücretli servis kullanılmaz.

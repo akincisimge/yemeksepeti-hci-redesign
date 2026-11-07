@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useCart } from "../state/CartContext";
+import { useDelivery } from "../state/DeliveryContext";
+import { locationLabel } from "../data/delivery";
+import { marketProducts } from "../features/market/data/marketData";
+import LocationPicker from "./LocationPicker";
 import SidePanel, { type DemoAccount, type PanelView } from "./SidePanel";
 
 export type LayoutContext = {
@@ -9,10 +13,11 @@ export type LayoutContext = {
 };
 
 export default function Layout() {
-  const { count } = useCart();
+  const { count, carts } = useCart();
+  const { delivery, available } = useDelivery();
+  const address = delivery ? locationLabel(delivery) : null;
   const location = useLocation();
   const [panel, setPanel] = useState<PanelView>(null);
-  const [address, setAddress] = useState<string | null>(null);
   const [account, setAccount] = useState<DemoAccount | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
@@ -30,6 +35,12 @@ export default function Layout() {
 
   useEffect(() => { setPanel(null); }, [location.pathname]);
 
+  const path = location.pathname.replace(/\/+$/, "") || "/";
+  const productId = path.startsWith("/market/product/") ? (path.split("/")[3] ?? "") : null;
+  const routeStore = productId ? marketProducts.find(p => p.id.toLowerCase() === productId.trim().toLowerCase())?.storeId
+    : /^\/market\/[^/]+$/.test(path) ? path.split("/")[2] : undefined;
+  const checkoutService = path.startsWith("/checkout/") ? (path === "/checkout/market" ? "market" : "food") : null;
+  const blocked = (routeStore && !available(routeStore)) || (checkoutService && carts[checkoutService].some(line => !available(line.product.storeId)));
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
       <a className="skip-link" href="#main-content">Ana içeriğe geç</a>
@@ -51,7 +62,12 @@ export default function Layout() {
         </div>
       </header>
       <main id="main-content" className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-        <Outlet context={{ address, openAddress: () => open("address") } satisfies LayoutContext} />
+        {!delivery ? <LocationPicker /> : blocked ? <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-8">
+          <h1 className="text-2xl font-bold">Bu mağaza konumuna teslimat yapmıyor</h1>
+          <p>Seçili konum: {address}. Uygun işletmeleri seçebilir veya konumunu değiştirebilirsin.</p>
+          <button className="btn-primary" onClick={() => open("address")}>Konumu değiştir</button>
+          <Link className="nav-link" to="/">Uygun işletmeleri keşfet</Link>
+        </section> : <Outlet key={delivery.id} context={{ address, openAddress: () => open("address") } satisfies LayoutContext} />}
       </main>
       <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
         Bağımsız HCI öğrenci projesidir. Gerçek sipariş, ödeme veya canlı destek hizmeti sunulmaz.
@@ -61,7 +77,6 @@ export default function Layout() {
         onClose={close}
         onNavigate={navigatePanel}
         address={address}
-        onAddressChange={setAddress}
         account={account}
         onSaveAccount={setAccount}
         foodCount={count("food")}

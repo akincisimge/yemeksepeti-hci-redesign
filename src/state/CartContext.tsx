@@ -31,6 +31,7 @@ type CartContextValue = {
   add: (product: Product) => "added" | "store-changed";
   change: (service: Service, productId: string, delta: number) => void;
   clear: (service: Service) => void;
+  clearServices: (services: Service[]) => void;
   total: (service: Service) => number;
   count: (service: Service) => number;
 };
@@ -62,9 +63,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     persist({ ...carts, [service]: nextLines });
   };
   const clear = (service: Service) => persist({ ...carts, [service]: [] });
+  const clearServices = (services: Service[]) => persist({ ...carts, ...Object.fromEntries(services.map(service => [service, []])) });
   const total = (service: Service) => carts[service].reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const count = (service: Service) => carts[service].reduce((sum, line) => sum + line.quantity, 0);
-  const value = useMemo(() => ({ carts, add, change, clear, total, count }), [carts]);
+  const value = useMemo(() => ({ carts, add, change, clear, clearServices, total, count }), [carts]);
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 

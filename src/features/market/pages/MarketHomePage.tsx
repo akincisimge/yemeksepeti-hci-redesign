@@ -1,16 +1,19 @@
 
 import { useNavigate } from "react-router-dom";
 import { marketStores } from "../data/marketData";
+import { useDelivery } from "../../../state/DeliveryContext";
 import MarketStoreCard from "../components/MarketStoreCard";
 
 export default function MarketHomePage() {
   const navigate = useNavigate();
+  const { available } = useDelivery();
+  const nearbyStores = marketStores.filter(store => available(store.id));
 
-  const ymarketStores = marketStores.filter(
+  const ymarketStores = nearbyStores.filter(
     (store) => store.group === "ymarket"
   );
 
-  const otherStores = marketStores.filter(
+  const otherStores = nearbyStores.filter(
     (store) => store.group === "other"
   );
 
@@ -39,7 +42,8 @@ export default function MarketHomePage() {
               </p>
 
               <button
-                onClick={() => navigate("/market/ymarket-1")}
+                disabled={!nearbyStores.length}
+                onClick={() => navigate(`/market/${nearbyStores[0].id}`)}
                 className="mt-7 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-[#D90049] shadow-lg transition duration-200 hover:-translate-y-1 hover:bg-pink-50"
               >
                 Alışverişe başla
@@ -60,6 +64,7 @@ export default function MarketHomePage() {
           <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-white/10" />
         </section>
 
+        {!nearbyStores.length && <p role="status" className="mb-6 rounded-2xl bg-white p-6">Bu konumda henüz hizmet veren market bulunmuyor. Üstteki konum butonundan konumunu değiştirebilirsin.</p>}
         {/* Yemeksepeti Market */}
         <section className="mb-14">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -81,6 +86,7 @@ export default function MarketHomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {!ymarketStores.length && <p className="text-slate-600">Bu bölgede Yemeksepeti Market hizmeti yok.</p>}
             {ymarketStores.map((store) => (
               <MarketStoreCard
                 key={store.id}
@@ -112,6 +118,7 @@ export default function MarketHomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {!otherStores.length && <p className="text-slate-600">Bu bölgede diğer marketler hizmet vermiyor.</p>}
             {otherStores.map((store) => (
               <MarketStoreCard
                 key={store.id}
