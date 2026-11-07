@@ -37,7 +37,7 @@ export const marketStores: Store[] = [
   },
 ];
 
-export const marketProducts: Product[] = [
+const originalProducts: Product[] = [
   // Yemeksepeti Market
   {
     id: "m1",
@@ -159,3 +159,47 @@ export const marketProducts: Product[] = [
 
 
 
+
+// Prices, assortment and dietary labels are fictional HCI test data.
+const samples = [
+  { name: "Tam Yağlı Süt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 45, unitLabel: "1 L", unitBasis: "L" as const, amount: 1, tags: [] },
+  { name: "Laktozsuz Süt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 55, unitLabel: "1 L", unitBasis: "L" as const, amount: 1, tags: ["Laktozsuz"] },
+  { name: "Laktozsuz Süt", brand: "Doğa", category: "Süt ve Kahvaltılık", price: 32, unitLabel: "500 ml", unitBasis: "L" as const, amount: .5, tags: ["Laktozsuz"] },
+  { name: "Yoğurt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 80, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
+  { name: "Tam Buğday Ekmeği", brand: "Fırından", category: "Fırın", price: 35, unitLabel: "400 g", unitBasis: "kg" as const, amount: .4, tags: [] },
+  { name: "Elma", brand: "Bahçeden", category: "Meyve ve Sebze", price: 60, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
+  { name: "Domates", brand: "Bahçeden", category: "Meyve ve Sebze", price: 45, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
+  { name: "Burgu Makarna", brand: "Sofra", category: "Temel Gıda", price: 30, unitLabel: "500 g", unitBasis: "kg" as const, amount: .5, tags: [] },
+  { name: "Glutensiz Makarna", brand: "Doğa", category: "Temel Gıda", price: 85, unitLabel: "400 g", unitBasis: "kg" as const, amount: .4, tags: ["Glutensiz"] },
+  { name: "Pirinç", brand: "Sofra", category: "Temel Gıda", price: 90, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
+  { name: "Maden Suyu", brand: "Kaynak", category: "İçecek", price: 48, unitLabel: "6 × 200 ml", unitBasis: "L" as const, amount: 1.2, tags: [] },
+  { name: "İçme Suyu", brand: "Kaynak", category: "İçecek", price: 25, unitLabel: "1,5 L", unitBasis: "L" as const, amount: 1.5, tags: [] },
+  { name: "Bulaşık Deterjanı", brand: "Temiz", category: "Temizlik", price: 65, unitLabel: "750 ml", unitBasis: "L" as const, amount: .75, tags: [] },
+  { name: "Kağıt Havlu", brand: "Temiz", category: "Temizlik", price: 95, unitLabel: "6 rulo", unitBasis: "adet" as const, amount: 6, tags: [] },
+];
+export const marketProducts: Product[] = [
+  ...originalProducts.map(product => {
+    const packs: Record<string, { amount: number; unitBasis: "kg" | "L" | "adet"; unitLabel: string; brand: string }> = {
+      m1: { amount: .5, unitBasis: "kg", unitLabel: "500 g", brand: "Sütaş" },
+      m2: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Yummy" },
+      m3: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
+      m4: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Bahçeden" },
+      c1: { amount: .35, unitBasis: "kg", unitLabel: "350 g", brand: "CarrefourSA" },
+      c2: { amount: 10, unitBasis: "adet", unitLabel: "10 adet", brand: "CarrefourSA" },
+      c3: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
+      b1: { amount: .5, unitBasis: "kg", unitLabel: "500 g", brand: "Dost" },
+      b2: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
+      b3: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Günlük" },
+    };
+    const pack = packs[product.id];
+    return { ...product, brand: pack.brand, unitLabel: pack.unitLabel, unitBasis: pack.unitBasis, unitPrice: product.price / pack.amount };
+  }),
+  ...marketStores.flatMap((store, storeIndex) => samples.map((sample, index) => {
+    const price = Math.round(sample.price * (1 + storeIndex * .06) * 100) / 100;
+    return {
+      id: `${store.id}-demo-${index}`, storeId: store.id, storeName: store.name, service: "market" as const,
+      name: sample.name, description: sample.unitLabel, brand: sample.brand, category: sample.category,
+      price, unitLabel: sample.unitLabel, unitBasis: sample.unitBasis, unitPrice: price / sample.amount, tags: sample.tags,
+    };
+  })),
+];

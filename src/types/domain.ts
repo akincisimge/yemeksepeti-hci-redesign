@@ -8,6 +8,11 @@ export interface Product {
   description: string;
   price: number;
   image?: string;
+  brand?: string;
+  unitLabel?: string;
+  unitPrice?: number;
+  unitBasis?: "kg" | "L" | "adet";
+  tags?: string[];
   category: string;
   storeId: string;
   storeName: string;

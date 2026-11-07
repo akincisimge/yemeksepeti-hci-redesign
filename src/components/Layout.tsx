@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
 import { locationLabel } from "../data/delivery";
@@ -60,6 +60,11 @@ export default function Layout() {
             </button>
           </nav>
         </div>
+        {delivery && <nav aria-label="Hizmetler ve sepetler" className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-2 text-sm">
+          <NavLink to="/food" className={({isActive})=>isActive?"nav-link nav-link-active font-bold":"nav-link font-semibold"}>YEMEK</NavLink>
+          <NavLink to="/market" className={({isActive})=>isActive?"nav-link nav-link-active font-bold":"nav-link font-semibold"}>MARKET</NavLink>
+          <div className="ml-auto flex flex-wrap gap-1"><Link to="/cart/food" className="nav-link">Yemek sepeti ({count("food")})</Link><Link to="/cart/market" className="nav-link">Market sepeti ({count("market")})</Link></div>
+        </nav>}
       </header>
       <main id="main-content" className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
         {!delivery ? <LocationPicker /> : blocked ? <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-8">
