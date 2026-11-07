@@ -41,7 +41,7 @@ export default function CatalogPage({ service }: { service: Service }) {
           <button type="button" className={activeStore.group === "other" ? "filter-active" : "filter"} onClick={() => chooseStore("m-2")}>Diğer Marketler</button>
         </div>
       </div>}
-      {service === "food" && <div className="flex flex-wrap gap-2" aria-label="Restoran seç">
+      {service === "food" && <div className="flex flex-wrap gap-2" role="group" aria-label="Restoran seç">
         {serviceStores.map((store) => <button type="button" key={store.id} onClick={() => chooseStore(store.id)} className={store.id === activeStore.id ? "filter-active" : "filter"} aria-pressed={store.id === activeStore.id}>{store.name}</button>)}
       </div>}
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
@@ -53,7 +53,7 @@ export default function CatalogPage({ service }: { service: Service }) {
           <span className="mb-2 block font-semibold">Ürün ara</span>
           <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} className="field" placeholder="Ürün adı veya açıklaması" />
         </label>
-        <div className="flex flex-wrap gap-2" aria-label="Kategori filtresi">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Kategori filtresi">
           {categories.map((name) => <button key={name} type="button" onClick={() => setCategory(name)} aria-pressed={category === name} className={category === name ? "filter-active" : "filter"}>{name}</button>)}
         </div>
         <p role="status" className="text-sm text-slate-600">{filtered.length} ürün bulundu.</p>

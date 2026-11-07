@@ -108,7 +108,7 @@ export default function CheckoutPage() {
             )}
 
             <div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 Market mağazası
               </p>
               <p className="font-bold text-slate-800">

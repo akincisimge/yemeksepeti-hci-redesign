@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import Modal from "./Modal";
 import LocationPicker from "./LocationPicker";
 import { readDemoOrder } from "../state/demoOrder";
 
@@ -97,7 +98,7 @@ function HelpView() {
         </div>
       ) : (
         <>
-          <div className="mt-4 space-y-2" aria-label="Sık kullanılan yardım başlıkları">
+          <div className="mt-4 space-y-2" role="group" aria-label="Sık kullanılan yardım başlıkları">
             {TOPICS.map((topic) => (
               <button type="button" key={topic.name} onClick={() => send(topic.name, topic.answer)} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-slate-800 hover:border-brand hover:bg-[#FFF1F6]">{topic.name}</button>
             ))}
@@ -114,25 +115,6 @@ function HelpView() {
 }
 
 export default function SidePanel({ view, onClose, onNavigate, address, account, onSaveAccount, foodCount, marketCount }: PanelProps) {
-  const panelRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const oldOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    panelRef.current?.querySelector<HTMLButtonElement>("[data-close]")?.focus();
-    function keyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") { event.preventDefault(); onClose(); }
-      if (event.key !== "Tab" || !panelRef.current) return;
-      const nodes = Array.from(panelRef.current.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex='-1'])"));
-      if (!nodes.length) return;
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    }
-    document.addEventListener("keydown", keyDown);
-    return () => { document.body.style.overflow = oldOverflow; document.removeEventListener("keydown", keyDown); };
-  }, [onClose, view]);
-
   const title: Record<Exclude<PanelView, null>, string> = {
     address: "Teslimat konumu", profile: "Profil ve hesabım", account: "Demo hesabım",
     orders: "Önceki siparişlerim", coupons: "Kuponlarım", help: "Yardım ve canlı destek"
@@ -141,14 +123,8 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
   const lastOrder = view === "orders" ? readDemoOrder() : null;
 
   return (
-    <div className="fixed inset-0 z-50">
-      <button type="button" aria-label="Paneli kapat" onClick={onClose} className="absolute inset-0 h-full w-full cursor-default bg-slate-900/40" />
-      <aside ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="panel-title" className="absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl sm:max-w-[440px]">
-        <header className="flex min-h-[76px] shrink-0 items-center gap-3 border-b border-slate-200 px-4 sm:px-6">
-          {subpage && <button type="button" onClick={() => onNavigate("profile")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 hover:bg-slate-50" aria-label="Profil menüsüne dön">←</button>}
-          <h2 id="panel-title" className="min-w-0 flex-1 text-xl font-bold text-slate-900">{title[view]}</h2>
-          <button data-close type="button" onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-xl text-slate-700 hover:bg-slate-50" aria-label="Paneli kapat">×</button>
-        </header>
+    <Modal open title={title[view]} onClose={onClose}>
+      {subpage && <button type="button" onClick={() => onNavigate("profile")} className="mb-4 min-h-11 rounded-xl border border-slate-300 px-4 font-semibold">← Profil menüsüne dön</button>}
         <div className={"min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 " + (view === "help" ? "flex flex-col" : "")}>
           {view === "address" && <LocationPicker onDone={onClose} />}
           {view === "profile" && <div className="space-y-3">
@@ -191,7 +167,6 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
           {view === "help" && <HelpView />}
         </div>
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs text-slate-600 sm:px-6">Bağımsız HCI öğrenci projesi · Gerçek müşteri desteği değildir.</div>
-      </aside>
-    </div>
+    </Modal>
   );
 }

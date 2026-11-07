@@ -22,3 +22,33 @@ export function filterProducts(products: Product[], filters: Filters) {
     return 0;
   });
 }
+
+// Adjacent transpositions (e.g. sut -> stu) count as one typo.
+export function editDistance(a: string, b: string): number {
+  const rows = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) rows[i][j] = Math.min(rows[i][j], rows[i - 2][j - 2] + 1);
+  }
+  return rows[a.length][b.length];
+}
+export function searchSuggestion(products: Product[], filters: Filters): string | null {
+  const query = normalize(filters.search);
+  if (query.length < 3 || query.length > 80 || filterProducts(products, filters).length) return null;
+  const terms = query.split(/\s+/);
+  const candidates = filterProducts(products, { ...filters, search: "" });
+  const ranked = candidates.flatMap(product => {
+    const words = normalize(product.name).split(/\s+/);
+    let score = 0;
+    for (const term of terms) {
+      const distance = Math.min(...words.map(word => word.includes(term) ? 0 : editDistance(term, word)));
+      const limit = term.length < 3 ? 0 : term.length < 5 ? 1 : term.length < 9 ? 2 : 3;
+      if (distance > limit) return [];
+      score += distance;
+    }
+    return score > 0 ? [{ name: product.name, score }] : [];
+  });
+  ranked.sort((a, b) => a.score - b.score || a.name.localeCompare(b.name, "tr"));
+  return ranked[0]?.name ?? null;
+}

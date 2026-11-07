@@ -7,7 +7,7 @@ import { marketStores } from "../data/marketData";
 
 export default function MarketCartPage() {
   const navigate = useNavigate();
-  const { carts, change, clear, total } = useCart();
+  const { carts, change, removeAll, total } = useCart();
 
   const lines = carts.market;
   const subtotal = total("market");
@@ -34,7 +34,7 @@ export default function MarketCartPage() {
           Market sepetin boş
         </h1>
 
-        <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">
+        <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
           Alışverişe başlayarak sepetini doldurabilir, ihtiyaçlarını kolayca
           sipariş edebilirsin.
         </p>
@@ -55,7 +55,7 @@ export default function MarketCartPage() {
         {/* Back */}
         <button
           onClick={() => navigate("/market")}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-[#D90049]"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-[#D90049]"
         >
           ← Alışverişe devam et
         </button>
@@ -66,7 +66,7 @@ export default function MarketCartPage() {
             Market Sepetim
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p aria-live="polite" aria-atomic="true" className="mt-2 text-sm text-slate-600">
             Sepetinde {itemCount} ürün bulunuyor.
           </p>
 
@@ -81,7 +81,7 @@ export default function MarketCartPage() {
               )}
 
               <div>
-                <p className="text-xs text-slate-400">Mağazan</p>
+                <p className="text-xs text-slate-600">Mağazan</p>
                 <p className="text-sm font-bold text-slate-800">
                   {store.name}
                 </p>
@@ -90,18 +90,19 @@ export default function MarketCartPage() {
           )}
         </div>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           {/* Cart Items */}
           <section className="space-y-4">
             {lines.map((line) => (
               <article
                 key={line.product.id}
-                className="flex gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md sm:gap-5 sm:p-5"
+                className="grid grid-cols-[64px_minmax(0,1fr)] gap-3 rounded-2xl sm:flex border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md sm:gap-5 sm:p-5"
               >
                 {/* Product Image */}
                 <button
+                  aria-label={`${line.product.name} ürün detayını aç`}
                   onClick={() => navigate(`/market/product/${line.product.id}`)}
-                  className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-2 sm:h-28 sm:w-28 sm:p-3"
+                  className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-2 sm:h-28 sm:w-28 sm:p-3"
                 >
                   {line.product.image ? (
                     <img
@@ -117,7 +118,7 @@ export default function MarketCartPage() {
                 {/* Product Info */}
                 <div className="flex min-w-0 flex-1 flex-col justify-between">
                   <div>
-                    <p className="mb-1 text-xs font-medium text-slate-400">
+                    <p className="mb-1 min-h-11 text-sm font-medium text-slate-600">
                       {line.product.storeName}
                     </p>
 
@@ -135,7 +136,7 @@ export default function MarketCartPage() {
                     <button
                       onClick={() => change("market", line.product.id, -1)}
                       aria-label={`${line.product.name} miktarını azalt`}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-lg font-semibold text-slate-600 transition hover:border-[#D90049] hover:text-[#D90049]"
+                      className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-lg font-semibold text-slate-600 transition hover:border-[#D90049] hover:text-[#D90049]"
                     >
                       −
                     </button>
@@ -147,7 +148,7 @@ export default function MarketCartPage() {
                     <button
                       onClick={() => change("market", line.product.id, 1)}
                       aria-label={`${line.product.name} miktarını artır`}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-lg font-semibold text-slate-600 transition hover:border-[#D90049] hover:text-[#D90049]"
+                      className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-lg font-semibold text-slate-600 transition hover:border-[#D90049] hover:text-[#D90049]"
                     >
                       +
                     </button>
@@ -155,14 +156,14 @@ export default function MarketCartPage() {
                 </div>
 
                 {/* Price and Remove */}
-                <div className="flex shrink-0 flex-col items-end justify-between">
+                <div className="col-start-2 flex shrink-0 flex-row items-center justify-between gap-3 sm:flex-col sm:items-end">
                   <p className="text-sm font-extrabold text-slate-900 sm:text-base">
                     {formatTRY(line.product.price * line.quantity)}
                   </p>
 
                   <button
                     onClick={() => change("market", line.product.id, -line.quantity)}
-                    className="rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                    className="rounded-lg px-2 py-1 min-h-11 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-800"
                   >
                     ✕ Sil
                   </button>
@@ -172,27 +173,27 @@ export default function MarketCartPage() {
 
             {/* Clear Cart */}
             <button
-              onClick={() => clear("market")}
-              className="rounded-lg px-2 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+              onClick={() => removeAll("market")}
+              className="rounded-lg px-2 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50"
             >
               🗑️ Sepeti temizle
             </button>
           </section>
 
           {/* Order Summary */}
-          <aside className="sticky top-6 h-fit rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <aside className="lg:sticky lg:top-40 h-fit rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-extrabold text-slate-900">
               Sipariş özeti
             </h2>
 
-            <div className="mt-5 flex justify-between text-sm text-slate-500">
+            <div className="mt-5 flex justify-between text-sm text-slate-600">
               <span>Ürün toplamı ({itemCount} ürün)</span>
               <span className="font-medium text-slate-700">
                 {formatTRY(subtotal)}
               </span>
             </div>
 
-            <div className="mt-4 flex justify-between text-sm text-slate-500">
+            <div className="mt-4 flex justify-between text-sm text-slate-600">
               <span>Teslimat ücreti</span>
               <span className="font-medium text-slate-700">
                 {store ? formatTRY(deliveryFee) : "Hesaplanacak"}
@@ -200,7 +201,7 @@ export default function MarketCartPage() {
             </div>
 
             <div className="mt-5 flex justify-between border-t border-slate-100 pt-5">
-              <span className="font-bold text-slate-900">Ara toplam</span>
+              <span className="font-bold text-slate-900">Genel toplam</span>
               <span className="text-xl font-extrabold text-slate-900">
                 {formatTRY(subtotal + deliveryFee)}
               </span>
