@@ -1,18 +1,20 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { products, stores } from "../data/catalog";
+import { useDelivery } from "../state/DeliveryContext";
 import { useCart } from "../state/CartContext";
 import { formatTRY, type Service } from "../types/domain";
 
 export default function CatalogPage({ service }: { service: Service }) {
+  const { available } = useDelivery();
   const [storeId, setStoreId] = useState(service === "food" ? "f-1" : "m-1");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tümü");
   const [notice, setNotice] = useState("");
   const { add, count } = useCart();
-  const serviceStores = stores.filter((store) => store.service === service);
+  const serviceStores = stores.filter((store) => store.service === service && available(store.id));
   const activeStore = serviceStores.find((store) => store.id === storeId) ?? serviceStores[0];
-  const inStore = products.filter((item) => item.storeId === activeStore.id);
+  const inStore = products.filter((item) => item.storeId === activeStore?.id);
   const categories = ["Tümü", ...new Set(inStore.map((item) => item.category))];
   const filtered = useMemo(() => inStore.filter((item) =>
     (category === "Tümü" || item.category === category) &&
@@ -21,6 +23,7 @@ export default function CatalogPage({ service }: { service: Service }) {
   const chooseStore = (id: string) => {
     setStoreId(id); setCategory("Tümü"); setSearch(""); setNotice("");
   };
+  if (!activeStore) return <section className="space-y-4 rounded-2xl bg-white p-8"><h1 className="text-2xl font-bold">Bu konumda henüz hizmet veren restoran bulunmuyor</h1><p>Üstteki konum butonundan başka bir mahalle seçebilirsin.</p></section>;
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">

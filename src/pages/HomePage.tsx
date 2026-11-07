@@ -61,7 +61,7 @@ export default function HomePage() {
           <div>
             <h2 id="address-title" className="text-lg font-bold text-slate-900">Teslimat konumun</h2>
             <p className="mt-1 font-semibold text-slate-800" aria-live="polite">{address ?? "Henüz konum seçilmedi"}</p>
-            <p className="mt-1 text-sm leading-5 text-slate-600">{address ? "İstersen konumunu değiştirebilirsin." : "Konum seçmeden de yemek ve market bölümlerini keşfedebilirsin."}</p>
+            <p className="mt-1 text-sm leading-5 text-slate-600">{address ? "İstersen konumunu değiştirebilirsin." : "İşletmeleri görmek için teslimat konumunu seç."}</p>
           </div>
         </div>
         <button type="button" onClick={openAddress} className="btn-primary w-full shrink-0 sm:w-auto">{address ? "Konumu değiştir" : "Adres seç"}</button>
