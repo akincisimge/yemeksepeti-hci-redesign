@@ -9,7 +9,7 @@ test('Kötekli and Bodrum show different food and market providers', () => {
 });
 test('unsupported, missing and legacy stores do not silently get delivery', () => {
   for (const id of ['f-1', 'f-2', 'ymarket-1', 'carrefour-1', 'bim-1']) {
-    assert.equal(deliversTo(id, 'adana-merkez'), false);
+    assert.equal(deliversTo(id, 'unknown-location'), false);
     assert.equal(deliversTo(id, undefined), false);
   }
   assert.equal(deliversTo('m-1', 'kotekli'), false);

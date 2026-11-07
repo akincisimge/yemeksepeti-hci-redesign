@@ -11,16 +11,16 @@ export default function MarketBasket({ onNotice }: { onNotice: (text: string) =>
   const subtotal = total("market");
   const remaining = Math.max(0, (store?.minBasket ?? 0) - subtotal);
   return <section aria-labelledby={headingId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div className="flex items-center justify-between gap-3"><h2 id={headingId} className="text-xl font-bold">Sepetim</h2><span className="text-sm text-slate-600">{lines.reduce((n,l)=>n+l.quantity,0)} ürün</span></div>
+    <div className="flex items-center justify-between gap-3"><h2 id={headingId} className="text-xl font-bold">Sepetim</h2><span aria-live="polite" aria-atomic="true" className="text-sm text-slate-600">{lines.reduce((n,l)=>n+l.quantity,0)} ürün</span></div>
     {!lines.length ? <div className="py-10 text-center"><span className="text-4xl" aria-hidden="true">🛍️</span><p className="mt-4 font-semibold">Sepetin seni bekliyor</p><p className="mt-2 text-sm text-slate-600">Ürünlerdeki “Sepete ekle” butonuyla alışverişe başla.</p></div> : <>
       <p className="mt-2 text-sm font-medium text-brand">{store?.name ?? lines[0].product.storeName}</p>
       <ul className="mt-4 max-h-[36vh] space-y-4 overflow-y-auto pr-1">{lines.map(({product,quantity})=><li key={product.id} className="border-b border-slate-100 pb-4">
-        <Link to={`/market/product/${product.id}`} className="font-semibold hover:text-brand">{product.name}</Link>
+        <Link to={`/market/product/${product.id}`} className="line-clamp-2 break-words font-semibold hover:text-brand">{product.name}</Link>
         <p className="mt-1 text-sm text-slate-600">{formatTRY(product.price)} / adet</p>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2">
-          <button className="quantity" aria-label={`Sepette ${product.name} miktarını azalt`} onClick={()=>{change("market",product.id,-1);onNotice(`${product.name} miktarı güncellendi.`);}}>−</button>
+          <button className="quantity" aria-label={`Sepette ${product.name} miktarını azalt`} onClick={()=>{change("market",product.id,-1);onNotice(`${product.name} miktarı güncellendi.`);}}><span aria-hidden="true">−</span><span className="sr-only">Miktarı azalt</span></button>
           <span className="min-w-5 text-center font-semibold">{quantity}</span>
-          <button className="quantity" aria-label={`Sepette ${product.name} miktarını artır`} onClick={()=>{change("market",product.id,1);onNotice(`${product.name} miktarı güncellendi.`);}}>+</button>
+          <button className="quantity" aria-label={`Sepette ${product.name} miktarını artır`} onClick={()=>{change("market",product.id,1);onNotice(`${product.name} miktarı güncellendi.`);}}><span aria-hidden="true">+</span><span className="sr-only">Miktarı artır</span></button>
         </div><strong>{formatTRY(product.price*quantity)}</strong></div>
         <button className="mt-1 min-h-11 text-sm font-semibold text-red-800 underline" aria-label={`${product.name} sepetten sil`} onClick={()=>{change("market",product.id,-quantity);onNotice(`${product.name} sepetten çıkarıldı.`);}}>Sil</button>
       </li>)}</ul>

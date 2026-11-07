@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useReducer, useRef, type ReactNode } from "react";
+import { cartReducer, type PendingRemoval } from "./cartOperations";
 import type { Carts, Product, Service } from "../types/domain";
 
 const EMPTY: Carts = { food: [], market: [] };
@@ -28,50 +29,42 @@ function readInitial(): Carts {
 
 type CartContextValue = {
   carts: Carts;
+  pending: PendingRemoval | null;
   add: (product: Product) => "added" | "store-changed";
   change: (service: Service, productId: string, delta: number) => void;
+  removeAll: (service: Service) => void;
   clear: (service: Service) => void;
   clearServices: (services: Service[]) => void;
+  undoRemoval: () => void;
+  dismissUndo: (token?: number) => void;
   total: (service: Service) => number;
   count: (service: Service) => number;
 };
-
 const CartContext = createContext<CartContextValue | null>(null);
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [carts, setCarts] = useState<Carts>(readInitial);
-  const persist = (next: Carts) => {
-    setCarts(next);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* storage optional */ }
-  };
+  const [{ carts, pending }, dispatch] = useReducer(cartReducer, undefined, () => ({ carts: readInitial(), pending: null }));
+  const token = useRef(0);
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(carts)); } catch { /* storage optional */ }
+  }, [carts]);
   const add = (product: Product): "added" | "store-changed" => {
-    const existing = carts[product.service];
-    const differentStore = existing.length > 0 && existing[0].product.storeId !== product.storeId;
-    // MVP: one active store per service; caller must confirm before switching.
-    if (differentStore && !window.confirm("Bu bölümün sepetinde farklı bir mağazadan ürün var. Sepeti temizleyip yeni mağazaya geçilsin mi?")) return "store-changed";
-    const base = differentStore ? [] : existing;
-    const found = base.find((line) => line.product.id === product.id);
-    const updated = found
-      ? base.map((line) => line.product.id === product.id ? { ...line, quantity: line.quantity + 1 } : line)
-      : [...base, { product, quantity: 1 }];
-    persist({ ...carts, [product.service]: updated });
+    const switched = carts[product.service].some(line => line.product.storeId !== product.storeId);
+    if (switched && !window.confirm("Bu bölümün sepetinde farklı bir mağazadan ürün var. Sepeti temizleyip yeni mağazaya geçilsin mi?")) return "store-changed";
+    dispatch({ type: "add", product });
     return "added";
   };
-  const change = (service: Service, id: string, delta: number) => {
-    const nextLines = carts[service].map((line) => line.product.id === id
-      ? { ...line, quantity: line.quantity + delta } : line).filter((line) => line.quantity > 0);
-    persist({ ...carts, [service]: nextLines });
-  };
-  const clear = (service: Service) => persist({ ...carts, [service]: [] });
-  const clearServices = (services: Service[]) => persist({ ...carts, ...Object.fromEntries(services.map(service => [service, []])) });
+  const change = (service: Service, id: string, delta: number) => dispatch({ type: "change", service, id, delta, token: ++token.current });
+  const removeAll = (service: Service) => dispatch({ type: "remove-all", service, token: ++token.current });
+  const clear = (service: Service) => dispatch({ type: "clear", services: [service] });
+  const clearServices = (services: Service[]) => dispatch({ type: "clear", services });
+  const undoRemoval = () => dispatch({ type: "undo" });
+  const dismissUndo = (token?: number) => dispatch({ type: "dismiss", token });
   const total = (service: Service) => carts[service].reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const count = (service: Service) => carts[service].reduce((sum, line) => sum + line.quantity, 0);
-  const value = useMemo(() => ({ carts, add, change, clear, clearServices, total, count }), [carts]);
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return <CartContext.Provider value={{ carts, pending, add, change, removeAll, clear, clearServices, undoRemoval, dismissUndo, total, count }}>{children}</CartContext.Provider>;
 }
-
 export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart, CartProvider içinde kullanılmalı");
-  return ctx;
+  const value = useContext(CartContext);
+  if (!value) throw new Error("useCart, CartProvider içinde kullanılmalı");
+  return value;
 }

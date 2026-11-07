@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { marketProducts, marketStores } from "../data/marketData";
-import { emptyFilters, filterProducts, type Filters, type Sort } from "../filterProducts";
+import { emptyFilters, filterProducts, searchSuggestion, type Filters, type Sort } from "../filterProducts";
 import MarketProductCard from "../components/MarketProductCard";
+import Modal from "../../../components/Modal";
+import MarketFilters from "../components/MarketFilters";
 import MarketBasket from "../components/MarketBasket";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY, type Product } from "../../../types/domain";
@@ -32,16 +34,30 @@ export default function MarketCatalogPage() {
     setParams(query, { replace: true, preventScrollReset: true });
   }
   const [notice, setNotice] = useState("");
-  const dialog = useRef<HTMLDialogElement>(null);
-  const basketButton = useRef<HTMLButtonElement>(null);
-  useEffect(()=>{setNotice("");dialog.current?.close();},[storeId]);
+  const [basketOpen, setBasketOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  useEffect(()=>{setNotice("");setBasketOpen(false);setFiltersOpen(false);},[storeId]);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const query = window.matchMedia("(min-width: 1024px)");
+    const resize = () => { if (query.matches) { setBasketOpen(false); setFiltersOpen(false); } };
+    query.addEventListener("change", resize);
+    return () => query.removeEventListener("change", resize);
+  }, []);
   const store = marketStores.find(s=>s.id===storeId);
   const products = marketProducts.filter(p=>p.storeId===storeId);
-  const categories = [...new Set(products.map(p=>p.category))];
-  const categoryProducts = products.filter(p=>filters.category==="all" || p.category===filters.category);
-  const brands = [...new Set(categoryProducts.map(p=>p.brand).filter((b):b is string=>!!b))];
-  const tags = [...new Set(categoryProducts.flatMap(p=>p.tags ?? []))];
   const filtered = filterProducts(products,filters);
+  const pageSize = 24;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const requestedPage = Number(params.get("page") ?? 1);
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? Math.min(requestedPage, pageCount) : 1;
+  const pageProducts = filtered.slice((page - 1) * pageSize, page * pageSize);
+  function changePage(next: number) {
+    setParams(old => { const query = new URLSearchParams(old); query.set("page", String(next)); return query; }, { preventScrollReset: true });
+    requestAnimationFrame(() => document.getElementById("market-results")?.focus());
+  }
+  const suggestion = filtered.length ? null : searchSuggestion(products, filters);
+  const patchFilters = (patch: Partial<Filters>) => setFilters(old => ({ ...old, ...patch }));
   function update<K extends keyof Filters>(key: K, value: Filters[K]) { setFilters(old=>({...old,[key]:value})); }
   function chooseCategory(category: string) {setFilters(old=>({...old,category,brand:"all",tag:"all",basis:"all",pack:"all",sort:old.sort==="unit"?"default":old.sort}));}
   function addProduct(product: Product) {
@@ -67,27 +83,30 @@ export default function MarketCatalogPage() {
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm"><span>Teslimat: {store.deliveryTime}</span><span>Teslimat ücreti: {formatTRY(store.deliveryFee ?? 0)}</span><span>Minimum sepet: {formatTRY(store.minBasket ?? 0)}</span></div>
       <p className="mt-4 text-sm text-slate-500">HCI prototipi · Katalog, fiyatlar, beslenme etiketleri ve teslimat bilgileri örnek veridir.</p>
     </header>
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid items-start gap-6 lg:grid-cols-[200px_minmax(0,1fr)_300px] xl:grid-cols-[220px_minmax(0,1fr)_320px]">
+      <aside aria-label="Masaüstü filtreleri" className="sticky top-40 hidden max-h-[calc(100dvh-11rem)] overflow-y-auto lg:block"><MarketFilters products={products} filters={filters} onChange={patchFilters} onCategory={chooseCategory} /></aside>
       <div className="min-w-0 space-y-5">
-        <section aria-label="Ürün arama ve filtreler" className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
-          <label className="block"><span className="mb-2 block font-semibold">Ne arıyorsun?</span><input type="search" className="field min-h-12" placeholder="Ürün, marka veya kategori ara…" value={filters.search} onChange={e=>update("search",e.target.value)} /></label>
-          <fieldset><legend className="mb-3 font-semibold">Kategoriler</legend><div className="flex flex-wrap gap-2">{["all",...categories].map(category=><button type="button" key={category} aria-pressed={filters.category===category} className={filters.category===category?"filter-active":"filter"} onClick={()=>chooseCategory(category)}>{category==="all"?"Tüm ürünler":category} <span className="ml-1 text-xs">({category==="all"?products.length:products.filter(p=>p.category===category).length})</span></button>)}</div></fieldset>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label><span className="mb-2 block text-sm font-semibold">Marka</span><select className="field" value={filters.brand} onChange={e=>update("brand",e.target.value)}><option value="all">Tüm markalar</option>{brands.map(b=><option key={b}>{b}</option>)}</select></label>
-            <label><span className="mb-2 block text-sm font-semibold">En yüksek fiyat (TL)</span><input type="number" min="0" step="0.01" inputMode="decimal" className="field" placeholder="Sınır yok" value={filters.maxPrice} onChange={e=>update("maxPrice",e.target.value===""?"":String(Math.max(0,Number(e.target.value))))} /></label>
-            {!!tags.length && <label><span className="mb-2 block text-sm font-semibold">Beslenme tercihi</span><select className="field" value={filters.tag} onChange={e=>update("tag",e.target.value)}><option value="all">Tüm seçenekler</option>{tags.map(t=><option key={t}>{t}</option>)}</select></label>}
-            <label><span className="mb-2 block text-sm font-semibold">Gramaj / paket miktarı</span><select className="field" value={filters.pack} onChange={e=>update("pack",e.target.value)}><option value="all">Tüm paketler</option>{[...new Set(categoryProducts.map(p=>p.unitLabel).filter(Boolean))].map(pack=><option key={pack}>{pack}</option>)}</select></label>
-            <label><span className="mb-2 block text-sm font-semibold">Birim karşılaştırması</span><select className="field" value={filters.basis} onChange={e=>setFilters(old=>({...old,basis:e.target.value,sort:e.target.value==="all"&&old.sort==="unit"?"default":old.sort}))}><option value="all">Tüm birimler</option>{[...new Set(categoryProducts.map(p=>p.unitBasis).filter(Boolean))].map(b=><option key={b} value={b}>{b} başına fiyatı olanlar</option>)}</select></label>
-          </div>
-          <div className="flex flex-wrap items-center gap-2" aria-label="Seçili filtreler">{active.map(chip=><button key={chip.label} className="filter-active" onClick={chip.clear} aria-label={`${chip.label} filtresini kaldır`}>{chip.label} ×</button>)}{active.length>0 && <button className="min-h-11 px-2 text-sm font-semibold text-brand underline" onClick={()=>setFilters({...emptyFilters})}>Tümünü temizle</button>}</div>
+        <section aria-label="Ürün arama" className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+          <label className="block"><span className="mb-2 block font-semibold">Ne arıyorsun?</span><input type="search" maxLength={80} className="field min-h-12" placeholder="Ürün, marka veya kategori ara…" value={filters.search} onChange={event=>update("search",event.target.value)} /></label>
+          <button type="button" className="filter w-full lg:hidden" aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(true)}>Filtrele{active.length ? ` (${active.length})` : ""}</button>
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Seçili filtreler">{active.map(chip=><button key={chip.label} className="filter-active max-w-full break-words" onClick={chip.clear} aria-label={`${chip.label} filtresini kaldır`}>{chip.label} ×</button>)}{active.length>0 && <button className="min-h-11 px-2 text-sm font-semibold text-brand underline" onClick={()=>setFilters({...emptyFilters})}>Tümünü temizle</button>}</div>
         </section>
-        <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="text-xl font-bold">{filters.category==="all"?"Tüm ürünler":filters.category}</h2><p role="status" className="mt-1 text-sm text-slate-600">{filtered.length} ürün bulundu</p></div><label><span className="mb-2 block text-sm font-semibold">Sıralama</span><select className="field" value={filters.sort} onChange={e=>update("sort",e.target.value as Sort)}><option value="default">Önerilen sıralama</option><option value="price-asc">Fiyat: düşükten yükseğe</option><option value="price-desc">Fiyat: yüksekten düşüğe</option><option value="name">Ürün adı: A–Z</option>{filters.basis!=="all" && <option value="unit">Birim fiyat: düşükten yükseğe</option>}</select></label></div>
+        <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 id="market-results" tabIndex={-1} className="scroll-mt-40 text-xl font-bold">{filters.category==="all"?"Tüm ürünler":filters.category}</h2><p role="status" className="mt-1 text-sm text-slate-600">{filtered.length} ürün bulundu</p></div><label><span className="mb-2 block text-sm font-semibold">Sıralama</span><select className="field" value={filters.sort} onChange={e=>update("sort",e.target.value as Sort)}><option value="default">Önerilen sıralama</option><option value="price-asc">Fiyat: düşükten yükseğe</option><option value="price-desc">Fiyat: yüksekten düşüğe</option><option value="name">Ürün adı: A–Z</option>{filters.basis!=="all" && <option value="unit">Birim fiyat: düşükten yükseğe</option>}</select></label></div>
         <p role="status" aria-live="polite" aria-atomic="true" className="min-h-6 text-sm font-semibold text-green-800">{notice}</p>
-        {filtered.length ? <div className="grid gap-4 min-[440px]:grid-cols-2 xl:grid-cols-3">{filtered.map(product=><MarketProductCard key={product.id} product={product} onAdd={addProduct} onNotice={setNotice} />)}</div> : <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center"><h3 className="text-xl font-bold">Aradığın ürün bulunamadı</h3><p className="mt-3 text-slate-600">Aramanı kısaltabilir veya seçili filtrelerden birini kaldırabilirsin.</p><button className="btn-primary mt-5" onClick={()=>setFilters({...emptyFilters})}>Tüm filtreleri temizle</button></section>}
+        {filtered.length ? <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">{pageProducts.map(product=><MarketProductCard key={product.id} product={product} onAdd={addProduct} onNotice={setNotice} />)}</div> : <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center"><h3 className="text-xl font-bold">Aradığın ürün bulunamadı</h3><p className="mt-3 text-slate-600">Aramanı kısaltabilir veya seçili filtrelerden birini kaldırabilirsin.</p>{suggestion && <button type="button" className="mt-5 min-h-11 max-w-full rounded-xl border border-brand px-4 py-3 font-semibold text-brand" onClick={()=>update("search",suggestion)}>Bunu mu demek istediniz: {suggestion}?</button>}<button className="btn-primary mt-5" onClick={()=>setFilters({...emptyFilters})}>Tüm filtreleri temizle</button></section>}
+        {pageCount > 1 && <nav aria-label="Ürün sayfaları" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <button type="button" className="filter" disabled={page === 1} onClick={() => changePage(page - 1)}>← Önceki</button>
+          <p aria-live="polite" className="text-sm text-slate-700">Sayfa {page} / {pageCount} · {filtered.length} ürün</p>
+          <button type="button" className="filter" disabled={page === pageCount} onClick={() => changePage(page + 1)}>Sonraki →</button>
+        </nav>}
       </div>
       <aside className="sticky top-40 hidden lg:block"><MarketBasket onNotice={setNotice} /></aside>
     </div>
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"><button ref={basketButton} className="btn-primary mx-auto flex w-full max-w-xl justify-between" onClick={()=>dialog.current?.showModal()} aria-haspopup="dialog"><span>Sepetim · {count("market")} ürün</span><span>{formatTRY(total("market")+(carts.market.length?(basketStore?.deliveryFee ?? 0):0))} →</span></button></div>
-    <dialog ref={dialog} aria-label="Market sepetin" onClose={()=>basketButton.current?.focus()} onClick={e=>{if(e.target===e.currentTarget)dialog.current?.close();}} className="fixed inset-0 m-auto max-h-[85dvh] w-[calc(100%_-_24px)] max-w-md overflow-y-auto rounded-3xl bg-white p-4 backdrop:bg-slate-900/40"><button autoFocus className="mb-3 min-h-11 w-full rounded-xl border border-slate-300 font-semibold" onClick={()=>dialog.current?.close()}>Alışverişe dön · Kapat ×</button><MarketBasket onNotice={setNotice} /></dialog>
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"><button className="btn-primary mx-auto flex w-full max-w-xl justify-between" onClick={()=>setBasketOpen(true)} aria-haspopup="dialog"><span aria-live="polite" aria-atomic="true">Sepetim · {count("market")} ürün</span><span>{formatTRY(total("market")+(carts.market.length?(basketStore?.deliveryFee ?? 0):0))} →</span></button></div>
+    <Modal open={basketOpen} title="Market sepetin" onClose={()=>setBasketOpen(false)}><MarketBasket onNotice={setNotice} /></Modal>
+    <Modal open={filtersOpen} title="Filtreler" onClose={()=>setFiltersOpen(false)}>
+      <MarketFilters products={products} filters={filters} onChange={patchFilters} onCategory={chooseCategory} />
+      <button type="button" className="btn-primary mt-4 w-full" onClick={()=>setFiltersOpen(false)}>{filtered.length} ürünü göster</button>
+    </Modal>
   </div>;
 }

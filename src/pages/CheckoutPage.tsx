@@ -1,6 +1,8 @@
 
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useDelivery } from "../state/DeliveryContext";
+import { locationLabel } from "../data/delivery";
 import { useCart } from "../state/CartContext";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
 import { saveDemoOrder, type DemoOrder } from "../state/demoOrder";
@@ -10,11 +12,12 @@ export default function CheckoutPage() {
   const { service: segment } = useParams();
   const service: Service = segment === "market" ? "market" : "food";
 
+  const { delivery } = useDelivery();
   const { carts, total, clear } = useCart();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(delivery ? locationLabel(delivery) : "");
   const [method, setMethod] = useState<PaymentMethod>("cash-demo");
   const [error, setError] = useState("");
 
@@ -93,7 +96,7 @@ export default function CheckoutPage() {
         </h1>
 
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Gerçek adres veya kart bilgisi kullanma.
+          Kapı numarası veya gerçek kart bilgisi girmen gerekmez.
           Sipariş yalnızca bu tarayıcıda simüle edilir.
         </p>
 
@@ -108,7 +111,7 @@ export default function CheckoutPage() {
             )}
 
             <div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 Market mağazası
               </p>
               <p className="font-bold text-slate-800">

@@ -17,9 +17,9 @@ export default function CartPage() {
         {lines.map(({ product, quantity }) => <li key={product.id} className="flex flex-wrap items-center justify-between gap-3 py-5">
           <div className="min-w-44"><strong>{product.name}</strong><p className="text-sm text-slate-600">{product.storeName}</p><p className="mt-1 text-sm">{formatTRY(product.price * quantity)}</p></div>
           <div className="flex items-center gap-3">
-            <button type="button" className="quantity" onClick={() => change(service, product.id, -1)} aria-label={product.name + " miktarını azalt"}>−</button>
+            <button type="button" className="quantity" onClick={() => change(service, product.id, -1)} aria-label={product.name + " miktarını azalt"}><span aria-hidden="true">−</span><span className="sr-only">Miktarı azalt</span></button>
             <span aria-live="polite" className="w-6 text-center font-bold">{quantity}</span>
-            <button type="button" className="quantity" onClick={() => change(service, product.id, 1)} aria-label={product.name + " miktarını artır"}>+</button>
+            <button type="button" className="quantity" onClick={() => change(service, product.id, 1)} aria-label={product.name + " miktarını artır"}><span aria-hidden="true">+</span><span className="sr-only">Miktarı artır</span></button>
             <button type="button" className="ml-2 text-sm font-semibold text-red-700 underline" onClick={() => change(service, product.id, -quantity)}>Sil</button>
           </div>
         </li>)}

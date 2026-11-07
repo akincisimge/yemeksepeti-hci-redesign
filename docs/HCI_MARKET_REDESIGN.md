@@ -32,11 +32,12 @@ Konum → MARKET → mağaza → kategori/arama/filtre → ürün → görünür
 - `npm run build`: TypeScript ve üretim derlemesi.
 - Node 22.18+ veya 24+ ile `node --test tests/*.test.mjs`: konum/filtre iş kuralları.
 - Geçici JSDOM ortamında React etkileşim kontrolü: arama, fiyat/kategori/birim filtreleri, sıfırlama, ekleme/adet/silme/toplam senkronizasyonu, boş sonuç, mağaza değişimini iptal, mobil dialog aç/kapat.
-- JSDOM görsel tarayıcı testi değildir; native dialog odağı ve responsive yerleşim gerçek tarayıcıda ayrıca doğrulanmalıdır.
+- Chromium ile gerçek tarayıcı testleri tamamlandı: 390/768/1440px yatay taşma ve sütun sayıları, maksimum içerik genişliği, filtre/sepet modalı, odak döngüsü ve ESC/odak dönüşü.
+- axe-core ile WCAG etiketli otomatik tarama: üç katalog boyutu, mobil sepet, ana sayfa, market seçimi, yemek kataloğu, ürün detayı, market sepeti ve checkout için ihlal bulunmadı. Bu sonuç manuel ekran okuyucu denemesinin yerine geçmez.
 
 ## Ekip tarafından tarayıcıda kontrol edilecekler
-- [ ] 390px, 768px, 1440px: yatay taşma, sepet/ürünlerin örtüşmesi ve sticky header.
-- [ ] Tab/Shift+Tab/Enter/Escape: filtreler, ürün detayları, mobil sepet ve odak dönüşü.
+- [x] 390px, 768px, 1440px: yatay taşma, sepet/ürünlerin örtüşmesi ve sticky header.
+- [x] Tab/Shift+Tab/Enter/Escape: filtreler, ürün detayları, mobil sepet ve odak dönüşü.
 - [ ] Ekran okuyucu: arama sonucu, ürün ekleme mesajı, alan etiketleri.
 - [ ] Renk kontrastı ve görsel/marka varlıklarının teslim öncesi kontrolü.
 - [ ] Figma ekranları ve Design System belgesiyle ekip incelemesi.
@@ -48,3 +49,40 @@ En az 5 gönüllüye aynı görevleri verin; süreyi, tamamlanmayı ve yanlış 
 3. Bütçeyi 50 TL ile sınırla; ardından yalnız bütçe filtresini kaldır.
 4. Sepete iki farklı ürün ekle, miktarı artır ve bir ürünü sil.
 5. Minimum sepet tutarına ulaşıp demo checkout'a ilerle; teslimat dahil toplamı kontrol et.
+
+
+## Responsive, erişilebilirlik, geri alma ve arama güncellemesi
+- Mobil sepet 390px'de ekranı kaplar; tablet için alt paneldir. Ortak native dialog; arka plan etkileşimi kapalıdır, fiziksel DOM üzerinden odak döngüsü portalla taşınan toast düğmelerini de kapsar.
+- Tablet/mobil filtreleri “Filtrele” ile açılır, masaüstünde sol paneldir. Grid mobilde 2, tablette 3, dar masaüstünde 2, geniş masaüstünde 3 sütundur. Ürün adı/açıklaması iki satırla sınırlanır; tam ad erişilebilir bağlantıda ve detay sayfasında bulunur.
+- Konteyner max-w-7xl; ortak primary odak halkası, ikon düğmelerinde erişilebilir adlar ve sepet adedinde polite canlı bildirim vardır.
+- Silinen ürünler görünür sepetten hemen kalkar, ürün/adet/konum bilgisi geçici bellekte saklanır. Peş peşe silmeler tek geri alma grubunda korunur. 5 saniyelik toast fare veya odak üzerindeyken kalan süresini duraklatır. Süresi bitince yalnız geri alma imkânı kapanır.
+- Geri alma başka eklemeleri ezmez; kaldırılan adedi ekler, özgün sırayı mümkün olduğunca geri getirir. Mağaza değişimi, konum değişimi ve sipariş tamamlama eski ürünlerin uygunsuz biçimde geri getirilmesini engeller.
+- Yazım önerisi yalnız sonuç yoksa görünür; bütçe/kategori/marka gibi filtrelere uyar. Kullanıcı öneriyi seçmeden sorgu değiştirilmez. Örnek: “çklata” → “Sütlü Çikolata”. Örnek çikolata ürünleriyle katalog 631 ürüne genişletildi.
+
+### Tekrarlanabilir testler
+İş kuralları: `node --test tests/*.test.mjs` (20 test), derleme: `npm run build`.
+
+Gerçek tarayıcı kontrolü isteğe bağlı geliştirme araçları ister. Çalışma bağımlılıkları değiştirilmeden yerel test ortamına kurulum:
+
+```bash
+npm install --no-save --package-lock=false playwright axe-core
+npx playwright install chromium
+node tests/browser/hci-responsive.cjs
+```
+
+Kurulu farklı Chromium kullanılacaksa `HCI_CHROMIUM_EXECUTABLE` ortam değişkeni verilebilir. Test geçici klasöre ekran görüntüleri üretir; uygulamayı 5175 portunda kendi başlatıp kapatır. Normal kullanıcı akışına gerçek kişisel veya ödeme verisi eklenmez.
+
+
+## Yeni konum paneli ve geniş katalog
+- Panelde mevcut cihaz konumunu kullanma ve başka adrese manuel gönderme ayrı, açık eylemlerdir. İzin ve servis hataları manuel seçimle telafi edilir.
+- Aranabilir il/ilçe alanları 81 il / 973 ilçe içerir. Mahalle serbestçe yazılır. Seçim önizlenir ve “Bu adrese getir” ile onaylanır.
+- GPS işlemi sürerken manuel seçime geçilirse geç gelen GPS yanıtı formu ezmez. Ham koordinatlar tarayıcı depolamasına yazılmaz.
+- Ürün sayısı 631, kategori sayısı 12; mağaza başına en az 200 örnek ürün. Tüm kataloğu tek sayfada yüklemek yerine 24 ürünlük sayfalama uygulanır. Filtre değişince ilk sayfa, detaydan dönüşte önceki filtre/sayfa gösterilir.
+- `node --test tests/*.test.mjs`: 29 test. `tests/browser/location-catalog.cjs`: manuel/GPS/izin reddi/servis hatası/geç yanıt/yenileme/sayfalama ve 390/768/1440px axe kontrolleri.
+- GPS tarayıcı testi cihaz koordinatını taklit eder ve sağlayıcı yanıtını yakalayarak döndürür. Gerçek kullanıcı koordinatları test amacıyla servise gönderilmez. Canlı sağlayıcının her cihazda adres kesinliği garanti edilmez.
+- Kaynak ve lisans ayrıntıları: docs/DATA_SOURCES.md.
+
+## Görünmez konum paneli düzeltmesi
+Safari'de konum düğmesi arka planı kararttığı halde panel görünmüyordu. Native dialog'daki intrinsic/fit-content yüksekliği ve yüzde yükseklikli flex çocuklar kaldırıldı. Dialog artık açık bir vh/dvh yüksekliği, mobilde tam ekran ve masaüstünde sınırlı ekran yüksekliği kullanır; yalnız içerik alanı kayar.
+
+`tests/browser/modal-visibility.cjs` ana sayfa, MARKET, uygun olmayan mağaza ve profil menüsündeki açılışları; 390/768/1440px'de pozitif panel/içerik yüksekliğini, görünür alan sınırını, aç/kapa tekrarını ve Escape davranışını kontrol eder. Chromium kontrolü ve 29 iş kuralı testi geçti. WebKit testi bu ortamda eksik sistem kütüphaneleri nedeniyle çalıştırılamadı; Safari'de ayrıca doğrulanmalıdır. WebKit kurulu bir ortamda `HCI_TEST_BROWSER=webkit node tests/browser/modal-visibility.cjs` kullanılabilir.
