@@ -10,7 +10,7 @@ export default function MarketProductCard({ product, onAdd, onNotice }: {
   const quantity = carts.market.find(line => line.product.id === product.id && line.product.storeId === product.storeId)?.quantity ?? 0;
   return <article className="flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 transition hover:border-brand">
     <Link to={`/market/product/${product.id}`} state={detailState} className="flex h-36 items-center justify-center rounded-xl bg-slate-50" aria-label={`${product.name} ürün detayını aç`}>
-      {product.image ? <img loading="lazy" src={product.image} alt="" className="h-28 w-full object-contain" /> : <span aria-hidden="true" className="text-5xl">{({"Süt ve Kahvaltılık":"🥛","Fırın":"🍞","Meyve ve Sebze":"🍎","Temel Gıda":"🍝","İçecek":"🧃","Temizlik":"🧴"} as Record<string,string>)[product.category] ?? "🛍️"}</span>}
+      {product.image ? <img loading="lazy" src={product.image} alt="" className="h-28 w-full object-contain" /> : <span aria-hidden="true" className="text-5xl">{({"Süt ve Kahvaltılık":"🥛","Fırın":"🍞","Meyve ve Sebze":"🍎","Temel Gıda":"🍝","İçecek":"🧃","Temizlik":"🧴","Kişisel Bakım":"🧼","Dondurulmuş":"🧊","Et ve Tavuk":"🍗","Evcil Dostlar":"🐾","Anne ve Bebek":"🍼","Atıştırmalık":"🍫"} as Record<string,string>)[product.category] ?? "🛍️"}</span>}
     </Link>
     <p className="mt-4 text-sm text-slate-600">{product.brand ?? product.storeName}</p>
     <h3 className="mt-1 min-h-12 line-clamp-2 break-words font-semibold leading-6"><Link to={`/market/product/${product.id}`} state={detailState} className="hover:text-brand">{product.name}</Link></h3>

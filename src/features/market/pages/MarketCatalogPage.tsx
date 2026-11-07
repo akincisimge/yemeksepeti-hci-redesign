@@ -47,6 +47,15 @@ export default function MarketCatalogPage() {
   const store = marketStores.find(s=>s.id===storeId);
   const products = marketProducts.filter(p=>p.storeId===storeId);
   const filtered = filterProducts(products,filters);
+  const pageSize = 24;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const requestedPage = Number(params.get("page") ?? 1);
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? Math.min(requestedPage, pageCount) : 1;
+  const pageProducts = filtered.slice((page - 1) * pageSize, page * pageSize);
+  function changePage(next: number) {
+    setParams(old => { const query = new URLSearchParams(old); query.set("page", String(next)); return query; }, { preventScrollReset: true });
+    requestAnimationFrame(() => document.getElementById("market-results")?.focus());
+  }
   const suggestion = filtered.length ? null : searchSuggestion(products, filters);
   const patchFilters = (patch: Partial<Filters>) => setFilters(old => ({ ...old, ...patch }));
   function update<K extends keyof Filters>(key: K, value: Filters[K]) { setFilters(old=>({...old,[key]:value})); }
@@ -82,9 +91,14 @@ export default function MarketCatalogPage() {
           <button type="button" className="filter w-full lg:hidden" aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(true)}>Filtrele{active.length ? ` (${active.length})` : ""}</button>
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Seçili filtreler">{active.map(chip=><button key={chip.label} className="filter-active max-w-full break-words" onClick={chip.clear} aria-label={`${chip.label} filtresini kaldır`}>{chip.label} ×</button>)}{active.length>0 && <button className="min-h-11 px-2 text-sm font-semibold text-brand underline" onClick={()=>setFilters({...emptyFilters})}>Tümünü temizle</button>}</div>
         </section>
-        <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 className="text-xl font-bold">{filters.category==="all"?"Tüm ürünler":filters.category}</h2><p role="status" className="mt-1 text-sm text-slate-600">{filtered.length} ürün bulundu</p></div><label><span className="mb-2 block text-sm font-semibold">Sıralama</span><select className="field" value={filters.sort} onChange={e=>update("sort",e.target.value as Sort)}><option value="default">Önerilen sıralama</option><option value="price-asc">Fiyat: düşükten yükseğe</option><option value="price-desc">Fiyat: yüksekten düşüğe</option><option value="name">Ürün adı: A–Z</option>{filters.basis!=="all" && <option value="unit">Birim fiyat: düşükten yükseğe</option>}</select></label></div>
+        <div className="flex flex-wrap items-end justify-between gap-4"><div><h2 id="market-results" tabIndex={-1} className="scroll-mt-40 text-xl font-bold">{filters.category==="all"?"Tüm ürünler":filters.category}</h2><p role="status" className="mt-1 text-sm text-slate-600">{filtered.length} ürün bulundu</p></div><label><span className="mb-2 block text-sm font-semibold">Sıralama</span><select className="field" value={filters.sort} onChange={e=>update("sort",e.target.value as Sort)}><option value="default">Önerilen sıralama</option><option value="price-asc">Fiyat: düşükten yükseğe</option><option value="price-desc">Fiyat: yüksekten düşüğe</option><option value="name">Ürün adı: A–Z</option>{filters.basis!=="all" && <option value="unit">Birim fiyat: düşükten yükseğe</option>}</select></label></div>
         <p role="status" aria-live="polite" aria-atomic="true" className="min-h-6 text-sm font-semibold text-green-800">{notice}</p>
-        {filtered.length ? <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">{filtered.map(product=><MarketProductCard key={product.id} product={product} onAdd={addProduct} onNotice={setNotice} />)}</div> : <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center"><h3 className="text-xl font-bold">Aradığın ürün bulunamadı</h3><p className="mt-3 text-slate-600">Aramanı kısaltabilir veya seçili filtrelerden birini kaldırabilirsin.</p>{suggestion && <button type="button" className="mt-5 min-h-11 max-w-full rounded-xl border border-brand px-4 py-3 font-semibold text-brand" onClick={()=>update("search",suggestion)}>Bunu mu demek istediniz: {suggestion}?</button>}<button className="btn-primary mt-5" onClick={()=>setFilters({...emptyFilters})}>Tüm filtreleri temizle</button></section>}
+        {filtered.length ? <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">{pageProducts.map(product=><MarketProductCard key={product.id} product={product} onAdd={addProduct} onNotice={setNotice} />)}</div> : <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center"><h3 className="text-xl font-bold">Aradığın ürün bulunamadı</h3><p className="mt-3 text-slate-600">Aramanı kısaltabilir veya seçili filtrelerden birini kaldırabilirsin.</p>{suggestion && <button type="button" className="mt-5 min-h-11 max-w-full rounded-xl border border-brand px-4 py-3 font-semibold text-brand" onClick={()=>update("search",suggestion)}>Bunu mu demek istediniz: {suggestion}?</button>}<button className="btn-primary mt-5" onClick={()=>setFilters({...emptyFilters})}>Tüm filtreleri temizle</button></section>}
+        {pageCount > 1 && <nav aria-label="Ürün sayfaları" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <button type="button" className="filter" disabled={page === 1} onClick={() => changePage(page - 1)}>← Önceki</button>
+          <p aria-live="polite" className="text-sm text-slate-700">Sayfa {page} / {pageCount} · {filtered.length} ürün</p>
+          <button type="button" className="filter" disabled={page === pageCount} onClick={() => changePage(page + 1)}>Sonraki →</button>
+        </nav>}
       </div>
       <aside className="sticky top-40 hidden lg:block"><MarketBasket onNotice={setNotice} /></aside>
     </div>

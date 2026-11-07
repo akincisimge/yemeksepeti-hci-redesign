@@ -1,4 +1,5 @@
 
+import { expandedCatalog } from "./mockCatalog.ts";
 import type { Product, Store } from "../../../types/domain";
 
 export const marketStores: Store[] = [
@@ -203,4 +204,5 @@ export const marketProducts: Product[] = [
       price, unitLabel: sample.unitLabel, unitBasis: sample.unitBasis, unitPrice: price / sample.amount, tags: sample.tags,
     };
   })),
+  ...marketStores.flatMap((store, index) => expandedCatalog(store, index)),
 ];

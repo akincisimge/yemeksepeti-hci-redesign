@@ -57,7 +57,7 @@ En az 5 gönüllüye aynı görevleri verin; süreyi, tamamlanmayı ve yanlış 
 - Konteyner max-w-7xl; ortak primary odak halkası, ikon düğmelerinde erişilebilir adlar ve sepet adedinde polite canlı bildirim vardır.
 - Silinen ürünler görünür sepetten hemen kalkar, ürün/adet/konum bilgisi geçici bellekte saklanır. Peş peşe silmeler tek geri alma grubunda korunur. 5 saniyelik toast fare veya odak üzerindeyken kalan süresini duraklatır. Süresi bitince yalnız geri alma imkânı kapanır.
 - Geri alma başka eklemeleri ezmez; kaldırılan adedi ekler, özgün sırayı mümkün olduğunca geri getirir. Mağaza değişimi, konum değişimi ve sipariş tamamlama eski ürünlerin uygunsuz biçimde geri getirilmesini engeller.
-- Yazım önerisi yalnız sonuç yoksa görünür; bütçe/kategori/marka gibi filtrelere uyar. Kullanıcı öneriyi seçmeden sorgu değiştirilmez. Örnek: “çklata” → “Sütlü Çikolata”. Örnek çikolata ürünleriyle katalog 55 ürüne çıktı.
+- Yazım önerisi yalnız sonuç yoksa görünür; bütçe/kategori/marka gibi filtrelere uyar. Kullanıcı öneriyi seçmeden sorgu değiştirilmez. Örnek: “çklata” → “Sütlü Çikolata”. Örnek çikolata ürünleriyle katalog 631 ürüne genişletildi.
 
 ### Tekrarlanabilir testler
 İş kuralları: `node --test tests/*.test.mjs` (20 test), derleme: `npm run build`.
@@ -71,3 +71,13 @@ node tests/browser/hci-responsive.cjs
 ```
 
 Kurulu farklı Chromium kullanılacaksa `HCI_CHROMIUM_EXECUTABLE` ortam değişkeni verilebilir. Test geçici klasöre ekran görüntüleri üretir; uygulamayı 5175 portunda kendi başlatıp kapatır. Normal kullanıcı akışına gerçek kişisel veya ödeme verisi eklenmez.
+
+
+## Yeni konum paneli ve geniş katalog
+- Panelde mevcut cihaz konumunu kullanma ve başka adrese manuel gönderme ayrı, açık eylemlerdir. İzin ve servis hataları manuel seçimle telafi edilir.
+- Aranabilir il/ilçe alanları 81 il / 973 ilçe içerir. Mahalle serbestçe yazılır. Seçim önizlenir ve “Bu adrese getir” ile onaylanır.
+- GPS işlemi sürerken manuel seçime geçilirse geç gelen GPS yanıtı formu ezmez. Ham koordinatlar tarayıcı depolamasına yazılmaz.
+- Ürün sayısı 631, kategori sayısı 12; mağaza başına en az 200 örnek ürün. Tüm kataloğu tek sayfada yüklemek yerine 24 ürünlük sayfalama uygulanır. Filtre değişince ilk sayfa, detaydan dönüşte önceki filtre/sayfa gösterilir.
+- `node --test tests/*.test.mjs`: 29 test. `tests/browser/location-catalog.cjs`: manuel/GPS/izin reddi/servis hatası/geç yanıt/yenileme/sayfalama ve 390/768/1440px axe kontrolleri.
+- GPS tarayıcı testi cihaz koordinatını taklit eder ve sağlayıcı yanıtını yakalayarak döndürür. Gerçek kullanıcı koordinatları test amacıyla servise gönderilmez. Canlı sağlayıcının her cihazda adres kesinliği garanti edilmez.
+- Kaynak ve lisans ayrıntıları: docs/DATA_SOURCES.md.

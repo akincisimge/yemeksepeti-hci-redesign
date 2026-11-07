@@ -48,9 +48,11 @@ Node.js 20.19+ veya uyumlu sürüm önerilir.
 
 İlk geliştirme dalında hazırlanan uygulama, diğer ekip üyelerinin ekranları için entegrasyon sözleşmesi sağlar; herkes kendi modülünü ayrı PR ile geliştirecek.
 
-## Konuma bağlı keşif — 7 Kasım 2026
-- İşletmeler gösterilmeden önce il, ilçe ve mahalle seçilir. Seçim bu tarayıcının localStorage alanında saklanır; tam adres veya GPS toplanmaz.
-- Örnek konumlar: Muğla/Menteşe/Kötekli ve Orhaniye, Muğla/Bodrum/Çarşı, Adana/Seyhan/Reşatbey. Reşatbey, hizmet bulunmayan bölge durumunu göstermek için kullanılır.
-- Restoran ve MARKET listeleri aynı teslimat kapsamı kontrolünü kullanır. Doğrudan mağaza/ürün bağlantısı ve checkout da uygunluk kontrolünden geçer.
-- Konum değişiminde hizmet veremeyen mağazaların sepetleri için onay istenir. İptalde konum ve sepetler korunur; onayda yalnız etkilenen servis sepetleri temizlenir.
-- Bölge/işletme eşleştirmeleri `src/data/delivery.ts` içindeki kurgu demo verisidir. Gerçek marka teslimat kapsamını temsil etmez; harita veya ücretli servis kullanılmaz.
+## Konuma bağlı keşif — 8 Kasım 2026
+- Konum paneli iki akış sunar: izinle cihaz konumunu kullanma ve başka adrese manuel gönderme. Sayfa açılır açılmaz izin istenmez.
+- Manuel seçim Türkiye'nin 81 ili ve 973 ilçesi için aranabilir alanlarla çalışır; mahalle/semt elle yazılabilir. GPS yanıtında bulunan bilgiler otomatik doldurulur; eksik alanlar uydurulmaz.
+- Konumunu kullanan kullanıcıya koordinatların adres çözümleme sağlayıcısına gönderildiği açıklanır. Uygulamada yalnız seçili il/ilçe/mahalle kaydedilir; hassas koordinatlar saklanmaz.
+- Restoran/MARKET ve doğrudan ürün/checkout bağlantıları aynı demo teslimat kontrolünü kullanır. Bölge kapsamları gerçek ticari hizmet iddiası değildir.
+- Konum değişiminde etkilenmiş sepetler için onay istenir. İptalde konum ve sepetler korunur; onayda yalnız etkilenen servis sepetleri temizlenir.
+- 631 mock ürün 12 kategoride sunulur. Filtreler tüm katalogda çalışır, görünüm 24 ürünlük sayfalara bölünür.
+- Veri kaynakları, lisanslar ve servis davranışı: docs/DATA_SOURCES.md.

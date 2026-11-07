@@ -122,11 +122,11 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
   const subpage = view !== "profile" && view !== "address";
   const lastOrder = view === "orders" ? readDemoOrder() : null;
 
+  if (view === "address") return <Modal open title="Teslimat adresin" variant="location" onClose={onClose}><LocationPicker embedded onDone={onClose} /></Modal>;
   return (
     <Modal open title={title[view]} onClose={onClose}>
       {subpage && <button type="button" onClick={() => onNavigate("profile")} className="mb-4 min-h-11 rounded-xl border border-slate-300 px-4 font-semibold">← Profil menüsüne dön</button>}
         <div className={"min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 " + (view === "help" ? "flex flex-col" : "")}>
-          {view === "address" && <LocationPicker onDone={onClose} />}
           {view === "profile" && <div className="space-y-3">
             <div className="mb-5 rounded-2xl bg-[#FFF1F6] p-5">
               <p className="text-sm font-semibold text-brand">HOŞ GELDİN</p>
