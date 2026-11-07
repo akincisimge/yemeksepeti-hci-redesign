@@ -162,6 +162,7 @@ const originalProducts: Product[] = [
 
 // Prices, assortment and dietary labels are fictional HCI test data.
 const samples = [
+  { name: "Sütlü Çikolata", brand: "Tatlı Mola", category: "Atıştırmalık", price: 45, unitLabel: "80 g", unitBasis: "kg" as const, amount: .08, tags: [] },
   { name: "Tam Yağlı Süt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 45, unitLabel: "1 L", unitBasis: "L" as const, amount: 1, tags: [] },
   { name: "Laktozsuz Süt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 55, unitLabel: "1 L", unitBasis: "L" as const, amount: 1, tags: ["Laktozsuz"] },
   { name: "Laktozsuz Süt", brand: "Doğa", category: "Süt ve Kahvaltılık", price: 32, unitLabel: "500 ml", unitBasis: "L" as const, amount: .5, tags: ["Laktozsuz"] },

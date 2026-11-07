@@ -14,7 +14,7 @@ const Context = createContext<{
 } | null>(null);
 export function DeliveryProvider({ children }: { children: ReactNode }) {
   const [delivery, setDelivery] = useState<DeliveryLocation | null>(initial);
-  const { carts, clearServices } = useCart();
+  const { carts, clearServices, dismissUndo } = useCart();
   function selectLocation(id: string) {
     const next = locations.find(item => item.id === id);
     if (!next) return false;
@@ -23,6 +23,7 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
     if (affected.length && !window.confirm(
       `${affected.map(s => s === "food" ? "Yemek" : "Market").join(" ve ")} sepetindeki mağaza yeni konuma teslimat yapmıyor. İlgili sepetler temizlenerek konum değiştirilsin mi?`
     )) return false;
+    if (delivery?.id !== next.id) dismissUndo();
     clearServices(affected);
     setDelivery(next);
     try { localStorage.setItem(KEY, next.id); } catch { /* storage optional */ }
