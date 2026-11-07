@@ -1,6 +1,8 @@
 
+
 import { useNavigate } from "react-router-dom";
 import { formatTRY, type Product } from "../../../types/domain";
+import { useCart } from "../../../state/CartContext";
 
 interface MarketProductCardProps {
   product: Product;
@@ -12,9 +14,28 @@ export default function MarketProductCard({
   onAdd,
 }: MarketProductCardProps) {
   const navigate = useNavigate();
+  const { carts, change } = useCart();
+
+  const cartLine = carts.market.find(
+    (line) => line.product.id === product.id
+  );
+
+  const quantity = cartLine?.quantity ?? 0;
 
   const goToProduct = () => {
     navigate(`/market/product/${product.id}`);
+  };
+
+  const increase = () => {
+    if (quantity === 0) {
+      onAdd(product);
+    } else {
+      change("market", product.id, 1);
+    }
+  };
+
+  const decrease = () => {
+    change("market", product.id, -1);
   };
 
   return (
@@ -38,6 +59,13 @@ export default function MarketProductCard({
         <span className="absolute left-3 top-3 rounded-md bg-pink-50 px-2 py-1 text-[10px] font-bold text-[#D90049]">
           MARKET
         </span>
+
+        {/* Cart Quantity Badge */}
+        {quantity > 0 && (
+          <span className="absolute right-3 top-3 flex h-8 min-w-8 items-center justify-center rounded-full bg-[#D90049] px-2 text-sm font-bold text-white shadow-md">
+            {quantity}
+          </span>
+        )}
       </div>
 
       {/* Product Information */}
@@ -57,7 +85,7 @@ export default function MarketProductCard({
           {product.description}
         </p>
 
-        {/* Price and Add Button */}
+        {/* Price and Quantity Controls */}
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
           <div>
             <span className="block text-[10px] text-slate-400 sm:text-xs">
@@ -68,19 +96,41 @@ export default function MarketProductCard({
             </span>
           </div>
 
-          <button
-            onClick={(event) => {
-              event.stopPropagation();
-              onAdd(product);
-            }}
-            aria-label={`${product.name} sepete ekle`}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D90049] text-2xl font-medium text-white shadow-sm transition-all hover:bg-[#B6003C] hover:shadow-md active:scale-90 sm:h-11 sm:w-11"
-          >
-            +
-          </button>
+          {quantity === 0 ? (
+            <button
+              onClick={increase}
+              aria-label={`${product.name} sepete ekle`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D90049] text-2xl font-medium text-white shadow-sm transition-all hover:bg-[#B6003C] hover:shadow-md active:scale-90 sm:h-11 sm:w-11"
+            >
+              +
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 rounded-xl bg-pink-50 p-1">
+              <button
+                onClick={decrease}
+                aria-label={`${product.name} miktarını azalt`}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-lg font-bold text-[#D90049] shadow-sm transition hover:bg-pink-100"
+              >
+                −
+              </button>
+
+              <span className="min-w-5 text-center text-sm font-bold text-[#D90049]">
+                {quantity}
+              </span>
+
+              <button
+                onClick={increase}
+                aria-label={`${product.name} miktarını artır`}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#D90049] text-lg font-bold text-white shadow-sm transition hover:bg-[#B6003C]"
+              >
+                +
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 
