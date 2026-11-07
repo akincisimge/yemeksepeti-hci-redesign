@@ -37,13 +37,14 @@ export default function Modal({ open, title, onClose, children, variant = "defau
   return <dialog ref={dialog} aria-modal="true" aria-labelledby={titleId}
     onCancel={event => { event.preventDefault(); closeRef.current(); }}
 
-    className={variant === "location" ? "fixed inset-0 z-50 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-white p-0 text-slate-900 backdrop:bg-slate-900/40 sm:inset-0 sm:m-auto sm:h-fit sm:max-h-[calc(100dvh-3rem)] sm:max-w-4xl sm:rounded-3xl" : "fixed inset-0 z-50 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-white p-0 text-slate-900 backdrop:bg-slate-900/40 sm:inset-x-0 sm:inset-y-auto sm:bottom-0 sm:mx-auto sm:h-auto sm:max-h-[90dvh] sm:max-w-xl sm:rounded-t-3xl"}>
-    <div className="flex h-full max-h-[inherit] flex-col">
+    data-variant={variant}
+    className="app-dialog z-50 bg-white text-slate-900 backdrop:bg-slate-900/40">
+    <div className="app-dialog-layout">
       <header className={variant === "location" ? "absolute right-4 top-4 z-30" : "flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 p-4"}>
         <h2 id={titleId} className={variant === "location" ? "sr-only" : "text-xl font-bold"}>{title}</h2>
         <button data-modal-close type="button" onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300"><span aria-hidden="true">×</span><span className="sr-only">{title} penceresini kapat</span></button>
       </header>
-      <div className={variant === "location" ? "min-h-0 flex-1 overflow-y-auto" : "min-h-0 flex-1 overflow-y-auto p-4 pb-40"}>{children}</div>
+      <div className={variant === "location" ? "app-dialog-content" : "app-dialog-content p-4 pb-40"}>{children}</div>
       <div data-toast-host />
     </div>
   </dialog>;

@@ -81,3 +81,8 @@ Kurulu farklı Chromium kullanılacaksa `HCI_CHROMIUM_EXECUTABLE` ortam değişk
 - `node --test tests/*.test.mjs`: 29 test. `tests/browser/location-catalog.cjs`: manuel/GPS/izin reddi/servis hatası/geç yanıt/yenileme/sayfalama ve 390/768/1440px axe kontrolleri.
 - GPS tarayıcı testi cihaz koordinatını taklit eder ve sağlayıcı yanıtını yakalayarak döndürür. Gerçek kullanıcı koordinatları test amacıyla servise gönderilmez. Canlı sağlayıcının her cihazda adres kesinliği garanti edilmez.
 - Kaynak ve lisans ayrıntıları: docs/DATA_SOURCES.md.
+
+## Görünmez konum paneli düzeltmesi
+Safari'de konum düğmesi arka planı kararttığı halde panel görünmüyordu. Native dialog'daki intrinsic/fit-content yüksekliği ve yüzde yükseklikli flex çocuklar kaldırıldı. Dialog artık açık bir vh/dvh yüksekliği, mobilde tam ekran ve masaüstünde sınırlı ekran yüksekliği kullanır; yalnız içerik alanı kayar.
+
+`tests/browser/modal-visibility.cjs` ana sayfa, MARKET, uygun olmayan mağaza ve profil menüsündeki açılışları; 390/768/1440px'de pozitif panel/içerik yüksekliğini, görünür alan sınırını, aç/kapa tekrarını ve Escape davranışını kontrol eder. Chromium kontrolü ve 29 iş kuralı testi geçti. WebKit testi bu ortamda eksik sistem kütüphaneleri nedeniyle çalıştırılamadı; Safari'de ayrıca doğrulanmalıdır. WebKit kurulu bir ortamda `HCI_TEST_BROWSER=webkit node tests/browser/modal-visibility.cjs` kullanılabilir.
