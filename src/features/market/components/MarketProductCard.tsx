@@ -1,136 +1,28 @@
-
-
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { formatTRY, type Product } from "../../../types/domain";
 import { useCart } from "../../../state/CartContext";
-
-interface MarketProductCardProps {
-  product: Product;
-  onAdd: (product: Product) => void;
-}
-
-export default function MarketProductCard({
-  product,
-  onAdd,
-}: MarketProductCardProps) {
-  const navigate = useNavigate();
+export default function MarketProductCard({ product, onAdd, onNotice }: {
+  product: Product; onAdd: (product: Product) => void; onNotice: (text: string) => void;
+}) {
+  const location = useLocation();
+  const detailState = { returnTo: location.pathname + location.search };
   const { carts, change } = useCart();
-
-  const cartLine = carts.market.find(
-    (line) => line.product.id === product.id
-  );
-
-  const quantity = cartLine?.quantity ?? 0;
-
-  const goToProduct = () => {
-    navigate(`/market/product/${product.id}`);
-  };
-
-  const increase = () => {
-    if (quantity === 0) {
-      onAdd(product);
-    } else {
-      change("market", product.id, 1);
-    }
-  };
-
-  const decrease = () => {
-    change("market", product.id, -1);
-  };
-
-  return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-pink-200 hover:shadow-xl">
-
-      {/* Product Image */}
-      <div
-        onClick={goToProduct}
-        className="relative flex h-40 cursor-pointer items-center justify-center overflow-hidden bg-white p-4 sm:h-52 sm:p-5"
-      >
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <span className="text-6xl">🛒</span>
-        )}
-
-        <span className="absolute left-3 top-3 rounded-md bg-pink-50 px-2 py-1 text-[10px] font-bold text-[#D90049]">
-          MARKET
-        </span>
-
-        {/* Cart Quantity Badge */}
-        {quantity > 0 && (
-          <span className="absolute right-3 top-3 flex h-8 min-w-8 items-center justify-center rounded-full bg-[#D90049] px-2 text-sm font-bold text-white shadow-md">
-            {quantity}
-          </span>
-        )}
-      </div>
-
-      {/* Product Information */}
-      <div className="flex flex-1 flex-col border-t border-slate-100 p-3 sm:p-4">
-        <span className="mb-2 line-clamp-1 text-[11px] font-medium text-slate-400 sm:text-xs">
-          {product.storeName}
-        </span>
-
-        <h3
-          onClick={goToProduct}
-          className="mb-2 line-clamp-2 min-h-10 cursor-pointer text-sm font-semibold leading-5 text-slate-900 transition-colors hover:text-[#D90049] sm:text-base"
-        >
-          {product.name}
-        </h3>
-
-        <p className="mb-4 line-clamp-2 min-h-8 text-xs leading-4 text-slate-500 sm:text-sm sm:leading-5">
-          {product.description}
-        </p>
-
-        {/* Price and Quantity Controls */}
-        <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
-          <div>
-            <span className="block text-[10px] text-slate-400 sm:text-xs">
-              Fiyat
-            </span>
-            <span className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">
-              {formatTRY(product.price)}
-            </span>
-          </div>
-
-          {quantity === 0 ? (
-            <button
-              onClick={increase}
-              aria-label={`${product.name} sepete ekle`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D90049] text-2xl font-medium text-white shadow-sm transition-all hover:bg-[#B6003C] hover:shadow-md active:scale-90 sm:h-11 sm:w-11"
-            >
-              +
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 rounded-xl bg-pink-50 p-1">
-              <button
-                onClick={decrease}
-                aria-label={`${product.name} miktarını azalt`}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-lg font-bold text-[#D90049] shadow-sm transition hover:bg-pink-100"
-              >
-                −
-              </button>
-
-              <span className="min-w-5 text-center text-sm font-bold text-[#D90049]">
-                {quantity}
-              </span>
-
-              <button
-                onClick={increase}
-                aria-label={`${product.name} miktarını artır`}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#D90049] text-lg font-bold text-white shadow-sm transition hover:bg-[#B6003C]"
-              >
-                +
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+  const quantity = carts.market.find(line => line.product.id === product.id && line.product.storeId === product.storeId)?.quantity ?? 0;
+  return <article className="flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-brand">
+    <Link to={`/market/product/${product.id}`} state={detailState} className="flex h-36 items-center justify-center rounded-xl bg-slate-50" aria-label={`${product.name} ürün detayını aç`}>
+      {product.image ? <img loading="lazy" src={product.image} alt="" className="h-28 w-full object-contain" /> : <span aria-hidden="true" className="text-5xl">{({"Süt ve Kahvaltılık":"🥛","Fırın":"🍞","Meyve ve Sebze":"🍎","Temel Gıda":"🍝","İçecek":"🧃","Temizlik":"🧴"} as Record<string,string>)[product.category] ?? "🛍️"}</span>}
+    </Link>
+    <p className="mt-4 text-sm text-slate-600">{product.brand ?? product.storeName}</p>
+    <h3 className="mt-1 font-semibold leading-6"><Link to={`/market/product/${product.id}`} state={detailState} className="hover:text-brand">{product.name}</Link></h3>
+    <p className="mt-1 text-sm text-slate-600">{product.unitLabel ?? product.description}</p>
+    {!!product.tags?.length && <p className="mt-2 text-sm font-medium text-green-800">{product.tags.join(" · ")}</p>}
+    <div className="mt-auto pt-4"><p className="text-xl font-bold">{formatTRY(product.price)}</p>
+      <p className="mt-1 min-h-5 text-sm text-slate-600">{product.unitPrice != null ? `${formatTRY(product.unitPrice)} / ${product.unitBasis}` : ""}</p>
+      {quantity ? <div className="mt-3 flex items-center justify-between rounded-xl bg-[#FFF1F6] p-1">
+        <button className="quantity" aria-label={`${product.name} miktarını azalt`} onClick={() => { change("market", product.id, -1); onNotice(quantity === 1 ? `${product.name} sepetten çıkarıldı.` : `${product.name}: ${quantity - 1} adet.`); }}>−</button>
+        <span className="font-bold" aria-label={`${quantity} adet`}>{quantity}</span>
+        <button className="quantity" aria-label={`${product.name} miktarını artır`} onClick={() => onAdd(product)}>+</button>
+      </div> : <button className="btn-primary mt-3 w-full" aria-label={`${product.name} sepete ekle`} onClick={() => onAdd(product)}>+ Sepete ekle</button>}
     </div>
-  );
+  </article>;
 }
-
-

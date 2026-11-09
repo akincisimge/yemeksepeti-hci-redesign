@@ -1,130 +1,25 @@
-
-import { useNavigate } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { marketStores } from "../data/marketData";
-import MarketStoreCard from "../components/MarketStoreCard";
-
+import { useDelivery } from "../../../state/DeliveryContext";
+import { locationLabel } from "../../../data/delivery";
+import { formatTRY } from "../../../types/domain";
+import type { LayoutContext } from "../../../components/Layout";
 export default function MarketHomePage() {
-  const navigate = useNavigate();
-
-  const ymarketStores = marketStores.filter(
-    (store) => store.group === "ymarket"
-  );
-
-  const otherStores = marketStores.filter(
-    (store) => store.group === "other"
-  );
-
-  return (
-    <div className="min-h-screen bg-[#F8F8FA]">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-
-        {/* Hero Banner */}
-        <section className="relative mb-12 overflow-hidden rounded-[28px] bg-gradient-to-r from-[#D90049] via-[#ED285F] to-[#FF7890] shadow-sm">
-          <div className="relative z-10 flex flex-col justify-between gap-8 px-7 py-10 sm:px-10 md:flex-row md:items-center md:px-14 md:py-14">
-            
-            <div className="max-w-xl">
-              <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-xs font-bold tracking-wide text-white backdrop-blur-sm">
-                🛒 YEMEKSEPETİ MARKET
-              </span>
-
-              <h1 className="mt-5 text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl">
-                Market alışverişin
-                <br />
-                kapında!
-              </h1>
-
-              <p className="mt-4 max-w-md text-sm leading-6 text-white/90 sm:text-base">
-                Taze ürünler, günlük ihtiyaçlar ve favori marketlerin
-                tek bir yerde.
-              </p>
-
-              <button
-                onClick={() => navigate("/market/ymarket-1")}
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-[#D90049] shadow-lg transition duration-200 hover:-translate-y-1 hover:bg-pink-50"
-              >
-                Alışverişe başla
-                <span>→</span>
-              </button>
-            </div>
-
-            {/* Banner Decoration */}
-            <div className="relative hidden h-48 w-48 shrink-0 items-center justify-center rounded-full bg-white/10 md:flex lg:h-64 lg:w-64">
-              <div className="absolute h-36 w-36 rounded-full bg-white/10 lg:h-48 lg:w-48" />
-              <span className="relative text-8xl drop-shadow-lg lg:text-9xl">
-                🛍️
-              </span>
-            </div>
-          </div>
-
-          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/10" />
-          <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-white/10" />
-        </section>
-
-        {/* Yemeksepeti Market */}
-        <section className="mb-14">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-7 w-1.5 rounded-full bg-[#D90049]" />
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                  Yemeksepeti Market
-                </h2>
-              </div>
-              <p className="ml-3.5 text-sm text-slate-500">
-                Günlük ihtiyaçların için hızlı alışveriş
-              </p>
-            </div>
-
-            <span className="w-fit rounded-full bg-pink-100 px-3 py-1.5 text-xs font-semibold text-[#D90049]">
-              Hızlı teslimat
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {ymarketStores.map((store) => (
-              <MarketStoreCard
-                key={store.id}
-                store={store}
-                onSelect={() => navigate(`/market/${store.id}`)}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Other Markets */}
-        <section className="pb-8">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-7 w-1.5 rounded-full bg-[#D90049]" />
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                  Diğer Marketler
-                </h2>
-              </div>
-              <p className="ml-3.5 text-sm text-slate-500">
-                Favori marketinden alışveriş yap
-              </p>
-            </div>
-
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-              Alternatif marketler
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {otherStores.map((store) => (
-              <MarketStoreCard
-                key={store.id}
-                store={store}
-                onSelect={() => navigate(`/market/${store.id}`)}
-              />
-            ))}
-          </div>
-        </section>
-
-      </div>
-    </div>
-  );
+  const { delivery, available } = useDelivery();
+  const { openAddress } = useOutletContext<LayoutContext>();
+  const nearby = marketStores.filter(store=>available(store.id));
+  return <div className="space-y-8">
+    <Link to="/" className="inline-flex min-h-11 items-center font-semibold text-slate-600 hover:text-brand">← Hizmet seçimine dön</Link>
+    <header className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8"><p className="font-semibold text-brand">MARKET</p><h1 className="mt-2 text-3xl font-bold sm:text-4xl">İhtiyacın olanı kolayca bul.</h1><p className="mt-4 max-w-2xl text-slate-600">Marketini seç; kategoriler, marka ve fiyat filtreleriyle alışverişini kolaylaştır.</p>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-4"><div><p className="text-sm text-slate-600">Teslimat konumun</p><p className="mt-1 font-semibold">{delivery && locationLabel(delivery)}</p></div><button className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 font-semibold text-brand" onClick={openAddress}>Konumu değiştir</button></div>
+      <p className="mt-4 text-sm text-slate-500">HCI prototipi · Mağaza kapsamı, ürün çeşitleri, fiyatlar ve teslimat bilgileri örnektir.</p>
+    </header>
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-bold">Konumundaki marketler</h2><p role="status" className="text-sm text-slate-600">{nearby.length} market bulundu</p></div>
+    {nearby.length ? <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{nearby.map(store=><article key={store.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="flex h-28 items-center justify-center rounded-xl bg-slate-50"><img src={store.logo} alt="" className="h-20 w-full object-contain" /></div>
+      <p className="mt-5 text-sm font-semibold text-brand">{store.group==="ymarket"?"Yemeksepeti Market":"Diğer marketler"}</p><h3 className="mt-2 text-xl font-bold">{store.name}</h3><p className="mt-2 text-sm text-slate-600">{store.description}</p>
+      <dl className="my-5 space-y-3 text-sm"><div className="flex justify-between gap-2"><dt>Teslimat süresi</dt><dd className="font-semibold">{store.deliveryTime}</dd></div><div className="flex justify-between gap-2"><dt>Teslimat ücreti</dt><dd className="font-semibold">{formatTRY(store.deliveryFee ?? 0)}</dd></div><div className="flex justify-between gap-2"><dt>Minimum sepet</dt><dd className="font-semibold">{formatTRY(store.minBasket ?? 0)}</dd></div></dl>
+      <Link to={`/market/${store.id}`} className="btn-primary mt-auto" aria-label={`${store.name} ürünlerini incele`}>Ürünleri incele →</Link>
+    </article>)}</div> : <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center"><h3 className="text-xl font-bold">Bu konumda henüz hizmet veren market bulunmuyor</h3><p className="mt-3 text-slate-600">Başka bir teslimat konumu seçerek marketleri keşfedebilirsin.</p><button className="btn-primary mt-5" onClick={openAddress}>Konumu değiştir</button></section>}
+  </div>;
 }
-
-
