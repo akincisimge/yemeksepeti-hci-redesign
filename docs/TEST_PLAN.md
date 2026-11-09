@@ -27,4 +27,16 @@ Kişisel ad, telefon, gerçek adres ya da ödeme bilgisi kaydetme.
 - Hata türünü ilgili HCI kuralı ve ekran sahibiyle eşleştir.
 
 ## Testte özellikle gözlenecekler
-K1 hizmetler tutarlı mı? K2 klavye/kontrast problemi var mı? K3 geri bildirim anlaşılıyor mu? K4 demo başarı açık mı? K5 yanlış girişi önlüyor mu? K6 silme/geri alma kolay mı? K7 kullanıcı kontrolü sürüyor mu? K8 tutar ve seçili ürünler görünür mü?
+K1 hizmetler tutarlı mı? K2 deneyimli kullanıcı için kayıtlı adres gibi kısayollar işe yarıyor mu? K3 geri bildirim anlaşılıyor mu? K4 işlem sonucu açık mı? K5 yanlış girişi önlüyor mu? K6 silme/geri alma kolay mı? K7 kullanıcı kontrolü sürüyor mu? K8 tutar ve seçili ürünler görünür mü?
+
+
+## Melisa'nın adres bölümü için ek görevler
+
+Derste kullanılan Shneiderman sürümünde K2 deneyimli kullanıcıya kısayol sağlar. Klavye, görünür odak ve kontrast ayrıca kontrol edilir.
+
+- Kötekli'yi seçip hazır kurgu Ev adresini kullan; bilgiyi yeniden yazman gerekip gerekmediğini anlat.
+- Adresin bir zorunlu alanını boş bırak; çıkan mesaj yardımıyla düzelt.
+- Teslimat notu yaz, sepete dönüp adedi değiştir ve geri gel; hangi bilgilerin korunduğunu kontrol et.
+- Minimum tutarın altındaki Market sepetiyle devam etmeyi dene; devam edememe nedenini ve gereken ek tutarı açıkla.
+
+Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı testi yapılmadı. Otomatik/tarayıcı kontrolleri [teknik uygulama raporunda](team/MELISA_CHECKOUT_IMPLEMENTATION.md) ayrı tutulur.
