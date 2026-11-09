@@ -1,6 +1,6 @@
 # Ortak sipariş akışı — uygulama ve doğrulama raporu
 
-Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **44/44 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
+Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **49/49 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
 
 ## Değişiklik ve gerekçe
 
@@ -72,11 +72,11 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 ## Ödeme bölümünün davranışı ve sunum verileri
 
 - `PaymentForm.tsx` kart sahibi, numara, AA/YY ve gizlenmiş CVV alanlarını; yöntem ve bahşiş seçimlerini içerir. Etiketler ve alan hataları erişilebilir ad/açıklamalarla bağlıdır. Geçersiz formda devam düğmesi pasif olur ve nedeni yanında yazılır.
-- `paymentModel.ts` yalnız iki kurgu kart tanır. `0000 0000 0000 0000` başarılı olur. `0000 0000 0000 0002` aynı açık checkout'taki ilk tamamlanmış denemede hata verir, tekrar denemede başarılı olur. İptal edilen deneme bu senaryoyu tüketmez. Sunum için ad: Deniz Yılmaz, tarih: `12/30`, CVV: `000`. Bunlar banka test kartı değildir; gerçek kart/banka/ödeme servisi kullanılmaz.
+- `paymentModel.ts` kart sahibi, 16 haneli numara, geçerli tarih ve 3–4 haneli CVV biçimini kontrol eder. İki numaralık izin listesi kaldırıldı; uygun biçimdeki kurgu bilgilerle yerel işlem başarılı olur. Gerçek kart/banka veya Luhn doğrulaması yapılmaz. `0000 0000 0000 0000` başarılı olur. `0000 0000 0000 0002` aynı açık checkout'taki ilk tamamlanmış denemede hata verir, tekrar denemede başarılı olur. İptal edilen deneme bu senaryoyu tüketmez. Sunum için ad: Deniz Yılmaz, tarih: `12/30`, CVV: `000`. Bunlar banka test kartı değildir; gerçek kart/banka/ödeme servisi kullanılmaz.
 - Yemek yöntemleri: online kart, nakit, kapıda kredi kartı, yemek kartları. Market yalnız online kart. Teslimatta ödeme seçimlerinde online kart alanları aranmaz.
 - Bahşiş seçenekleri 0/30/50/75/100 TL'dir. Toplama eklenir; teslimat ücreti gibi minimum ürün tutarını tamamlamaz. “Şimdi değil” toplamı geri alır.
 - Kart alanları React belleğindedir; saklama alanına veya route state'e yazılmaz. Aynı checkout içinde adrese dönüp gelince korunur; sayfadan ayrılma/yenileme sonrasında temizlenir. Bahşiş de yalnız açık akışta tutulur ve yenilemede 0'a döner. Adres taslağı korunur.
-- “Sonraki siparişlerimde bu kartı kullan”, başarılı işlemden sonra yalnız `presentation-card` veya `retry-card` kimliğini aynı sekmenin sessionStorage alanına yazar. Kısayol önceden tanımlı kurgu bilgileri doldurur; CVV boş kalır ve odağı alır. Kaydı kaldırmak bu tercihi siler. Kart saklama/ödeme tokenizasyon hizmeti değildir.
+- “Sonraki siparişlerimde bu kartı kullan”, başarılı işlemden sonra yalnız son dört haneyi ve yerel `presentation-card` / `retry-card` senaryo kimliğini aynı sekmenin sessionStorage alanına yazar. Kısayol maskeli kartı seçer; tam numara, ad ve tarih yeniden doldurulmaz. CVV boş başlar ve odağı alır. “Başka kart kullan” boş formu açar; “Kaydı kaldır” tercihi siler. Eski yalnız kimlik içeren kayıtlar okunur. Gerçek kart saklama/tokenizasyon hizmeti değildir.
 - Yerel işlem 1,2 saniyelik gecikmeyle sonuçlanır. Senkron işlem kilidi ikinci denemeyi engeller. İptal, tarayıcı Geri, checkout'tan ayrılma, bölge veya sepet değişimi bekleyen sonucu geçersiz kılar. İptal düğmesi odağı yeniden etkinleşen devam düğmesine döndürür.
 - Başarısızlıkta sipariş oluşturulmaz; alanlar, adres, sepet ve bahşiş korunur. Hata mesajı odaklanır. Başarıda bahşiş dahil tutar mevcut sipariş sonucuna gider ve yalnız ilgili sepet/taslak temizlenir.
 
@@ -162,12 +162,20 @@ Normal kullanıcı etkileşimleriyle **1363 × 936 masaüstünde** yapılan kont
 
 Tarayıcıda gözlenen uygulama hatası yoktu. Ekran okuyucuyla duyuru testi, 1440px'de ayrı tarayıcı testi ve mobil test yapılmadı. Katılımcı başarısı/süresi ölçülmedi; hazırlanmış [test protokolü](MELISA_USABILITY_TEST.md) bu sonraki insan çalışması içindir. [Sunum rehberi](MELISA_DEMO_GUIDE.md) çalıştırma, kurgu veriler ve hızlandırılmış akışı açıklar.
 
+## Kart numarası engeli düzeltmesi — 9 Kasım 2026
+
+Kullanıcı provasındaki “Bu kartla devam edilemiyor” mesajının nedeni iki kurgu numarayla sınırlı doğrulamaydı. Form doğrulaması ve ödeme çalıştırıcısı güncellendi: uygun biçimdeki başka bir örnek numara da başarılı yerel ödeme oluşturur. Eksik numara, geçersiz/geçmiş tarih ve CVV doğrulaması korunur. Bilinçli hata senaryosu yalnız `0000 0000 0000 0002` için sürer.
+
+Kayıtlı kart akışı da yeni girişleri destekler: sadece son dört hane ve senaryo kimliği saklanır; kısayolda maskeli kart + yeniden CVV, başka karta geçişte boş alanlar gösterilir. Tam numara/CVV/ad/tarih tercihe kaydedilmez. Bu görsel kısayol güncellemesi React uygulamasındadır; mevcut Figma/ZIP bu düzeltmede değiştirilmedi.
+
+Derleme, **49/49 test** ve `git diff --check` geçti. Beş yeni test; iki örnek dışındaki numarayla tamamlama, temel numara hatalarının korunması, maskeli kayıt/CVV davranışı, eski kayıt uyumluluğu ve geçersiz kayıt son ekini kapsar. Masaüstü tarayıcıda 15 haneli numara engellendi; `1234 5678 9012 3456`, `11/29`, dört haneli kurgu CVV ile **220,89 TL Market** siparişi tamamlandı. Sonraki Yemek akışında kayıt `•••• 3456` olarak göründü, eksik CVV engellendi, “Başka kart kullan” odağı boş ad alanına taşıdı ve kayıtlı kart + yeni CVV ile **180 TL Yemek** siparişi tamamlandı. Gerçek kart veya kullanıcı ekran görüntüsündeki numara test verilerine alınmadı. Önceki PR #10 kontrolü bu son düzeltmeden öncedir; tekrar merge/uyumluluk testi yapılmadı.
+
 ## PR #10 ile birleştirme notu
 
 İlk bölümde `feat/hci-responsive-a11y-undo-search` / `65e7641` ayrı geçici çalışma alanında kontrol edildi. Adres/özet özellikleri o dalın ortak Layout'u üzerine eklenince derleme ve 37 test geçti. Bu tarihsel kontrol ödeme bölümünü kapsamaz ve iki dalın otomatik/görsel olarak eksiksiz birleştiği anlamına gelmez.
 
 Ödeme bölümünde aynı `65e7641` tabanındaki ayrı çalışma alanına güncel checkout, ödeme modeli, domain/sipariş modeli ve testler aktarıldı; PR #10'un `Layout.tsx` dosyası korundu. Derleme ve **53/53 test** geçti. Bu yalnız kod/veri uyumluluğu kontrolüdür; gerçek merge yapılmadı ve birleşik görünüm tarayıcıda doğrulanmadı.
 
-Sonuç/durum bölümünde aynı kontrol güncel dosyalarla tekrarlandı: PR #10'un `Layout.tsx` dosyası yine değiştirilmeden **derleme ve 65/65 test** geçti. Bu sonuç ortak veri/kod uyumluluğunu destekler; Layout birleşiminin veya birleşik arayüzün doğrulandığı anlamına gelmez. Bu dalın kendi ana dal tabanındaki güncel test sayısı 44'tür; 65 sayısı PR #10'un ek testlerini de içerir.
+Sonuç/durum bölümünde aynı kontrol güncel dosyalarla tekrarlandı: PR #10'un `Layout.tsx` dosyası yine değiştirilmeden **derleme ve 65/65 test** geçti. Bu sonuç ortak veri/kod uyumluluğunu destekler; Layout birleşiminin veya birleşik arayüzün doğrulandığı anlamına gelmez. O aşamada bu dalın kendi ana dal tabanındaki test sayısı 44'tü; 65 sayısı PR #10'un ek testlerini de içerir.
 
 Her iki dal `Layout.tsx` ve `CheckoutPage.tsx` dosyalarını değiştiriyor. Birleştirirken PR #10'daki UndoToast, ana içerik tabIndex, sepet erişilebilir isimleri ve diğer sayfaların genişlik/uyarlanabilirlik değişiklikleri korunmalı. Checkout **ve sonuç** için 1184px sınırı/resmî logo koşulu, sonuçta güncel konum zorunluluğunun kaldırılması bunların üzerine uygulanmalı. Bu akış bölgeyi DeliveryContext'ten zaten ayrı gösterir; PR #10'un bölge etiketini açık adres alanına başlangıç değeri olarak yazması tekrar eklenmemeli. PR #10 birleştirilmedi ve dalına değişiklik gönderilmedi.

@@ -1,6 +1,6 @@
 # Ortak sipariş akışı — katılımcı test protokolü
 
-Durum: **Hazırlandı; henüz uygulanmadı.** Katılımcı, süre, başarı oranı veya alıntı üretilmedi. Otomatik 44 test ve tarayıcı kontrolleri bu çalışmanın sonucu değildir.
+Durum: **Hazırlandı; henüz uygulanmadı.** Katılımcı, süre, başarı oranı veya alıntı üretilmedi. Otomatik 49 test ve tarayıcı kontrolleri bu çalışmanın sonucu değildir.
 
 ## Amaç ve ekip sorumluluğu
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, type FormEvent } from "react";
 import { formatTRY, PAYMENT_METHOD_LABELS, type PaymentMethod, type Service } from "../../types/domain";
 import {
   fixtureLabel, paymentMethods, TIP_AMOUNTS,
-  type CardErrors, type CardValues, type FixtureId, type PaymentStatus,
+  type CardErrors, type CardValues, type SavedCardPreference, type PaymentStatus,
 } from "./paymentModel";
 
 type Props = {
@@ -13,7 +13,8 @@ type Props = {
   status: PaymentStatus;
   tip: number;
   remember: boolean;
-  savedFixture?: FixtureId;
+  savedFixture?: SavedCardPreference;
+  selectedSaved?: SavedCardPreference;
   savedMessage: string;
   onMethodChange: (method: PaymentMethod) => void;
   onCardChange: (field: keyof CardValues, value: string) => void;
@@ -21,6 +22,7 @@ type Props = {
   onTipChange: (tip: number) => void;
   onRememberChange: (remember: boolean) => void;
   onUseSaved: () => void;
+  onNewCard: () => void;
   onForgetSaved: () => void;
   onCancel: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -92,17 +94,19 @@ export default function PaymentForm(props: Props) {
           <span className="text-sm text-slate-600">VISA · Mastercard · Troy</span>
         </div>
         {props.savedFixture && <div className="rounded-xl border border-slate-300 bg-slate-50 p-4">
-          <p className="font-semibold">Kayıtlı kart · {fixtureLabel(props.savedFixture)}</p>
+          <p className="font-semibold">{props.selectedSaved ? "Seçili kart" : "Kayıtlı kart"} · {fixtureLabel(props.savedFixture)}</p>
           <div className="mt-2 flex flex-wrap gap-4">
-            <button type="button" onClick={props.onUseSaved} className="min-h-11 rounded-lg font-semibold text-brand underline underline-offset-4">Bu kartı kullan</button>
+            {props.selectedSaved ? <button type="button" onClick={props.onNewCard} className="min-h-11 rounded-lg font-semibold text-brand underline underline-offset-4">Başka kart kullan</button> : <button type="button" onClick={props.onUseSaved} className="min-h-11 rounded-lg font-semibold text-brand underline underline-offset-4">Bu kartı kullan</button>}
             <button type="button" onClick={props.onForgetSaved} className="min-h-11 rounded-lg text-sm font-semibold text-slate-700 underline underline-offset-4">Kaydı kaldır</button>
           </div>
         </div>}
         <p role="status" className={props.savedMessage ? "text-sm text-slate-600" : "sr-only"}>{props.savedMessage}</p>
-        {cardField("holder", "Kart sahibinin adı", "Kartın üzerindeki ad soyad", { maxLength: 100 })}
-        {cardField("number", "Kart numarası", "Kart numaranı gir", { maxLength: 19, numeric: true })}
+        {!props.selectedSaved && <>
+          {cardField("holder", "Kart sahibinin adı", "Kartın üzerindeki ad soyad", { maxLength: 100 })}
+          {cardField("number", "Kart numarası", "Kart numaranı gir", { maxLength: 19, numeric: true })}
+        </>}
         <div className="grid grid-cols-2 gap-6">
-          {cardField("expiry", "Son kullanma tarihi", "AA/YY", { maxLength: 5, numeric: true })}
+          {!props.selectedSaved && cardField("expiry", "Son kullanma tarihi", "AA/YY", { maxLength: 5, numeric: true })}
           {cardField("cvv", "CVV", "Güvenlik kodu", { maxLength: 4, numeric: true, secret: true, hint: "Kartındaki 3 veya 4 haneli güvenlik kodu." })}
         </div>
         <label className="flex min-h-11 cursor-pointer items-center gap-3">

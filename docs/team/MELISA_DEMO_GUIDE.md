@@ -7,7 +7,7 @@ Dal: `feat/melisa-checkout`. İnceleme: [PR #11](https://github.com/akincisimge/
 1. Kendi checkout dalındaki güncel kodu aç. Yerel değişiklik varsa önce koru; sunum hazırlığında `reset --hard` kullanma veya başka dala zorla geçme.
 2. İlk kurulumda veya kilit dosyası değiştiyse `npm ci` çalıştır. Kontroller Node 24.22.1 ile yapıldı; testler TypeScript dosyalarını doğrudan çalıştırdığı için Node 24 kullan.
 3. `npm run dev` çalıştır; terminalde Vite'ın verdiği adresi masaüstü tarayıcıda aç.
-4. Teknik kontrol gerekirse `npm run build` ve `node --test tests/*.test.mjs` çalıştır. Bu teslimde derleme ve 44 test başarılıdır; sonraki ekip değişikliklerinden sonra yeniden kontrol et.
+4. Teknik kontrol gerekirse `npm run build` ve `node --test tests/*.test.mjs` çalıştır. Bu teslimde derleme ve 49 test başarılıdır; sonraki ekip değişikliklerinden sonra yeniden kontrol et.
 
 Sunumdan önce Kötekli konumunu seç, ekranı normal yakınlaştırmada aç ve sepetleri gözden geçir. Tek tarayıcı sekmesinde ilerle. Son sipariş kaydı ve adres taslakları aynı sekmede tutulur; başka bilgisayarda otomatik görünmez. Sekmeyi kapatıp açmayı kalıcılık garantisi olarak sunma.
 
@@ -28,7 +28,7 @@ Sunumdan önce Kötekli konumunu seç, ekranı normal yakınlaştırmada aç ve 
 | Hata ve tekrar deneme kartı | `0000 0000 0000 0002` — aynı açık checkout'ta ilk tamamlanan deneme başarısız, sonraki başarılı |
 | Son kullanma / CVV | `12/30` / `000` |
 
-Bu numaralar ödeme sağlayıcısına ait test kartları değildir. Kod yalnız bu iki kurgu numarayı kabul eder. Hata senaryosunda sayfayı yenileme; yenileme deneme durumunu sıfırlar. Kart alanları yenilemede silinir, adres taslağı korunur. Bahşiş de yenilemede sıfırlanır.
+Bu numaralar ödeme sağlayıcısına ait test kartları değildir. Kart adı, 16 haneli numara, geçerli AA/YY ve 3–4 haneli CVV girildiğinde yerel ödeme ilerler; numaranın iki örnekten biri olması gerekmez. Örneğin `1234 5678 9012 3456` da kullanılabilir. Banka, kart markası veya Luhn doğrulaması yapılmaz. Hata senaryosunda sayfayı yenileme; yenileme deneme durumunu sıfırlar. Kart alanları yenilemede silinir, adres taslağı korunur. Bahşiş de yenilemede sıfırlanır.
 
 ## 1. Yemek: adres ve başarılı sipariş
 

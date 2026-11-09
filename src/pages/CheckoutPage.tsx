@@ -15,9 +15,9 @@ import {
   saveCheckoutDraft, SAVED_ADDRESS, validateAddress, type AddressErrors, type AddressValues,
 } from "../features/checkout/checkoutModel";
 import {
-  CARD_FIELDS, EMPTY_CARD, cardFixture, createPaymentRunner, fixtureCard, forgetFixture,
+  CARD_FIELDS, EMPTY_CARD, cardFixture, createPaymentRunner, forgetFixture,
   formatCardNumber, formatExpiry, normalizePaymentMethod, readSavedFixture, saveFixture, validateCard,
-  type CardErrors, type CardValues, type PaymentStatus,
+  type CardErrors, type CardValues, type PaymentStatus, type SavedCardPreference,
 } from "../features/checkout/paymentModel";
 
 export default function CheckoutPage() {
@@ -43,6 +43,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const [tip, setTip] = useState(0);
   const [remember, setRemember] = useState(false);
   const [savedFixture, setSavedFixture] = useState(() => readSavedFixture(checkoutStorage()));
+  const [selectedSaved, setSelectedSaved] = useState<SavedCardPreference>();
   const [savedMessage, setSavedMessage] = useState("");
   const [runner] = useState(() => createPaymentRunner());
   const attemptVersion = useRef(0);
@@ -56,12 +57,15 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const addressValid = Object.keys(validateAddress(draft)).length === 0;
   const payment = params.get("step") === "payment" && addressValid;
   const processing = status === "processing";
-  const cardValidation = validateCard(card);
+  const cardValidation = validateCard(card, new Date(), selectedSaved);
   const firstCardError = CARD_FIELDS.find(field => cardValidation[field]);
   const cardValid = draft.method !== "card-demo" || !firstCardError;
   const cartSignature = JSON.stringify(lines.map(({ product, quantity }) => [product.id, product.storeId, product.price, quantity]));
 
   useEffect(() => { saveCheckoutDraft(checkoutStorage(), service, regionId, draft); }, [draft, service, regionId]);
+  useEffect(() => {
+    if (selectedSaved) document.getElementById("checkout-card-cvv")?.focus();
+  }, [selectedSaved]);
   useEffect(() => {
     if (params.get("step") === "payment" && !addressValid) {
       const next = new URLSearchParams(params);
@@ -122,7 +126,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     const value = field === "number" ? formatCardNumber(raw) : field === "expiry" ? formatExpiry(raw) : field === "cvv" ? raw.replace(/\D/g, "").slice(0, 4) : raw;
     const next = { ...card, [field]: value };
     setCard(next);
-    if (cardErrors[field]) setCardErrors(current => ({ ...current, [field]: validateCard(next)[field] }));
+    if (cardErrors[field]) setCardErrors(current => ({ ...current, [field]: validateCard(next, new Date(), selectedSaved)[field] }));
     setStatus("idle");
     setAnnouncement("");
     setSavedMessage("");
@@ -131,6 +135,11 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     setDraft(current => ({ ...current, method: normalizePaymentMethod(method, service) }));
     setStatus("idle");
     setAnnouncement("");
+  };
+  const useNewCard = () => {
+    setSelectedSaved(undefined); setCard({ ...EMPTY_CARD }); setCardErrors({});
+    setRemember(false); setStatus("idle"); setSavedMessage("");
+    window.requestAnimationFrame(() => document.getElementById("checkout-card-holder")?.focus());
   };
   const cancelPayment = () => {
     attemptVersion.current += 1;
@@ -144,7 +153,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     event.preventDefault();
     if (runner.pending() || !payment || !totals.canContinue || !addressValid) return;
     if (draft.method === "card-demo") {
-      const nextErrors = validateCard(card);
+      const nextErrors = validateCard(card, new Date(), selectedSaved);
       setCardErrors(nextErrors);
       const first = CARD_FIELDS.find(field => nextErrors[field]);
       if (first) {
@@ -154,10 +163,10 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
       }
     }
     const version = ++attemptVersion.current;
-    const fixtureId = draft.method === "card-demo" ? cardFixture(card.number) : undefined;
+    const fixtureId = draft.method === "card-demo" ? selectedSaved?.fixtureId ?? cardFixture(card.number) : undefined;
     setStatus("processing");
     setAnnouncement("");
-    const result = await runner.run({ method: draft.method, fixtureId });
+    const result = await runner.run({ method: draft.method, fixtureId, cardValidated: draft.method === "card-demo" });
     if (version !== attemptVersion.current || result.status === "cancelled" || result.status === "busy") return;
     if (result.status === "failed") { setStatus("failed"); return; }
 
@@ -170,7 +179,8 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
       });
     } catch { setStatus("failed"); return; }
     let paymentNotice: string | undefined;
-    if (remember && fixtureId && !saveFixture(checkoutStorage(), fixtureId)) {
+    const last4 = selectedSaved?.last4 ?? card.number.replace(/\s/g, "").slice(-4);
+    if (remember && draft.method === "card-demo" && !saveFixture(checkoutStorage(), fixtureId ?? "presentation-card", last4)) {
       paymentNotice = "Siparişin oluşturuldu ancak kart tercihin kaydedilemedi. Sonraki siparişte kart bilgilerini yeniden girebilirsin.";
     }
     saveDemoOrder(order);
@@ -208,19 +218,20 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_392px]">
       {payment ? <PaymentForm
         service={service} method={draft.method} card={card} errors={cardErrors} status={status}
-        tip={tip} remember={remember} savedFixture={savedFixture} savedMessage={savedMessage}
+        tip={tip} remember={remember} savedFixture={savedFixture} selectedSaved={selectedSaved} savedMessage={savedMessage}
         onMethodChange={changeMethod} onCardChange={changeCard}
-        onCardBlur={field => setCardErrors(current => ({ ...current, [field]: validateCard(card)[field] }))}
+        onCardBlur={field => setCardErrors(current => ({ ...current, [field]: validateCard(card, new Date(), selectedSaved)[field] }))}
         onTipChange={value => { setTip(value); setStatus("idle"); setAnnouncement(""); }}
         onRememberChange={setRemember}
         onUseSaved={() => {
           if (!savedFixture) return;
-          setCard(fixtureCard(savedFixture)); setCardErrors({}); setRemember(true); setStatus("idle");
+          setSelectedSaved(savedFixture); setCard({ ...EMPTY_CARD }); setCardErrors({}); setRemember(true); setStatus("idle");
           setSavedMessage("Kayıtlı kart seçildi. Güvenlik kodunu gir.");
-          document.getElementById("checkout-card-cvv")?.focus();
         }}
+        onNewCard={useNewCard}
         onForgetSaved={() => {
           if (forgetFixture(checkoutStorage())) {
+            if (selectedSaved) useNewCard();
             setSavedFixture(undefined); setRemember(false); setSavedMessage("Kart kaydı kaldırıldı.");
           } else setSavedMessage("Kart kaydı kaldırılamadı. Yeniden dene.");
         }}

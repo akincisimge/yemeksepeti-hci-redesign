@@ -50,7 +50,7 @@ Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı 
 - İşlem sürerken iptal et; sipariş oluşup oluşmadığını ve bir sonraki adımını açıkla.
 - Kurgu kart tercihini kaydet, sonraki siparişte kısayolu kullan, güvenlik kodunu gir ve sonra kaydı kaldır.
 
-Moderatör için: yalnız `0000 0000 0000 0000` (başarı) ve `0000 0000 0000 0002` (aynı checkout'ta önce hata, sonra başarı), `12/30`, `000` kullanılır. Katılımcının gerçek kart bilgisi istenmez. Sonuçlar henüz toplanmadı; her görev ilgili ekran sahibi tarafından yürütülüp ortak tabloya kaydedilir.
+Moderatör için standart örnekler: `1234 5678 9012 3456` veya `0000 0000 0000 0000` (başarı), `0000 0000 0000 0002` (aynı checkout'ta önce hata, sonra başarı), `12/30`, `000`. Uygulama biçimi doğru diğer kurgu numaraları da kabul eder; testte tutarlılık için aynı örnekleri kullan. Katılımcının gerçek kart bilgisi istenmez. Sonuçlar henüz toplanmadı; her görev ilgili ekran sahibi tarafından yürütülüp ortak tabloya kaydedilir.
 
 ## Melisa'nın sipariş sonucu ve takip bölümü
 

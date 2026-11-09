@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  SAVED_CARD_KEY, cardFixture, createPaymentRunner, fixtureCard, fixtureLabel,
+  SAVED_CARD_KEY, cardFixture, createPaymentRunner, fixtureLabel,
   forgetFixture, formatCardNumber, formatExpiry, normalizePaymentMethod,
   paymentMethods, readSavedFixture, saveFixture, validateCard,
 } from '../src/features/checkout/paymentModel.ts';
@@ -35,7 +35,21 @@ test('both presentation fixtures validate without pretending to authorize a real
   assert.deepEqual(validateCard({ ...validCard, number: '0000 0000 0000 0002' }, now), {});
   assert.equal(cardFixture(validCard.number), 'presentation-card');
   assert.equal(cardFixture('0000 0000 0000 0002'), 'retry-card');
-  assert.ok(validateCard({ ...validCard, number: '1234 5678 9012 3456' }, now).number);
+  assert.deepEqual(validateCard({ ...validCard, number: '1234 5678 9012 3456' }, now), {});
+});
+test('a complete sample card outside the two fixtures can finish the local payment', async () => {
+  for (const number of ['1234 5678 9012 3456', '1111 1111 1111 1111']) {
+    const card = { ...validCard, number, expiry: '11/29', cvv: '0000' };
+    assert.deepEqual(validateCard(card, now), {});
+    assert.equal(cardFixture(number), undefined);
+    const result = await createPaymentRunner(1).run({ method: 'card-demo', fixtureId: cardFixture(number), cardValidated: true });
+    assert.equal(result.status, 'succeeded');
+  }
+});
+test('accepting non-fixture cards still rejects incomplete, oversized and nonnumeric numbers', () => {
+  for (const number of ['', '123456789012345', '12345678901234567', '123456789012345x']) {
+    assert.equal(validateCard({ ...validCard, number }, now).number, '16 haneli kart numarasını tamamla.');
+  }
 });
 test('empty card fields produce separate errors, and fixing CVV leaves other fields valid', () => {
   assert.deepEqual(Object.keys(validateCard({ holder: '', number: '', expiry: '', cvv: '' }, now)), ['holder', 'number', 'expiry', 'cvv']);
@@ -65,20 +79,45 @@ test('removing a tip restores exact totals; empty baskets and unsupported tips d
   assert.equal(calculateCheckout([], { deliveryFee: 29.99 }, 50).total, 0);
   for (const tip of [-1, NaN, Infinity, 31]) assert.equal(calculateCheckout(lines, undefined, tip).tip, 0);
 });
-test('saved-card preference contains only a fixture identifier, never card fields', () => {
+test('saved-card preference contains only a local scenario and masked suffix, never full card fields', () => {
   const storage = memoryStorage();
   assert.equal(saveFixture(storage, 'presentation-card'), true);
-  assert.deepEqual(JSON.parse(storage.getItem(SAVED_CARD_KEY)), { fixtureId: 'presentation-card' });
-  assert.equal(readSavedFixture(storage), 'presentation-card');
-  const card = fixtureCard('presentation-card');
-  assert.equal(card.cvv, '');
-  assert.equal(fixtureLabel('presentation-card'), '•••• 0000');
+  const saved = { fixtureId: 'presentation-card', last4: '0000' };
+  assert.deepEqual(JSON.parse(storage.getItem(SAVED_CARD_KEY)), saved);
+  assert.deepEqual(readSavedFixture(storage), saved);
+  assert.equal(fixtureLabel(saved), '•••• 0000');
   assert.equal(forgetFixture(storage), true);
   assert.equal(readSavedFixture(storage), undefined);
 });
+test('a saved generic card keeps its suffix and requests only a fresh CVV', () => {
+  const storage = memoryStorage();
+  const card = { ...validCard, number: '1234 5678 9012 3456' };
+  assert.equal(saveFixture(storage, 'presentation-card', card.number.slice(-4)), true);
+  const saved = readSavedFixture(storage);
+  assert.deepEqual(saved, { fixtureId: 'presentation-card', last4: '3456' });
+  assert.equal(fixtureLabel(saved), '•••• 3456');
+  assert.deepEqual(JSON.parse(storage.getItem(SAVED_CARD_KEY)), saved);
+  const empty = { holder: '', number: '', expiry: '', cvv: '' };
+  assert.deepEqual(Object.keys(validateCard(empty, now, saved)), ['cvv']);
+  assert.deepEqual(validateCard({ ...empty, cvv: '000' }, now, saved), {});
+  assert.deepEqual(Object.keys(validateCard(empty, now)), ['holder', 'number', 'expiry', 'cvv']);
+});
+test('legacy saved fixtures remain usable and unknown saved fields are discarded', () => {
+  const storage = memoryStorage();
+  storage.setItem(SAVED_CARD_KEY, JSON.stringify({ fixtureId: 'retry-card', number: 'discard-me', cvv: 'discard-me' }));
+  assert.deepEqual(readSavedFixture(storage), { fixtureId: 'retry-card', last4: '0002' });
+});
+test('an invalid saved suffix cannot replace the previous valid card preference', () => {
+  const storage = memoryStorage();
+  saveFixture(storage, 'presentation-card', '3456');
+  for (const suffix of ['', '123', '12345', '123x', '1234567890123456']) {
+    assert.equal(saveFixture(storage, 'presentation-card', suffix), false);
+    assert.equal(readSavedFixture(storage).last4, '3456');
+  }
+});
 test('malformed saved-card data and blocked storage fail gracefully', () => {
   const storage = memoryStorage();
-  for (const value of ['{', 'null', '42', '{"fixtureId":"real-card"}']) {
+  for (const value of ['{', 'null', '42', '{"fixtureId":"real-card"}', '{"fixtureId":"presentation-card","last4":"12345"}', '{"fixtureId":"presentation-card","last4":1234}']) {
     storage.setItem(SAVED_CARD_KEY, value);
     assert.equal(readSavedFixture(storage), undefined);
   }
@@ -129,7 +168,7 @@ test('an old cancelled attempt cannot unlock a newer active attempt', async () =
   assert.equal(runner.pending(), true);
   assert.equal((await next).status, 'succeeded');
 });
-test('delivery methods require no online card fields; online card requires a fixture', async () => {
+test('delivery methods require no online card fields; unvalidated online payment cannot proceed', async () => {
   const runner = createPaymentRunner(1);
   for (const method of ['cash-demo', 'door-card-demo', 'meal-card-demo']) {
     assert.equal((await runner.run({ method })).status, 'succeeded');

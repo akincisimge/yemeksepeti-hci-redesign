@@ -4,6 +4,7 @@ export type CardValues = { holder: string; number: string; expiry: string; cvv: 
 export type CardErrors = Partial<Record<keyof CardValues, string>>;
 export type PaymentStatus = "idle" | "processing" | "failed";
 export type FixtureId = "presentation-card" | "retry-card";
+export type SavedCardPreference = { fixtureId: FixtureId; last4: string };
 export const EMPTY_CARD: CardValues = { holder: "", number: "", expiry: "", cvv: "" };
 export const CARD_FIELDS = ["holder", "number", "expiry", "cvv"] as const;
 export const TIP_AMOUNTS = [0, 30, 50, 75, 100] as const;
@@ -35,14 +36,17 @@ export function cardFixture(number: string): FixtureId | undefined {
   const digits = number.replace(/\s/g, "");
   return (Object.keys(FIXTURES) as FixtureId[]).find(id => FIXTURES[id].number === digits);
 }
-export function validateCard(card: CardValues, now = new Date()): CardErrors {
+export function validateCard(card: CardValues, now = new Date(), saved?: SavedCardPreference): CardErrors {
   const errors: CardErrors = {};
+  if (saved) {
+    if (!/^\d{3,4}$/.test(card.cvv)) errors.cvv = "3 veya 4 haneli güvenlik kodunu gir.";
+    return errors;
+  }
   if (card.holder.trim().length < 2 || card.holder.length > 100) {
     errors.holder = "Kartın üzerindeki ad soyadı yaz.";
   }
   const number = card.number.replace(/\s/g, "");
   if (!/^\d{16}$/.test(number)) errors.number = "16 haneli kart numarasını tamamla.";
-  else if (!cardFixture(number)) errors.number = "Bu kartla devam edilemiyor. Kart numarasını kontrol et.";
   const expiry = /^(\d{2})\/(\d{2})$/.exec(card.expiry);
   if (!expiry || Number(expiry[1]) < 1 || Number(expiry[1]) > 12) {
     errors.expiry = "Son kullanma tarihini AA/YY biçiminde yaz.";
@@ -58,18 +62,22 @@ export function validateCard(card: CardValues, now = new Date()): CardErrors {
 }
 
 type FixtureStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
-export function readSavedFixture(storage: FixtureStorage | undefined): FixtureId | undefined {
+export function readSavedFixture(storage: FixtureStorage | undefined): SavedCardPreference | undefined {
   try {
     const value: unknown = JSON.parse(storage?.getItem(SAVED_CARD_KEY) ?? "null");
     if (!value || typeof value !== "object") return undefined;
-    const id = (value as { fixtureId?: unknown }).fixtureId;
-    return id === "presentation-card" || id === "retry-card" ? id : undefined;
+    const { fixtureId, last4 } = value as { fixtureId?: unknown; last4?: unknown };
+    if (fixtureId !== "presentation-card" && fixtureId !== "retry-card") return undefined;
+    // Read the older fixture-only preference without retaining arbitrary fields.
+    const suffix = last4 === undefined ? FIXTURES[fixtureId].number.slice(-4) : last4;
+    if (typeof suffix !== "string" || !/^\d{4}$/.test(suffix)) return undefined;
+    return { fixtureId, last4: suffix };
   } catch { return undefined; }
 }
-export function saveFixture(storage: FixtureStorage | undefined, fixtureId: FixtureId): boolean {
+export function saveFixture(storage: FixtureStorage | undefined, fixtureId: FixtureId, last4 = FIXTURES[fixtureId].number.slice(-4)): boolean {
   try {
-    if (!storage) return false;
-    storage.setItem(SAVED_CARD_KEY, JSON.stringify({ fixtureId }));
+    if (!storage || !/^\d{4}$/.test(last4)) return false;
+    storage.setItem(SAVED_CARD_KEY, JSON.stringify({ fixtureId, last4 }));
     return true;
   } catch { return false; }
 }
@@ -80,13 +88,10 @@ export function forgetFixture(storage: FixtureStorage | undefined): boolean {
     return true;
   } catch { return false; }
 }
-export const fixtureLabel = (id: FixtureId) => FIXTURES[id].label;
-export function fixtureCard(id: FixtureId): CardValues {
-  return { holder: "Deniz Yılmaz", number: formatCardNumber(FIXTURES[id].number), expiry: "12/30", cvv: "" };
-}
+export const fixtureLabel = (saved: SavedCardPreference) => `•••• ${saved.last4}`;
 
 type AttemptResult = { status: "succeeded" | "failed" | "cancelled" | "busy" };
-type AttemptRequest = { method: PaymentMethod; fixtureId?: FixtureId };
+type AttemptRequest = { method: PaymentMethod; fixtureId?: FixtureId; cardValidated?: boolean };
 function waitForLocalResult(delayMs: number, signal: AbortSignal): Promise<boolean> {
   return new Promise(resolve => {
     if (signal.aborted) { resolve(false); return; }
@@ -110,7 +115,7 @@ export function createPaymentRunner(delayMs = 1200) {
       try {
         if (!await waitForLocalResult(delayMs, controller.signal)) return { status: "cancelled" };
         if (request.method === "card-demo") {
-          if (!request.fixtureId) return { status: "failed" };
+          if (!request.cardValidated && !request.fixtureId) return { status: "failed" };
           if (request.fixtureId === "retry-card" && !retryCardFailed) {
             retryCardFailed = true;
             return { status: "failed" };
