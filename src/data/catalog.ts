@@ -1,7 +1,9 @@
 
 import type { Product, Store } from "../types/domain";
+import { foodProducts, foodRestaurants } from "../features/food/data/foodData";
 
 export const stores: Store[] = [
+  ...foodRestaurants,
   {
     id: "f-1",
     name: "Mahalle Mutfağı",
@@ -37,6 +39,7 @@ export const stores: Store[] = [
 ];
 
 export const products: Product[] = [
+  ...foodProducts,
   {
     id: "f1",
     name: "Mercimek Çorbası",
@@ -118,4 +121,3 @@ export const products: Product[] = [
     service: "market",
   },
 ];
-

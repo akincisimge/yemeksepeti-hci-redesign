@@ -21,10 +21,10 @@ const initialQuickFilters: QuickFilters = {
 type BudgetOption = "all" | "economic" | "mid" | "wide";
 
 const budgetOptions: { id: BudgetOption; label: string; max: number }[] = [
-  { id: "all", label: "Tümü", max: 300 },
+  { id: "all", label: "Tümü", max: 450 },
   { id: "economic", label: "₺ Ekonomik (Min. Sepet ≤ 150 TL)", max: 150 },
   { id: "mid", label: "₺₺ Orta Bütçe (Min. Sepet ≤ 200 TL)", max: 200 },
-  { id: "wide", label: "₺₺₺ Geniş Menü (Tüm Tutarlar)", max: 300 },
+  { id: "wide", label: "₺₺₺ Geniş Menü (Tüm Tutarlar)", max: 450 },
 ];
 
 export default function FoodHomePage() {
@@ -34,7 +34,7 @@ export default function FoodHomePage() {
   const [sort, setSort] = useState<FoodSort>("recommended");
   const [quickFilters, setQuickFilters] = useState(initialQuickFilters);
   const [campaign, setCampaign] = useState<FoodCampaign | "">("");
-  const [maxMinBasket, setMaxMinBasket] = useState(300);
+  const [maxMinBasket, setMaxMinBasket] = useState(450);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOption | "custom">("all");
   const { count } = useCart();
   const normalizedSearch = search.trim().toLocaleLowerCase("tr");
@@ -78,7 +78,7 @@ export default function FoodHomePage() {
     setMinimumRating(0);
     setQuickFilters(initialQuickFilters);
     setCampaign("");
-    setMaxMinBasket(300);
+    setMaxMinBasket(450);
     setBudgetChoice("all");
     setSort("recommended");
   };
@@ -88,70 +88,71 @@ export default function FoodHomePage() {
   };
 
   return (
-    <div className="mt-6 space-y-7">
-      <div className="space-y-3">
-        <form
-          aria-label="Restoran arama"
-          onSubmit={(event) => event.preventDefault()}
-          className="flex min-h-16 w-full items-center gap-2 rounded-xl border-2 border-[#CBD5E1] bg-white px-3 shadow-sm transition focus-within:border-[#D90049] sm:gap-3 sm:px-4"
-        >
-          <label className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="sr-only">Yemek, mutfak veya restoran arayın</span>
-          <svg aria-hidden="true" className="h-7 w-7 shrink-0 text-[#D90049]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="7" />
-            <path strokeLinecap="round" d="m20 20-4-4" />
-          </svg>
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Yemek, mutfak veya restoran arayın"
-            className="h-14 w-full min-w-0 border-0 bg-transparent text-lg text-[#0F172A] placeholder:text-[#475569] focus:outline-none focus:ring-0"
-          />
-          </label>
-          <button
-            type="submit"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-[#D90049] px-5 py-3 font-semibold text-white transition hover:bg-[#B6003C]"
+    <div className="space-y-7 pt-6">
+      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="space-y-3">
+          <form
+            aria-label="Restoran arama"
+            onSubmit={(event) => event.preventDefault()}
+            className="flex min-h-16 w-full items-center gap-2 rounded-xl border-2 border-[#CBD5E1] bg-white px-3 shadow-sm transition focus-within:border-[#D90049] sm:gap-3 sm:px-4"
           >
-            Ara
-          </button>
-        </form>
-        <div className="flex justify-end">
-          <Link
-            to="/cart/food"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-[#D90049] hover:bg-[#FFF1F6]"
-          >
-            <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.4L22 8H6" />
-              <circle cx="10" cy="20" r="1" />
-              <circle cx="18" cy="20" r="1" />
-            </svg>
-            Yemek Sepetim ({count("food")})
-          </Link>
-        </div>
-      </div>
-
-      <nav aria-label="Mutfak kategorileri" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-        {cuisineOptions.map((option) => {
-          const selected = (option.name === "Tümü" && !cuisine) || cuisine === option.name;
-          return (
+            <label className="flex min-w-0 flex-1 items-center gap-3">
+              <span className="sr-only">Yemek, mutfak veya restoran arayın</span>
+              <svg aria-hidden="true" className="h-7 w-7 shrink-0 text-[#D90049]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" />
+                <path strokeLinecap="round" d="m20 20-4-4" />
+              </svg>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Yemek, mutfak veya restoran arayın"
+                className="h-14 w-full min-w-0 border-0 bg-transparent text-lg text-[#0F172A] placeholder:text-[#475569] focus:outline-none focus:ring-0"
+              />
+            </label>
             <button
-              type="button"
-              key={option.name}
-              onClick={() => setCuisine(option.name === "Tümü" || selected ? "" : option.name)}
-              aria-pressed={selected}
-              className={selected
-                ? "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-[#D90049] bg-[#FFF1F6] px-4 py-2 text-sm font-semibold text-[#D90049]"
-                : "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] hover:border-[#D90049]"}
+              type="submit"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-[#D90049] px-5 py-3 font-semibold text-white transition hover:bg-[#B6003C]"
             >
-              <span aria-hidden="true">{option.icon}</span>
-              {option.name}
+              Ara
             </button>
-          );
-        })}
-      </nav>
+          </form>
+          <div className="flex justify-end">
+            <Link
+              to="/cart/food"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-[#D90049] hover:bg-[#FFF1F6]"
+            >
+              <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.4L22 8H6" />
+                <circle cx="10" cy="20" r="1" />
+                <circle cx="18" cy="20" r="1" />
+              </svg>
+              Yemek Sepetim ({count("food")})
+            </Link>
+          </div>
+        </div>
+        <nav aria-label="Mutfak kategorileri" className="flex flex-wrap gap-2">
+          {cuisineOptions.map((option) => {
+            const selected = (option.name === "Tümü" && !cuisine) || cuisine === option.name;
+            return (
+              <button
+                type="button"
+                key={option.name}
+                onClick={() => setCuisine(option.name === "Tümü" || selected ? "" : option.name)}
+                aria-pressed={selected}
+                className={selected
+                  ? "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-[#D90049] bg-[#FFF1F6] px-4 py-2 text-sm font-semibold text-[#D90049]"
+                  : "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] hover:border-[#D90049]"}
+              >
+                <span aria-hidden="true">{option.icon}</span>
+                {option.name}
+              </button>
+            );
+          })}
+        </nav>
+      </section>
 
-      <section className="space-y-3 rounded-2xl border border-[#CBD5E1] bg-white p-4 sm:p-5" aria-labelledby="budget-title">
+      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="budget-title">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <h2 id="budget-title" className="text-lg font-bold text-[#0F172A]">Bütçene Göre Seç</h2>
@@ -187,7 +188,7 @@ export default function FoodHomePage() {
           <input
             type="range"
             min="100"
-            max="300"
+            max="450"
             step="10"
             value={maxMinBasket}
             onChange={(event) => {
@@ -196,11 +197,11 @@ export default function FoodHomePage() {
             }}
             className="h-6 w-full cursor-pointer accent-[#D90049]"
           />
-          <span className="flex justify-between text-xs text-[#475569]"><span>100 TL</span><span>300 TL</span></span>
+          <span className="flex justify-between text-xs text-[#475569]"><span>100 TL</span><span>450 TL</span></span>
         </label>
       </section>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <div className="space-y-4">
           <CampaignCarousel
             activeCampaign={campaign}
@@ -218,7 +219,7 @@ export default function FoodHomePage() {
           />
         </div>
 
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <section aria-labelledby="restaurant-results-title">
             <div className="mb-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -237,13 +238,13 @@ export default function FoodHomePage() {
                   {quickFilters.fastDelivery && <button type="button" onClick={() => updateQuickFilter("fastDelivery", false)} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Hızlı teslimat <span aria-hidden="true">×</span></button>}
                   {quickFilters.discount && <button type="button" onClick={() => updateQuickFilter("discount", false)} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">İndirimli restoranlar <span aria-hidden="true">×</span></button>}
                   {campaign && <button type="button" onClick={() => setCampaign("")} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">{foodCampaigns.find((item) => item.id === campaign)?.title} <span aria-hidden="true">×</span></button>}
-                  {budgetChoice !== "all" && <button type="button" onClick={() => { setBudgetChoice("all"); setMaxMinBasket(300); }} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Bütçe: {budgetChoice === "custom" ? `≤ ${maxMinBasket} TL` : budgetOptions.find((option) => option.id === budgetChoice)?.label} <span aria-hidden="true">×</span></button>}
+                  {budgetChoice !== "all" && <button type="button" onClick={() => { setBudgetChoice("all"); setMaxMinBasket(450); }} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Bütçe: {budgetChoice === "custom" ? `≤ ${maxMinBasket} TL` : budgetOptions.find((option) => option.id === budgetChoice)?.label} <span aria-hidden="true">×</span></button>}
                   <button type="button" onClick={clearFilters} className="min-h-11 rounded-xl px-3 py-2 text-sm font-semibold text-[#D90049] underline underline-offset-2 hover:text-[#B6003C]">Filtreleri Temizle</button>
                 </div>
               )}
             </div>
             {filteredRestaurants.length ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {filteredRestaurants.map((restaurant) => (
                   <RestaurantCard key={restaurant.id} restaurant={restaurant} />
                 ))}

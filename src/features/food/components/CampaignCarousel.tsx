@@ -60,7 +60,7 @@ export default function CampaignCarousel({
   return (
     <section
       aria-label="Günün Kampanyaları"
-      className="overflow-hidden rounded-2xl border border-[#CBD5E1] bg-white shadow-sm"
+      className="min-w-0 overflow-hidden rounded-2xl border border-[#CBD5E1] bg-white shadow-sm"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -71,7 +71,7 @@ export default function CampaignCarousel({
       }}
     >
       <div className="flex items-center justify-between gap-2 px-4 pb-2 pt-4">
-        <h2 className="text-lg font-bold text-[#0F172A]">Günün Kampanyaları</h2>
+        <h2 className="min-w-0 break-words text-lg font-bold text-[#0F172A]">Günün Kampanyaları</h2>
         <span className="text-sm text-[#475569]">{activeIndex + 1} / {slides.length}</span>
       </div>
       <div className="relative aspect-[4/3] min-h-56 overflow-hidden bg-[#0F172A]">
