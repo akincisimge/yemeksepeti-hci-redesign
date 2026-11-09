@@ -14,7 +14,7 @@
 ## Uygulama sırası
 
 1. **Tamamlanan ilk bölüm:** `/checkout/food` ve `/checkout/market` için ortak adres ve sipariş özeti. Kayıtlı kurgu adres kısayolu, alan hataları, geri dönüşte bilgi koruma, sepetteki ürün/toplam bilgisi ve minimum tutar açıklaması.
-2. **Tamamlanan ikinci bölüm:** Kart alanları ve alan doğrulaması; Yemek için dört yöntem, Market için online kart; bahşiş, kurgu kayıtlı kart kısayolu, işleniyor/iptal/başarısızlık/tekrar deneme durumları. Yalnız dummy verilerle yerel ödeme simülasyonu çalışır.
+2. **Tamamlanan ikinci bölüm:** Kart alanları ve alan doğrulaması; Yemek için dört yöntem, Y-Market için online kart/nakit/kapıda temassız kart; diğer marketler için online kart; bahşiş, kurgu kayıtlı kart kısayolu, işleniyor/iptal/başarısızlık/tekrar deneme durumları. Yalnız dummy verilerle yerel ödeme simülasyonu çalışır.
 3. **Tamamlanan üçüncü bölüm:** Onaylı tasarıma göre sipariş sonucu, ürün/ücret/adres/yöntem özeti, yardım bölümü ve dört aşamalı sipariş durumu. Sunumda aktif durum “Sipariş alındı” olarak sabittir; diğer aşamalar sonraki adımları gösterir. Zamanlayıcı kaldırıldı; canlı kurye, GPS, gerçek ödeme veya restoran bağlantısı kurulmaz.
 4. **Hazırlanan teslim belgeleri:** [Sunum rehberi](MELISA_DEMO_GUIDE.md), [katılımcı test protokolü ve boş kayıt tablosu](MELISA_USABILITY_TEST.md). Teknik doğrulama tamamlandı; gerçek katılımcı çalışması henüz yapılmadı. Ana dala birleştirme ekip/Simge koordinasyonundadır.
 
@@ -29,6 +29,8 @@
 
 ## HCI ve doğrulama
 
-Dersin kullandığı Shneiderman sürümünde K2 **deneyimli kullanıcıya kısayol** anlamındadır. Klavye ve kontrast ayrıca kontrol edilir. [Uygulama raporu](MELISA_CHECKOUT_IMPLEMENTATION.md) tamamlanan davranışları, teknik kontrolleri ve Figma farklarını kaydeder. Bu dalda derleme ve **49/49 otomatik test** geçti; iki servis masaüstünde uçtan uca kontrol edildi. [TEST_PLAN.md](../TEST_PLAN.md) gerçek katılımcı çalışması içindir; otomatik testler kullanılabilirlik testi sonucu sayılmaz.
+Dersin kullandığı Shneiderman sürümünde K2 **deneyimli kullanıcıya kısayol** anlamındadır. Klavye ve kontrast ayrıca kontrol edilir. [Uygulama raporu](MELISA_CHECKOUT_IMPLEMENTATION.md) tamamlanan davranışları, teknik kontrolleri ve Figma farklarını kaydeder. Bu dalda derleme ve **53/53 otomatik test** geçti; iki servis masaüstünde uçtan uca kontrol edildi. [TEST_PLAN.md](../TEST_PLAN.md) gerçek katılımcı çalışması içindir; otomatik testler kullanılabilirlik testi sonucu sayılmaz.
 
 İlgili görev: [Issue #5](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/5).
+
+Son UX düzeltmesi: kompakt ödeme alanları, toplamla birlikte onay düğmesi, teslimat tahmini, açık yemek kartı kapsamı, CVV yardımı ve bir kez oynayan onay animasyonu eklendi. Aktif sipariş durumu ilerlemez. Yeni satıcı kimlikleri ödeme modeliyle eşleştirilmelidir. Figma/ZIP bu kod düzeltmesinde değiştirilmedi.

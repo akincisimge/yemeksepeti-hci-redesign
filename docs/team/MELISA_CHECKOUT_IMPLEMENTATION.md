@@ -1,6 +1,6 @@
 # Ortak sipariş akışı — uygulama ve doğrulama raporu
 
-Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **49/49 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
+Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **53/53 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
 
 ## Değişiklik ve gerekçe
 
@@ -16,6 +16,43 @@ Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Ad
 | Ürün, adet, birim fiyat ve ücretlerin görünürlüğü | K8: kısa süreli hafıza yükünü azaltma |
 
 Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başlangıç kodundaki hatalar orijinal Yemeksepeti'ne atfedilmez.
+
+## Yeni Market referansı ve ödeme UX düzeltmesi — 9 Kasım 2026
+
+**Uygulama öncesi bulgu:** Kullanıcının 23.00 tarihli özgün Market ekranında online kart, nakit ve kapıda temassız kart görülüyor. Önceki yalnız-online varsayımı bu örnek için yanlıştır; tüm gerçek mağazalar hakkında genelleme yapılmaz. Çalışan prototipte 1363 × 936 görünümünde tek ürünle bile onay düğmesi ilk ekranın altında kalıyor. Ödeme ekranında teslimat tahmini yok; yemek kartı kapsamı belirsiz; CVV'nin yeri açıklanmıyor.
+
+**Uygulanan çözüm:** İlgili mağaza için doğrulanan seçenekleri sipariş kaydına kadar desteklemek (K7), ücretlerle onay düğmesini birlikte tutmak (K8), formu kalıcı etiketleri koruyarak kısaltmak (gruplama/hiyerarşi), teslimat tahminini onaydan önce göstermek (K3/K8), yemek kartı kapsamı ve CVV yardımını açıklamak (K5). Sipariş onayına kısa, bir kez oynayan ve hareketi azalt tercihine uyan bir görsel eklemek (K3/K4). Durum “Sipariş alındı” olarak sabit kalır. Bu hedeflerin kullanıcı başarısını artırdığı henüz ölçülmedi.
+
+Çalışma React/PR kapsamındadır. Önceki Figma/ZIP bu aşamada güncellenmiş sayılmaz. Aşağıdaki eski test kayıtları tarihsel sonuçlardır; bu düzeltmenin doğrulaması bu bölümün sonunda ayrı verilir.
+
+
+
+**Kapsam ve veri:** Y-Market (`ymarket-1`) online kart, nakit ve kapıda temassız kart sunar. BİM/CarrefourSA ve tanımlanmamış satıcılar yeni referans olmadan önceki online-only kapsamda kalır; bu gerçek şubelerin kısıtı değil prototipin doğrulanmış kapsamıdır. `paymentModel.ts` içindeki satıcı eşlemesi yeni katalog kimlikleri eklenirse güncellenmelidir. Ortak sipariş parser'ı Market nakit/kapıda kart kayıtlarını kabul eder, Market yemek kartını reddeder.
+
+İki kurgu restoranın yemek kartı listeleri açıkça gösterilir: Mahalle Mutfağı için Ticket Restaurant, Pluxee, Multinet; Meydan Pizza için Ticket Restaurant, Multinet. Bu listeler ders senaryosu verisidir; gerçek işletmelerin anlaşmaları araştırılmış gibi sunulmaz. Kart sağlayıcı entegrasyonu veya ek kart numarası alanı yoktur.
+
+Ödeme seçenekleri kompakt seçim kartlarıdır; seçili yöntemin alanları hemen altında açılır. Kart alanları iki sütunda ve kalıcı etiketlerle gösterilir. Hata satırına yer ayrıldığı için CVV hatası oluşurken yardım bağlantısı aşağı kaçmaz. CVV yardımı yerel `<details>` içinde iki yüzü gösteren basit kart çizimi ve metin içerir. Kayıt tercihi “Bu kartı sonraki siparişlerim için kaydet” olarak açıklanır; zaten seçili kayıtlı kartta yeniden kayıt kutusu gösterilmez.
+
+Özetin ödeme görünümünde toplam ve tek onay düğmesi aynı karttadır; masaüstünde sağ sütun kaydırmada takip eder. İlk iki ürün çeşidi görünür, kalanlar düğmenin altındaki açılabilir ayrıntılardadır; toplam her zaman bütün ürünleri içerir. Adres daha kısa ayrı bir kartta ve düzenleme bağlantısıyla korunur. Tahmini dakika aralığı adres/ödemede gösterilir ve aynı ortak hesapla sipariş kopyasına alınır. Katalogda süre yoksa önceden kullanılan 20–35 dakikalık kurgu aralık kullanılır; canlı lojistik hesabı değildir.
+
+Onayda marka pembesiyle çizilen küçük paket ve yeşil tik bulunur. Giriş 360 ms, tik 420 ms (80 ms gecikme) sürer; her açılışta bir kez oynar. Hareket yalnız `prefers-reduced-motion: no-preference` içinde etkinleşir; diğer durumda tik doğrudan görünür. Gerçek kurye hareketi/konumu ve otomatik durum ilerlemesi yoktur.
+
+**Güncel doğrulama:** 53/53 otomatik test (önceki 49 + dört regresyon testi), TypeScript/Vite derlemesi ve `git diff --check` başarılı. Testler satıcı kapsamı, açık yemek kartı listeleri, tahmin aralığı ve Market nakit/kapıda kart siparişinin yenilemede korunmasını kapsar. 1363 × 936 masaüstünde:
+
+| Kontrol | Gözlenen sonuç |
+| --- | --- |
+| Y-Market ödeme yöntemleri | Online kart/nakit/kapıda kart görünür; teslimatta ödeme kart alanı istemez |
+| Tek ürünlü özet | Önce düğme y=1149, sonra y=738–786; ilk görünümde erişilebilir; yatay taşma yok |
+| CVV iki hane + yardım | Alan hatası ve pasif düğme; yardım ilk tıklamada açıldı; Tab/Enter ile de çalıştı |
+| Online → nakit → online | Açık formdaki kurgu kart bilgileri korundu |
+| 30 TL bahşiş + Market nakit | 190,90 + 29,99 + 30 = 250,89 TL; sonuçta Nakit; yenilemede aynı sipariş |
+| Dört ürünlü özet | İlk iki çeşide ek olarak Ekmek/Muz ayrıntısı açıldı; toplam 385,69 TL, düğmenin yeri değişmedi |
+| Market kapıda kart | Tercih ödeme ekranı yenilendiğinde korundu; boş online form ile 385,69 TL sonuç; yöntem etiketi doğru |
+| Yemek kartları | Mahalle Mutfağı'nın üç örnek sağlayıcısı açıkça görünür |
+| Yemek online hata/tekrar | Kurgu 0002 ilk denemede hata, odak mesaja taşındı; aynı bilgilerle 180 TL sipariş tamamlandı |
+| Onay animasyonu | Tarayıcıda tek tekrar ve tamamlanan tik görüldü; aktif aşama Sipariş alındı |
+
+Azaltılmış hareket için medya kuralı kodda kontrol edildi; işletim sistemi tercihi değiştirilerek ikinci bir tarayıcı deneyi yapılmadı. Mobil, ekran okuyucu ve gerçek katılımcı testleri yapılmış sayılmaz. Figma/ZIP bu aşamada değiştirilmedi; yeni kompakt ödeme/CVV/animasyon React uygulamasındadır. Önce/sonra sunumunda bu fark açıkça belirtilmelidir.
 
 ## Dosyalar ve ortak alanlar
 
@@ -39,7 +76,7 @@ Tutarlar kuruş cinsinden toplanır. Minimum sepet tutarına teslimat ücreti ka
 - [Figma](https://www.figma.com/design/i6MQxPs8Ne0n8KucRnZlXk) 1440px tasarım referansıdır. Kod mevcut ortak tipografi ve renk token'larını kullanır.
 - Örnek ürün/fiyat yerine güncel sepet verisi gösterilir. Modelde poşet ücreti bulunmadığı için Figma'daki örnek ücret koda sabitlenmez.
 - Üst alanda Figma'nın örnek Yardım/Deniz kontrolleri yerine mevcut çalışan bölge/profil paneli korunur.
-- Kart alanları, bahşiş ve ödeme hata durumları ikinci bölümde uygulandı. Yemek dört yöntem, Market yalnız online kart sunar. Yemek kartları bu kapsamda teslimatta ödeme seçeneğidir; sağlayıcı/şirket bazında entegrasyon yoktur.
+- Kart alanları, bahşiş ve ödeme hata durumları ikinci bölümde uygulandı. İki kurgu restoran dört yöntem, Y-Market üç yöntem sunar; diğer marketler önceki online-only kapsamda kalır. Yemek kartları bu kapsamda teslimatta ödeme seçeneğidir; sağlayıcı/şirket bazında entegrasyon yoktur.
 - Kurgu kayıtlı kartı seçme/kaldırma ve işlem sürerken iptal etme kontrolleri kısayol ve kullanıcı kontrolünü çalışır hâle getirir.
 - `SuccessPage.tsx` onaylı sipariş alındı/kurye/teslim edildi düzenine geçirildi. Aradaki hazırlanıyor durumu aynı bileşenleri kullanır. Durum, sipariş bilgileri, özet ve yardım alanları çalışır; ürün ekranında demo/HCI etiketi veya elle durum ilerletme düğmesi yoktur.
 - Figma'da üç adres ekranına kısayol kartı eklendi; kurye başlığı ve tek yöntemli Market hata metni düzeltildi; K2 panosu güncellendi. Önce ekranları korundu. Tıklanabilir Figma prototipi/Auto Layout kurulmadı.
@@ -73,10 +110,10 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 
 - `PaymentForm.tsx` kart sahibi, numara, AA/YY ve gizlenmiş CVV alanlarını; yöntem ve bahşiş seçimlerini içerir. Etiketler ve alan hataları erişilebilir ad/açıklamalarla bağlıdır. Geçersiz formda devam düğmesi pasif olur ve nedeni yanında yazılır.
 - `paymentModel.ts` kart sahibi, 16 haneli numara, geçerli tarih ve 3–4 haneli CVV biçimini kontrol eder. İki numaralık izin listesi kaldırıldı; uygun biçimdeki kurgu bilgilerle yerel işlem başarılı olur. Gerçek kart/banka veya Luhn doğrulaması yapılmaz. `0000 0000 0000 0000` başarılı olur. `0000 0000 0000 0002` aynı açık checkout'taki ilk tamamlanmış denemede hata verir, tekrar denemede başarılı olur. İptal edilen deneme bu senaryoyu tüketmez. Sunum için ad: Deniz Yılmaz, tarih: `12/30`, CVV: `000`. Bunlar banka test kartı değildir; gerçek kart/banka/ödeme servisi kullanılmaz.
-- Yemek yöntemleri: online kart, nakit, kapıda kredi kartı, yemek kartları. Market yalnız online kart. Teslimatta ödeme seçimlerinde online kart alanları aranmaz.
+- Yemek yöntemleri: online kart, nakit, kapıda kredi kartı, yemek kartları. Y-Market online kart, nakit ve kapıda temassız kart sunar. Diğer marketlerin prototip kapsamı online karttır. Teslimatta ödeme seçimlerinde online kart alanları aranmaz.
 - Bahşiş seçenekleri 0/30/50/75/100 TL'dir. Toplama eklenir; teslimat ücreti gibi minimum ürün tutarını tamamlamaz. “Şimdi değil” toplamı geri alır.
 - Kart alanları React belleğindedir; saklama alanına veya route state'e yazılmaz. Aynı checkout içinde adrese dönüp gelince korunur; sayfadan ayrılma/yenileme sonrasında temizlenir. Bahşiş de yalnız açık akışta tutulur ve yenilemede 0'a döner. Adres taslağı korunur.
-- “Sonraki siparişlerimde bu kartı kullan”, başarılı işlemden sonra yalnız son dört haneyi ve yerel `presentation-card` / `retry-card` senaryo kimliğini aynı sekmenin sessionStorage alanına yazar. Kısayol maskeli kartı seçer; tam numara, ad ve tarih yeniden doldurulmaz. CVV boş başlar ve odağı alır. “Başka kart kullan” boş formu açar; “Kaydı kaldır” tercihi siler. Eski yalnız kimlik içeren kayıtlar okunur. Gerçek kart saklama/tokenizasyon hizmeti değildir.
+- “Bu kartı sonraki siparişlerim için kaydet”, başarılı işlemden sonra yalnız son dört haneyi ve yerel `presentation-card` / `retry-card` senaryo kimliğini aynı sekmenin sessionStorage alanına yazar. Kısayol maskeli kartı seçer; tam numara, ad ve tarih yeniden doldurulmaz. CVV boş başlar ve odağı alır. “Başka kart kullan” boş formu açar; “Kaydı kaldır” tercihi siler. Eski yalnız kimlik içeren kayıtlar okunur. Gerçek kart saklama/tokenizasyon hizmeti değildir.
 - Yerel işlem 1,2 saniyelik gecikmeyle sonuçlanır. Senkron işlem kilidi ikinci denemeyi engeller. İptal, tarayıcı Geri, checkout'tan ayrılma, bölge veya sepet değişimi bekleyen sonucu geçersiz kılar. İptal düğmesi odağı yeniden etkinleşen devam düğmesine döndürür.
 - Başarısızlıkta sipariş oluşturulmaz; alanlar, adres, sepet ve bahşiş korunur. Hata mesajı odaklanır. Başarıda bahşiş dahil tutar mevcut sipariş sonucuna gider ve yalnız ilgili sepet/taslak temizlenir.
 
@@ -160,7 +197,7 @@ Normal kullanıcı etkileşimleriyle **1363 × 936 masaüstünde** yapılan kont
 | Ayrı boş sekmede sonuç yolunu açma | Açıklamalı boş durum, başlık odağı ve alışverişe dönüş |
 | Logo, ürün metni ve yerleşim | Resmî SVG yüklendi; ana sonuç içeriğinde demo/simülasyon etiketi ve 1363px'de yatay taşma yok |
 
-Tarayıcıda gözlenen uygulama hatası yoktu. Ekran okuyucuyla duyuru testi, 1440px'de ayrı tarayıcı testi ve mobil test yapılmadı. Katılımcı başarısı/süresi ölçülmedi; hazırlanmış [test protokolü](MELISA_USABILITY_TEST.md) bu sonraki insan çalışması içindir. [Sunum rehberi](MELISA_DEMO_GUIDE.md) çalıştırma, kurgu veriler ve hızlandırılmış akışı açıklar.
+Tarayıcıda gözlenen uygulama hatası yoktu. Ekran okuyucuyla duyuru testi, 1440px'de ayrı tarayıcı testi ve mobil test yapılmadı. Katılımcı başarısı/süresi ölçülmedi; hazırlanmış [test protokolü](MELISA_USABILITY_TEST.md) bu sonraki insan çalışması içindir. [Sunum rehberi](MELISA_DEMO_GUIDE.md) çalıştırma, kurgu veriler ve sabit onay akışını açıklar.
 
 ## Kart numarası engeli düzeltmesi — 9 Kasım 2026
 
@@ -178,9 +215,9 @@ Bu karar sunum kapsamıdır; gerçek bir sipariş sisteminde durum güncellemele
 
 ### Onay ekranının tasarım gerekçesi ve sınırı
 
-Orijinal kayıtların yeniden çiziminde mevcut aşama, teslimat zamanı, kurye görseli, yardım ve açılabilen sipariş ayrıntıları zaten vardır. Bunların yokluğu iddia edilmez. Kullanıcının belirttiği animasyonu kaldırmak tek başına bir HCI iyileştirmesi değildir; hareketli kurye görseli durumun anlaşılmasına ve marka hissine katkı sağlayabilir. Bu prototipte hareketli görselin uygulanmamış olması, orijinal animasyonun hatalı veya kullanılabilirliğinin düşük olduğuna dair bulgu değildir.
+Orijinal kayıtların yeniden çiziminde mevcut aşama, teslimat zamanı, kurye görseli, yardım ve açılabilen sipariş ayrıntıları zaten vardır. Bunların yokluğu iddia edilmez. Kullanıcının belirttiği animasyonu kaldırmak tek başına bir HCI iyileştirmesi değildir; hareketli kurye görseli durumun anlaşılmasına ve marka hissine katkı sağlayabilir. Önceki prototipte hareketli görselin uygulanmamış olması, orijinal animasyonun hatalı veya kullanılabilirliğinin düşük olduğuna dair bulgu değildir.
 
-Yeni tasarımın amacı: K3 için aktif ve sonraki aşamaları metinle açıklamak; K4 için siparişin oluştuğunu başlık ve numarayla belirtmek; K8 için ürün/ücret özetini ayrı bir açma işlemi gerektirmeden göstermek; K1 için adres/ödeme/sonuçta aynı özet bileşenini korumak. Dikey liste daha fazla alan kullanır ve görsel karakteri sadeleştirir; bunun kullanıcıya faydası henüz ölçülmedi. Orijinalin kurye görseli/animasyonu korunarak da bu bilgi düzeni uygulanabilir. Bu değişiklikte yeni animasyon eklenmedi; Figma/ZIP içindeki diğer durum örnekleri korunmuştur.
+Yeni tasarımın amacı: K3 için aktif ve sonraki aşamaları metinle açıklamak; K4 için siparişin oluştuğunu başlık ve numarayla belirtmek; K8 için ürün/ücret özetini ayrı bir açma işlemi gerektirmeden göstermek; K1 için adres/ödeme/sonuçta aynı özet bileşenini korumak. Dikey liste daha fazla alan kullanır ve görsel karakteri sadeleştirir; bunun kullanıcıya faydası henüz ölçülmedi. Orijinalin kurye görseli/animasyonu korunarak da bu bilgi düzeni uygulanabilir. Sabit onay düzeltmesi animasyon eklememişti; sonraki ödeme UX düzeltmesinde küçük onay animasyonu eklendi. Orijinal kurye animasyonu kopyalanmadı; Figma/ZIP içindeki diğer durum örnekleri korunmuştur.
 
 ### Doğrulama
 

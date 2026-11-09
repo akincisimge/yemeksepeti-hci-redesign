@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { formatTRY, PAYMENT_METHOD_LABELS } from "../types/domain";
+import { formatTRY } from "../types/domain";
 import { readDemoOrder, resolveDemoOrder, saveDemoOrder, type DemoOrder } from "../state/demoOrder";
 import CheckoutSteps from "../features/checkout/CheckoutSteps";
 import OrderSummary from "../features/checkout/OrderSummary";
 import OrderStatus from "../features/checkout/OrderStatus";
 import OrderHelp from "../features/checkout/OrderHelp";
+import ConfirmationMark from "../features/checkout/ConfirmationMark";
+import { paymentMethodLabel } from "../features/checkout/paymentModel";
 import { calculateCheckout } from "../features/checkout/checkoutModel";
 import { confirmationOrder, ORDER_TITLES } from "../features/checkout/orderStatusModel";
 
@@ -37,7 +39,7 @@ export default function SuccessPage() {
   return <div className="space-y-6">
     <CheckoutSteps complete />
     <div className="flex items-center gap-4 py-2">
-      <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#166534] text-3xl text-white">✓</span>
+      <ConfirmationMark />
       <h1 ref={titleRef} tabIndex={-1} className="text-[32px] font-bold leading-10">{ORDER_TITLES[order.stage]}</h1>
     </div>
     {paymentNotice && <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{paymentNotice}</p>}
@@ -51,7 +53,7 @@ export default function SuccessPage() {
             <div><dt className="text-sm font-semibold text-slate-600">Sipariş numarası</dt><dd className="mt-2 font-medium">{order.orderId.replace(/^DEMO-/, order.service === "food" ? "YMK-" : "MKT-")}</dd></div>
             <div><dt className="text-sm font-semibold text-slate-600">Hizmet</dt><dd className="mt-2">{order.service === "food" ? "Yemek" : "Market"}{snapshot && ` · ${snapshot.lines[0].product.storeName}`}</dd></div>
             {snapshot ? <div><dt className="text-sm font-semibold text-slate-600">Teslimat adresi</dt><dd className="mt-2 break-words leading-7">{snapshot.address.name}<br />{snapshot.address.address}<br />{snapshot.address.regionLabel}</dd>{snapshot.address.note && <><dt className="mt-4 text-sm font-semibold text-slate-600">Teslimat notu</dt><dd className="mt-2 break-words leading-6">{snapshot.address.note}</dd></>}</div> : <div><dt className="text-sm font-semibold text-slate-600">Sipariş ayrıntıları</dt><dd className="mt-2 leading-6 text-slate-600">Bu eski kayıtta ürün ve teslimat adresi bilgileri bulunmuyor.</dd></div>}
-            <div><dt className="text-sm font-semibold text-slate-600">Ödeme yöntemi</dt><dd className="mt-2">{PAYMENT_METHOD_LABELS[order.method]}</dd></div>
+            <div><dt className="text-sm font-semibold text-slate-600">Ödeme yöntemi</dt><dd className="mt-2">{paymentMethodLabel(order.method, order.service)}</dd></div>
           </dl>
         </section>
       </div>

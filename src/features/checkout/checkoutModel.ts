@@ -53,6 +53,15 @@ export function checkoutStorage(): Storage | undefined {
   try { return window.sessionStorage; } catch { return undefined; }
 }
 
+// The same estimate is shown before checkout and copied into the confirmed order.
+export function deliveryMinutes(deliveryTime?: string): [number, number] {
+  const match = /^(\d+)\s*[-–]\s*(\d+)(?:\s*dk)?$/.exec(deliveryTime?.trim() ?? "");
+  if (!match) return [20, 35];
+  const from = Number(match[1]);
+  const to = Number(match[2]);
+  return from > 0 && to >= from && to <= 180 ? [from, to] : [20, 35];
+}
+
 export function calculateCheckout(lines: SummaryLine[], store?: Pick<Store, "deliveryFee" | "minBasket">, tip = 0) {
   // Sum in kuruş to avoid floating-point rounding in totals and minimum checks.
   const subtotalCents = lines.reduce((sum, { product, quantity }) => sum + Math.round(product.price * 100) * quantity, 0);

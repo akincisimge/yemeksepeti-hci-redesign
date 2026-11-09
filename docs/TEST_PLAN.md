@@ -46,7 +46,7 @@ Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı 
 - Verilen kurgu kartla devam et; CVV eksik olduğunda düğmenin neden pasif olduğunu açıklayıp alanı düzelt.
 - 50 TL bahşiş seç, toplamı söyle, ardından bahşişten vazgeç ve yeni toplamı kontrol et.
 - Başarısız ödeme sonrasında hangi bilgilerin korunduğunu anlat; aynı bilgilerle tekrar dene.
-- Yemek siparişinde teslimatta nakit ödemeyi seç; hangi alanların değiştiğini anlat. Market akışında sunulan yöntemi kontrol et.
+- Yemek siparişinde teslimatta nakit ödemeyi seç; hangi alanların değiştiğini anlat. Yemeksepeti Market akışında online kart/nakit/kapıda kart seçeneklerini kontrol et; nakit seçerek kart bilgisi girmeden ilerle.
 - İşlem sürerken iptal et; sipariş oluşup oluşmadığını ve bir sonraki adımını açıkla.
 - Kurgu kart tercihini kaydet, sonraki siparişte kısayolu kullan, güvenlik kodunu gir ve sonra kaydı kaldır.
 
@@ -62,3 +62,5 @@ Moderatör için standart örnekler: `1234 5678 9012 3456` veya `0000 0000 0000 
 Uygulama katılımcıya gerçek ödeme/GPS içermeyen bir prototip olarak tanıtılır. Aktif durum “Sipariş alındı” olarak sabittir; katılımcının aktif aşama ile sonraki aşamaları ayırt etmesi değerlendirilir. Kurye ilerlemesi beklenmez. Ödeme sırasında sistem beklemesi varsa görev süresinden ayrı kaydedilir.
 
 [Ayrıntılı protokol ve boş kayıt tablosu](team/MELISA_USABILITY_TEST.md) hazırdır. Simge ana sayfa/araştırma, Hakan Yemek, Beyda Market, Melisa ortak checkout/sonuç görevlerini yürütür; herkes kendi bölümündeki bulguyu ortak biçimde raporlar. Melisa sonuçları koordine eder; tüm testleri tek başına üstlenmez. Henüz katılımcı verisi yoktur.
+
+Son ödeme UX düzeninde ayrıca tahmini teslimat aralığını ve toplamın yanındaki onay düğmesini bulma, uzun sepette diğer ürünleri açma, CVV yardımını anlama ve restorana göre yemek kartı kapsamını okuma gözlenir. Yeni animasyon yalnız onay geri bildirimidir; durum ilerlemez.

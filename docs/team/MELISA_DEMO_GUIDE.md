@@ -7,7 +7,7 @@ Dal: `feat/melisa-checkout`. İnceleme: [PR #11](https://github.com/akincisimge/
 1. Kendi checkout dalındaki güncel kodu aç. Yerel değişiklik varsa önce koru; sunum hazırlığında `reset --hard` kullanma veya başka dala zorla geçme.
 2. İlk kurulumda veya kilit dosyası değiştiyse `npm ci` çalıştır. Kontroller Node 24.22.1 ile yapıldı; testler TypeScript dosyalarını doğrudan çalıştırdığı için Node 24 kullan.
 3. `npm run dev` çalıştır; terminalde Vite'ın verdiği adresi masaüstü tarayıcıda aç.
-4. Teknik kontrol gerekirse `npm run build` ve `node --test tests/*.test.mjs` çalıştır. Bu teslimde derleme ve 49 test başarılıdır; sonraki ekip değişikliklerinden sonra yeniden kontrol et.
+4. Teknik kontrol gerekirse `npm run build` ve `node --test tests/*.test.mjs` çalıştır. Bu teslimde derleme ve 53 test başarılıdır; sonraki ekip değişikliklerinden sonra yeniden kontrol et.
 
 Sunumdan önce Kötekli konumunu seç, ekranı normal yakınlaştırmada aç ve sepetleri gözden geçir. Tek tarayıcı sekmesinde ilerle. Son sipariş kaydı ve adres taslakları aynı sekmede tutulur; başka bilgisayarda otomatik görünmez. Sekmeyi kapatıp açmayı kalıcılık garantisi olarak sunma.
 
@@ -37,18 +37,26 @@ Bu numaralar ödeme sağlayıcısına ait test kartları değildir. Kart adı, 1
 3. Hazır Ev adresini seç, not ekle. Gerekirse sepete dönüp adedi değiştirerek adres/notun korunduğunu göster.
 4. Ödeme adımında dört yöntemi göster: online kart, nakit, kapıda kredi kartı, yemek kartları. Sunumun bu akışında nakit ve 30 TL bahşiş seç.
 5. Özette 220 TL'yi doğrula ve siparişi tamamla. Yemek ücretleri mevcut katalogdan gelir; ayrıca teslimat/poşet ücreti uydurulmadı.
-6. Onay numarası, ürün/adet, tutar, teslimat adresi/not ve yöntemi göster. Ekran “Siparişin alındı” durumunda kalır; tasarımını anlatırken kendiliğinden değişmez.
+6. Onay numarası, ürün/adet, tutar, teslimat adresi/not ve yöntemi göster. Küçük paket/tik animasyonu açılışta bir kez oynar; hareketi azalt tercihinde statiktir. Ekran “Siparişin alındı” durumunda kalır; tasarımını anlatırken kendiliğinden değişmez.
 
 ## 2. Market: hata, toparlanma ve sepet ayrımı
 
 1. Alışverişe dön. İki sepetin ayrılığını göstermek için Yemek'te bir Tavuklu Pilav bırak.
 2. Market'te Sütaş Süzme Peynir 190,90 TL ve Ekmek 15 TL ekle. Ürün toplamı 205,90 TL, teslimat 29,99 TL; minimum 150 TL aşılmış olur.
-3. Checkout'ta kurgu adresi kullan. Market'te yalnız online kart sunulduğunu göster.
+3. Checkout'ta kurgu adresi kullan. Yemeksepeti Market'te online kart, nakit ve kapıda kart seçeneklerini göster. Bu hata senaryosu için online kartı seç.
 4. Hata kartını, `12/30`, `000` ve 50 TL bahşişi kullan. Toplam 285,89 TL.
 5. İlk denemede hatayı ve korunan bilgileri göster. Aynı açık formda tekrar dene; sipariş oluşur.
 6. Alışverişe dön: Market sepeti boş, Yemek sepetindeki ürün yerinde olmalı. Profil → Önceki siparişlerim → Sipariş takibini aç üzerinden son kaydı yeniden açabilirsin.
 
 Fiyatlar ekip tarafından değiştirilirse ezberlenen tutar yerine canlı özeti esas al. Yemek/Market sepetlerini karıştırarak tek sipariş oluşturulmaz; ortak ekranlar ilgili servisin verisini alır.
+
+## Ek ödeme UX kontrolleri
+
+- Özetin tahmini teslimat aralığını, toplamı ve aynı karttaki onay düğmesini göster. Dörtten fazla ürün şart değildir; dört çeşit ile ek ürünlerin düğmenin altından açıldığını gösterebilirsin.
+- Y-Market'te nakit veya kapıda temassız kart seçildiğinde online kart bilgisi istenmez. BİM/CarrefourSA için doğrulanmış ek referansımız olmadığı için önceki online kart kapsamı korunur. Bunu gerçek mağazanın kesin ödeme politikası diye anlatma.
+- Yemek kartını seçince iki kurgu restoran için tanımlanan sağlayıcı adlarını göster; bunlar örnek senaryo verisidir, gerçek anlaşma/entegrasyon değildir.
+- Online kartta “Güvenlik kodu nerede?” yardımını aç. Kart şifresi ile CVV'nin farklı olduğunu açıkla. Kayıt kutusunun isteğe bağlı olduğunu göster.
+- Yeni ödeme düzeni ve animasyon React kodunda günceldir; Figma/ZIP'deki eski ödeme kareleri bu son düzenle henüz eşitlenmedi.
 
 ## 3. Sipariş sonucu ve durum sunumu
 

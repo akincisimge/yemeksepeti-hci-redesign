@@ -1,12 +1,14 @@
 import { useEffect, useRef, type FormEvent } from "react";
-import { formatTRY, PAYMENT_METHOD_LABELS, type PaymentMethod, type Service } from "../../types/domain";
+import { formatTRY, type PaymentMethod, type Service } from "../../types/domain";
+import CardSecurityHelp from "./CardSecurityHelp";
 import {
-  fixtureLabel, paymentMethods, TIP_AMOUNTS,
+  fixtureLabel, mealCardNames, paymentMethodLabel, paymentMethods, TIP_AMOUNTS,
   type CardErrors, type CardValues, type SavedCardPreference, type PaymentStatus,
 } from "./paymentModel";
 
 type Props = {
   service: Service;
+  storeId: string;
   method: PaymentMethod;
   card: CardValues;
   errors: CardErrors;
@@ -28,11 +30,9 @@ type Props = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
-const DESCRIPTIONS: Record<PaymentMethod, string> = {
-  "card-demo": "Kart bilgilerini aşağıda gir.",
-  "cash-demo": "Siparişini teslim alırken öde.",
-  "door-card-demo": "Teslimatta kartınla öde.",
-  "meal-card-demo": "Satıcının desteklediği kartlar.",
+const SHORT_LABELS: Record<PaymentMethod, string> = {
+  "card-demo": "Online kart", "cash-demo": "Nakit",
+  "door-card-demo": "Kapıda kart", "meal-card-demo": "Yemek kartı",
 };
 const DELIVERY_TITLES: Record<Exclude<PaymentMethod, "card-demo">, string> = {
   "cash-demo": "Teslimatta nakit ödeme",
@@ -40,10 +40,21 @@ const DELIVERY_TITLES: Record<Exclude<PaymentMethod, "card-demo">, string> = {
   "meal-card-demo": "Teslimatta yemek kartıyla ödeme",
 };
 
+function PaymentIcon({ method }: { method: PaymentMethod }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    {method === "cash-demo" ? <><rect x="2" y="5" width="20" height="14" rx="2" /><circle cx="12" cy="12" r="3" /><path d="M5 9v6M19 9v6" /></>
+      : method === "meal-card-demo" ? <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M7 8v8M5 8v3h4V8M16 8c-3 0-3 5 0 5v3V8" /></>
+      : method === "door-card-demo" ? <><rect x="6" y="2" width="12" height="20" rx="2" /><path d="M9 5h6v5H9zM9 14h1m4 0h1m-6 4h1m4 0h1" /></>
+      : <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M2 9h20M6 15h4" /></>}
+  </svg>;
+}
+
 export default function PaymentForm(props: Props) {
   const { card, errors, method, status } = props;
   const failureRef = useRef<HTMLDivElement>(null);
   const processing = status === "processing";
+  const methods = paymentMethods(props.service, props.storeId);
+  const supportedMealCards = mealCardNames(props.storeId);
   useEffect(() => { if (status === "failed") failureRef.current?.focus(); }, [status]);
 
   const cardField = (
@@ -66,31 +77,32 @@ export default function PaymentForm(props: Props) {
       ].filter(Boolean).join(" ") || undefined}
       className={"field disabled:bg-slate-50 " + (errors[field] ? "border-red-800 focus:border-red-800" : "")}
     />
-    {errors[field] && <p id={`checkout-card-${field}-error`} className="mt-2 text-sm font-medium text-red-800">{errors[field]}</p>}
+    <p id={`checkout-card-${field}-error`} className="mt-1 min-h-5 text-sm font-medium leading-5 text-red-800">{errors[field] ?? ""}</p>
     {options.hint && <p id={`checkout-card-${field}-hint`} className="mt-2 text-sm text-slate-600">{options.hint}</p>}
+    {field === "cvv" && <CardSecurityHelp />}
   </div>;
 
-  return <form id="checkout-payment-form" onSubmit={props.onSubmit} noValidate autoComplete="off" aria-busy={processing} className="space-y-6 rounded-2xl border border-slate-300 bg-white p-6">
-    <fieldset disabled={processing} className="min-w-0 space-y-6">
+  return <form id="checkout-payment-form" onSubmit={props.onSubmit} noValidate autoComplete="off" aria-busy={processing} className="space-y-5 rounded-2xl border border-slate-300 bg-white p-6">
+    {status === "failed" && <div ref={failureRef} tabIndex={-1} role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800">
+      Ödeme tamamlanamadı. Sipariş oluşturulmadı; sepetin ve adresin korundu. Tekrar deneyebilirsin.
+    </div>}
+    <fieldset disabled={processing} className="min-w-0 space-y-5">
       <legend className="sr-only">Ödeme bilgileri</legend>
       <fieldset className="min-w-0">
-        <legend className="mb-4 text-xl font-semibold">Nasıl ödemek istersin?</legend>
-        <div className={"grid gap-4 " + (props.service === "food" ? "grid-cols-2" : "grid-cols-1")}>
-          {paymentMethods(props.service).map(value => <label key={value} className={"flex min-h-[100px] cursor-pointer flex-col rounded-xl border p-4 " + (method === value ? "border-brand bg-pink-50 ring-1 ring-brand" : "border-slate-400")}>
-            <span className="flex items-start gap-3">
-              <input type="radio" name="payment" value={value} checked={method === value} onChange={() => props.onMethodChange(value)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand" />
-              <span className={"font-semibold " + (props.service === "food" ? "text-sm leading-5" : "")}>
-                {PAYMENT_METHOD_LABELS[value]}
-              </span>
+        <legend className="mb-3 text-xl font-semibold">Ödeme yöntemi</legend>
+        <div className={"grid gap-3 " + (methods.length === 3 ? "grid-cols-3" : methods.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
+          {methods.map(value => <label key={value} className={"flex min-h-[72px] cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 " + (method === value ? "border-brand bg-pink-50 ring-1 ring-brand" : "border-slate-400 hover:border-brand")}>
+            <input type="radio" name="payment" value={value} checked={method === value} aria-label={`${SHORT_LABELS[value]}: ${paymentMethodLabel(value, props.service)}`} onChange={() => props.onMethodChange(value)} className="h-4 w-4 shrink-0 accent-brand" />
+            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold leading-5">
+              <PaymentIcon method={value} />{SHORT_LABELS[value]}
             </span>
-            <span className="mt-3 text-sm leading-5 text-slate-600">{DESCRIPTIONS[value]}</span>
           </label>)}
         </div>
       </fieldset>
 
-      {method === "card-demo" ? <section aria-labelledby="card-details-title" className="space-y-5">
+      {method === "card-demo" ? <section aria-labelledby="card-details-title" className="space-y-4 border-t border-slate-200 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="card-details-title" className="text-xl font-semibold">Kart bilgileri</h2>
+          <h2 id="card-details-title" className="font-semibold">Kart bilgileri</h2>
           <span className="text-sm text-slate-600">VISA · Mastercard · Troy</span>
         </div>
         {props.savedFixture && <div className="rounded-xl border border-slate-300 bg-slate-50 p-4">
@@ -101,26 +113,31 @@ export default function PaymentForm(props: Props) {
           </div>
         </div>}
         <p role="status" className={props.savedMessage ? "text-sm text-slate-600" : "sr-only"}>{props.savedMessage}</p>
-        {!props.selectedSaved && <>
-          {cardField("holder", "Kart sahibinin adı", "Kartın üzerindeki ad soyad", { maxLength: 100 })}
-          {cardField("number", "Kart numarası", "Kart numaranı gir", { maxLength: 19, numeric: true })}
-        </>}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-4">
+          {!props.selectedSaved && <>
+            {cardField("holder", "Kart sahibinin adı", "Kartın üzerindeki ad soyad", { maxLength: 100 })}
+            {cardField("number", "Kart numarası", "Kart numaranı gir", { maxLength: 19, numeric: true })}
+          </>}
           {!props.selectedSaved && cardField("expiry", "Son kullanma tarihi", "AA/YY", { maxLength: 5, numeric: true })}
-          {cardField("cvv", "CVV", "Güvenlik kodu", { maxLength: 4, numeric: true, secret: true, hint: "Kartındaki 3 veya 4 haneli güvenlik kodu." })}
+          {cardField("cvv", "Güvenlik kodu (CVV)", "3 veya 4 hane", { maxLength: 4, numeric: true, secret: true })}
         </div>
-        <label className="flex min-h-11 cursor-pointer items-center gap-3">
+        {!props.selectedSaved && <label className="flex min-h-11 cursor-pointer items-center gap-3">
           <input type="checkbox" checked={props.remember} onChange={event => props.onRememberChange(event.target.checked)} className="h-5 w-5 shrink-0 accent-brand" />
-          <span>Sonraki siparişlerimde bu kartı kullan</span>
-        </label>
-      </section> : <section aria-labelledby="delivery-payment-title" className="space-y-4">
-        <h2 id="delivery-payment-title" className="text-xl font-semibold">{DELIVERY_TITLES[method]}</h2>
-        <p className="rounded-xl bg-pink-50 p-4 text-sm font-medium leading-6 text-slate-700">Kapıda ödeme için ek ücret: {formatTRY(0)}. Ödeyeceğin toplam tutar sipariş özetinde gösteriliyor.</p>
+          <span className="text-sm">Bu kartı sonraki siparişlerim için kaydet</span>
+        </label>}
+      </section> : <section aria-labelledby="delivery-payment-title" className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <h2 id="delivery-payment-title" className="font-semibold">{method === "door-card-demo" && props.service === "market" ? "Teslimatta temassız kartla ödeme" : DELIVERY_TITLES[method]}</h2>
+        {method === "meal-card-demo" && <div className="space-y-2 text-sm leading-6">
+          <p className="font-medium">Bu restoranda geçerli yemek kartları:</p>
+          <ul className="flex flex-wrap gap-2" aria-label="Desteklenen yemek kartları">{supportedMealCards.map(name => <li key={name} className="rounded-lg border border-slate-300 bg-white px-3 py-1">{name}</li>)}</ul>
+          <p>Kartını teslimatta kullanabilirsin; burada kart bilgisi girmen gerekmiyor.</p>
+        </div>}
+        <p className="text-sm leading-6 text-slate-700">Siparişini teslim alırken ödeyeceksin. Kapıda ödeme ek ücreti: {formatTRY(0)}.</p>
       </section>}
 
-      <fieldset className="min-w-0 border-t border-slate-300 pt-6">
+      <fieldset className="min-w-0 border-t border-slate-300 pt-4">
         <legend className="sr-only">Bahşiş (isteğe bağlı)</legend>
-        <h2 className="mb-4 font-semibold" aria-hidden="true">Bahşiş (isteğe bağlı)</h2>
+        <h2 className="mb-3 font-semibold" aria-hidden="true">Bahşiş (isteğe bağlı)</h2>
         <div className="grid grid-cols-5 gap-2">
           {TIP_AMOUNTS.map(value => <label key={value} className="min-w-0 cursor-pointer">
             <input type="radio" name="tip" value={value} checked={props.tip === value} onChange={() => props.onTipChange(value)} className="peer sr-only" />
@@ -129,13 +146,10 @@ export default function PaymentForm(props: Props) {
             </span>
           </label>)}
         </div>
-        <p className="mt-4 text-sm text-slate-600">Bahşiş: {formatTRY(props.tip)}. Seçimini değiştirebilirsin.</p>
+        <p className="mt-3 text-sm text-slate-600">Bahşiş: {formatTRY(props.tip)}. Seçimini değiştirebilirsin.</p>
       </fieldset>
     </fieldset>
 
-    {status === "failed" && <div ref={failureRef} tabIndex={-1} role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800">
-      Ödeme tamamlanamadı. Sipariş oluşturulmadı; sepetin ve adresin korundu. Tekrar deneyebilirsin.
-    </div>}
     {processing && <div className="rounded-xl bg-pink-50 p-4">
       <p role="status" className="flex items-center gap-3 text-sm font-medium leading-6 text-slate-700">
         <span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border-2 border-brand border-t-transparent motion-safe:animate-spin" />

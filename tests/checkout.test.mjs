@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  calculateCheckout, clearCheckoutDraft, draftKey, readCheckoutDraft,
+  calculateCheckout, clearCheckoutDraft, deliveryMinutes, draftKey, readCheckoutDraft,
   saveCheckoutDraft, SAVED_ADDRESS, validateAddress,
 } from '../src/features/checkout/checkoutModel.ts';
 
@@ -64,10 +64,16 @@ test('malformed or unavailable storage does not break checkout', () => {
   assert.equal(readCheckoutDraft(unavailable, 'food', 'kotekli').address, '');
   assert.doesNotThrow(() => saveCheckoutDraft(unavailable, 'food', 'kotekli', { ...SAVED_ADDRESS, method: 'cash-demo' }));
 });
-test('draft persistence excludes card credentials and unsupported Market cash selection', () => {
+test('Market draft preserves cash while excluding card credentials and unsupported meal cards', () => {
   const storage = memoryStorage();
   saveCheckoutDraft(storage, 'market', 'kotekli', { ...SAVED_ADDRESS, method: 'cash-demo', cardNumber: '0000 0000 0000 0000', cvv: '000' });
   const raw = JSON.parse(storage.getItem(draftKey('market', 'kotekli')));
   assert.deepEqual(Object.keys(raw).sort(), ['address', 'method', 'name', 'note']);
+  assert.equal(readCheckoutDraft(storage, 'market', 'kotekli').method, 'cash-demo');
+  saveCheckoutDraft(storage, 'market', 'kotekli', { ...SAVED_ADDRESS, method: 'meal-card-demo' });
   assert.equal(readCheckoutDraft(storage, 'market', 'kotekli').method, 'card-demo');
+});
+test('delivery estimates parse catalog intervals and use a stable fallback for missing or invalid ranges', () => {
+  for (const label of ['20-30 dk', '20–30', ' 20 - 30 dk ']) assert.deepEqual(deliveryMinutes(label), [20, 30]);
+  for (const label of [undefined, '', 'soon', '30-20 dk', '0-30', '20-999']) assert.deepEqual(deliveryMinutes(label), [20, 35]);
 });

@@ -1,6 +1,6 @@
 # Ortak sipariş akışı — katılımcı test protokolü
 
-Durum: **Hazırlandı; henüz uygulanmadı.** Katılımcı, süre, başarı oranı veya alıntı üretilmedi. Otomatik 49 test ve tarayıcı kontrolleri bu çalışmanın sonucu değildir.
+Durum: **Hazırlandı; henüz uygulanmadı.** Katılımcı, süre, başarı oranı veya alıntı üretilmedi. Otomatik 53 test ve tarayıcı kontrolleri bu çalışmanın sonucu değildir.
 
 ## Amaç ve ekip sorumluluğu
 
@@ -32,6 +32,13 @@ Aşağıdaki ilk sütun katılımcıya okunur. Başlangıç ve başarı ölçüt
 | M6 | “Siparişinin adresi ve ödeme bilgisi hakkında yardım arıyorsun. İlgili bilgiye ulaş, sonra yeni bir alışverişe dön.” | Market sonucu. Yardım/ayrıntılar bulunur, ilgili servise dönülür. Yeni sepetteki değişikliğin eski siparişi değiştirmediğini açıklama ek gözlem olabilir. |
 
 M1 için eksik bilgiyi moderatörün kontrollü vermesi, doğal hata oranı ölçümü değildir; hata mesajı ve toparlanma değerlendirmesidir. M2'nin kısayol varyantını kullandıysan ayrı kod `M2-K` ile kaydet. M3/M5'te fiyat değişmişse güncel doğru tutarı oturum başlamadan kaydet.
+
+## Son ödeme düzeni için ek gözlemler
+
+- M3/M5 sırasında kullanıcı toplamı, tahmini teslimat süresini ve onay düğmesini yardım almadan bulabiliyor mu? Gereksiz kaydırma veya arama davranışını kaydet.
+- M5-K varyantı: “Yemeksepeti Market siparişini teslimatta nakit ödemek istiyorsun; siparişini tamamla.” Başlangıç aynı Y-Market sepeti; online kart alanlarını doldurmadan doğru yöntem/tutarla onaylayabilmesi gözlenir. Ana kart hata görevi M5 ile ayrı kaydet.
+- CVV konumunu bilmeyen katılımcının yardımı bulması ve açıklamayı anlaması ayrıca gözlenebilir. Görev sırasında doğrudan yardım bağlantısını işaret etme.
+- M4'te kısa animasyonun mevcut aşamayı açıklamaya katkısı/karışıklığı sorulabilir; “animasyon daha iyidir” varsayımıyla yönlendirme yapma.
 
 ## Ölçüm ve müdahale
 

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDemoOrder, ORDER_STORAGE_KEY, parseDemoOrder, readDemoOrder, resolveDemoOrder, saveDemoOrder } from '../src/state/demoOrder.ts';
 import { confirmationOrder, deliveryTimeLabel, orderStatusDescription } from '../src/features/checkout/orderStatusModel.ts';
+import { deliveryMinutes } from '../src/features/checkout/checkoutModel.ts';
 
 const created = new Date('2026-11-09T13:00:00.000Z');
 const input = (service = 'food') => ({
@@ -44,6 +45,19 @@ test('snapshot preserves exact total, tip, note, units, method and service-speci
   assert.match(food.orderId, /^YMK-/);
   assert.match(market.orderId, /^MKT-/);
   assert.deepEqual(market.snapshot.deliveryMinutes, [20, 30]);
+});
+test('Market cash and delivery card orders retain method, prices and checkout estimate after refresh', () => {
+  for (const method of ['cash-demo', 'door-card-demo']) {
+    const source = { ...input('market'), method };
+    const order = createDemoOrder(source);
+    const storage = memory();
+    assert.equal(saveDemoOrder(order, storage), true);
+    const restored = readDemoOrder(storage);
+    assert.equal(restored.method, method);
+    assert.equal(restored.amount, 259.69);
+    assert.deepEqual(restored.snapshot.deliveryMinutes, deliveryMinutes(source.deliveryTime));
+    assert.equal(confirmationOrder(restored).stage, 0);
+  }
 });
 test('saving and reloading only allow-listed fields never retains card or arbitrary nested fields', () => {
   const storage = memory();

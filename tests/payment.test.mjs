@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SAVED_CARD_KEY, cardFixture, createPaymentRunner, fixtureLabel,
-  forgetFixture, formatCardNumber, formatExpiry, normalizePaymentMethod,
+  forgetFixture, formatCardNumber, formatExpiry, mealCardNames, normalizePaymentMethod,
   paymentMethods, readSavedFixture, saveFixture, validateCard,
 } from '../src/features/checkout/paymentModel.ts';
 import { calculateCheckout, readCheckoutDraft, saveCheckoutDraft, SAVED_ADDRESS } from '../src/features/checkout/checkoutModel.ts';
@@ -16,12 +16,30 @@ const memoryStorage = () => {
     setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
 };
 
-test('Food exposes four methods; Market exposes only online card and rejects persisted alternatives', () => {
+test('Food exposes four method types; Market allows online card, cash and delivery card but not meal cards', () => {
   assert.deepEqual(paymentMethods('food'), ['card-demo', 'cash-demo', 'door-card-demo', 'meal-card-demo']);
-  assert.deepEqual(paymentMethods('market'), ['card-demo']);
+  assert.deepEqual(paymentMethods('market'), ['card-demo', 'cash-demo', 'door-card-demo']);
   assert.equal(normalizePaymentMethod('meal-card-demo', 'food'), 'meal-card-demo');
   assert.equal(normalizePaymentMethod('meal-card-demo', 'market'), 'card-demo');
   assert.equal(normalizePaymentMethod('unknown', 'food'), 'card-demo');
+});
+test('seller capabilities expose the referenced Y-Market choices without inventing support for other branches', () => {
+  assert.deepEqual(paymentMethods('market', 'ymarket-1'), ['card-demo', 'cash-demo', 'door-card-demo']);
+  for (const store of ['bim-1', 'carrefour-1', 'unconfigured-store']) {
+    assert.deepEqual(paymentMethods('market', store), ['card-demo']);
+    assert.equal(normalizePaymentMethod('cash-demo', 'market', store), 'card-demo');
+  }
+  assert.equal(normalizePaymentMethod('cash-demo', 'market', 'ymarket-1'), 'cash-demo');
+  assert.deepEqual(paymentMethods('food', 'unconfigured-store'), ['card-demo']);
+});
+test('meal card choice has explicit seller-specific fixture names and no unsupported unknown seller', () => {
+  for (const id of ['f-1', 'f-2']) {
+    assert.ok(paymentMethods('food', id).includes('meal-card-demo'));
+    assert.ok(mealCardNames(id).length > 0);
+  }
+  assert.notDeepEqual(mealCardNames('f-1'), mealCardNames('f-2'));
+  assert.deepEqual(mealCardNames('unconfigured-store'), []);
+  assert.ok(!paymentMethods('food', 'unconfigured-store').includes('meal-card-demo'));
 });
 test('formatting retains leading zeroes and bounds pasted input', () => {
   assert.equal(formatCardNumber('0000000000000000'), '0000 0000 0000 0000');
@@ -175,7 +193,7 @@ test('delivery methods require no online card fields; unvalidated online payment
   }
   assert.equal((await runner.run({ method: 'card-demo' })).status, 'failed');
 });
-test('order persistence accepts all Food methods but rejects unsupported Market delivery payment', () => {
+test('order persistence accepts the supported Food and Market methods and rejects Market meal cards', () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
   Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: memoryStorage() });
   const order = { orderId: 'DEMO-1234567', amount: 235.89, service: 'food', stage: 0, createdAt: now.toISOString() };
@@ -184,10 +202,13 @@ test('order persistence accepts all Food methods but rejects unsupported Market 
       saveDemoOrder({ ...order, method });
       assert.equal(readDemoOrder().method, method);
     }
-    assert.equal(saveDemoOrder({ ...order, service: 'market', method: 'door-card-demo' }), false);
+    assert.equal(saveDemoOrder({ ...order, service: 'market', method: 'meal-card-demo' }), false);
     assert.equal(readDemoOrder().service, 'food');
-    saveDemoOrder({ ...order, service: 'market', method: 'card-demo' });
-    assert.equal(readDemoOrder().amount, 235.89);
+    for (const method of paymentMethods('market')) {
+      assert.equal(saveDemoOrder({ ...order, service: 'market', method }), true);
+      assert.equal(readDemoOrder().method, method);
+      assert.equal(readDemoOrder().amount, 235.89);
+    }
   } finally {
     if (previous) Object.defineProperty(globalThis, 'sessionStorage', previous);
     else delete globalThis.sessionStorage;

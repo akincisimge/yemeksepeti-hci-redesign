@@ -1,4 +1,4 @@
-import type { PaymentMethod, Service } from "../../types/domain";
+import { PAYMENT_METHOD_LABELS, type PaymentMethod, type Service } from "../../types/domain.ts";
 
 export type CardValues = { holder: string; number: string; expiry: string; cvv: string };
 export type CardErrors = Partial<Record<keyof CardValues, string>>;
@@ -16,11 +16,28 @@ const FIXTURES: Record<FixtureId, { number: string; label: string }> = {
   "retry-card": { number: "0000000000000002", label: "•••• 0002" },
 };
 const FOOD_METHODS: PaymentMethod[] = ["card-demo", "cash-demo", "door-card-demo", "meal-card-demo"];
-export function paymentMethods(service: Service): PaymentMethod[] {
-  return service === "market" ? ["card-demo"] : [...FOOD_METHODS];
+const MARKET_METHODS: PaymentMethod[] = ["card-demo", "cash-demo", "door-card-demo"];
+// Checkout fixtures, not a claim about real branches or payment-provider contracts.
+// The supplied Y-Market reference verifies cash and contactless payment at delivery.
+// Other Market fixtures retain their existing online-only scope until verified.
+const SELLER_METHODS: Record<Service, Record<string, PaymentMethod[]>> = {
+  food: { "f-1": FOOD_METHODS, "f-2": FOOD_METHODS },
+  market: { "ymarket-1": MARKET_METHODS, "carrefour-1": ["card-demo"], "bim-1": ["card-demo"] },
+};
+const MEAL_CARDS: Record<string, readonly string[]> = {
+  "f-1": ["Ticket Restaurant", "Pluxee", "Multinet"],
+  "f-2": ["Ticket Restaurant", "Multinet"],
+};
+export const mealCardNames = (storeId: string): readonly string[] => MEAL_CARDS[storeId] ?? [];
+export function paymentMethods(service: Service, storeId?: string): PaymentMethod[] {
+  if (storeId !== undefined) return [...(SELLER_METHODS[service][storeId] ?? ["card-demo"])];
+  return [...(service === "market" ? MARKET_METHODS : FOOD_METHODS)];
 }
-export function normalizePaymentMethod(value: unknown, service: Service): PaymentMethod {
-  return paymentMethods(service).find(method => method === value) ?? "card-demo";
+export function normalizePaymentMethod(value: unknown, service: Service, storeId?: string): PaymentMethod {
+  return paymentMethods(service, storeId).find(method => method === value) ?? "card-demo";
+}
+export function paymentMethodLabel(method: PaymentMethod, service: Service): string {
+  return method === "door-card-demo" && service === "market" ? "Kapıda Temassız Kartla Ödeme" : PAYMENT_METHOD_LABELS[method];
 }
 export function isPaymentMethod(value: unknown): value is PaymentMethod {
   return FOOD_METHODS.some(method => method === value);

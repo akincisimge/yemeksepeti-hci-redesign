@@ -1,6 +1,6 @@
 import type { CartLine, PaymentMethod, Service } from "../types/domain";
-import { isPaymentMethod, TIP_AMOUNTS } from "../features/checkout/paymentModel.ts";
-import { calculateCheckout, validateAddress, type AddressValues, type SummaryLine } from "../features/checkout/checkoutModel.ts";
+import { isPaymentMethod, paymentMethods, TIP_AMOUNTS } from "../features/checkout/paymentModel.ts";
+import { calculateCheckout, deliveryMinutes, validateAddress, type AddressValues, type SummaryLine } from "../features/checkout/checkoutModel.ts";
 
 export type DemoOrderStage = 0 | 1 | 2 | 3;
 export type OrderSnapshot = {
@@ -55,7 +55,7 @@ export function parseDemoOrder(value: unknown): DemoOrder | null {
   if (typeof orderId !== "string" || !/^(DEMO|YMK|MKT)-\d{7}$/.test(orderId) || !money(amount)) return null;
   if (service !== "food" && service !== "market") return null;
   if ((orderId.startsWith("YMK-") && service !== "food") || (orderId.startsWith("MKT-") && service !== "market")) return null;
-  if (!isPaymentMethod(method) || (service === "market" && method !== "card-demo")) return null;
+  if (!isPaymentMethod(method) || !paymentMethods(service).includes(method)) return null;
   if (stage !== 0 && stage !== 1 && stage !== 2 && stage !== 3) return null;
   if (typeof createdAt !== "string" || !Number.isFinite(Date.parse(createdAt))) return null;
   const base = { orderId, amount, service, method, stage, createdAt } satisfies DemoOrder;
@@ -71,14 +71,13 @@ export function createDemoOrder(input: {
   deliveryTime?: string; now?: Date;
 }): DemoOrder {
   const now = input.now ?? new Date();
-  const range = /^(\d+)\s*[-–]\s*(\d+)/.exec(input.deliveryTime ?? "20-35");
   const order = parseDemoOrder({
     orderId: `${input.service === "food" ? "YMK" : "MKT"}-${now.getTime().toString().slice(-7).padStart(7, "0")}`,
     amount: calculateCheckout(input.lines, { deliveryFee: input.deliveryFee }, input.tip).total,
     service: input.service, method: input.method, stage: 0, createdAt: now.toISOString(),
     snapshot: {
       lines: input.lines, address: input.address, deliveryFee: input.deliveryFee, tip: input.tip,
-      deliveryMinutes: range ? [Number(range[1]), Number(range[2])] : [20, 35],
+      deliveryMinutes: deliveryMinutes(input.deliveryTime),
     },
   });
   if (!order) throw new Error("Invalid order snapshot");

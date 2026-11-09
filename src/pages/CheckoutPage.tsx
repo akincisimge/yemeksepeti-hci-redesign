@@ -6,12 +6,13 @@ import { useDelivery } from "../state/DeliveryContext";
 import { createDemoOrder, saveDemoOrder, type DemoOrder } from "../state/demoOrder";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
 import { marketStores } from "../features/market/data/marketData";
+import { stores } from "../data/catalog";
 import AddressForm from "../features/checkout/AddressForm";
 import CheckoutSteps from "../features/checkout/CheckoutSteps";
 import OrderSummary from "../features/checkout/OrderSummary";
 import PaymentForm from "../features/checkout/PaymentForm";
 import {
-  calculateCheckout, checkoutStorage, clearCheckoutDraft, readCheckoutDraft,
+  calculateCheckout, checkoutStorage, clearCheckoutDraft, deliveryMinutes, readCheckoutDraft,
   saveCheckoutDraft, SAVED_ADDRESS, validateAddress, type AddressErrors, type AddressValues,
 } from "../features/checkout/checkoutModel";
 import {
@@ -52,14 +53,18 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousStep = useRef(false);
   const lines = carts[service];
-  const store = service === "market" ? marketStores.find(item => item.id === lines[0]?.product.storeId) : undefined;
+  const storeId = lines[0]?.product.storeId ?? "";
+  const store = (service === "market" ? marketStores : stores).find(item => item.id === storeId);
+  const method = normalizePaymentMethod(draft.method, service, storeId);
   const totals = calculateCheckout(lines, store, tip);
+  const estimate = deliveryMinutes(store?.deliveryTime);
+  const deliveryEstimate = `${estimate[0]}–${estimate[1]} dk`;
   const addressValid = Object.keys(validateAddress(draft)).length === 0;
   const payment = params.get("step") === "payment" && addressValid;
   const processing = status === "processing";
   const cardValidation = validateCard(card, new Date(), selectedSaved);
   const firstCardError = CARD_FIELDS.find(field => cardValidation[field]);
-  const cardValid = draft.method !== "card-demo" || !firstCardError;
+  const cardValid = method !== "card-demo" || !firstCardError;
   const cartSignature = JSON.stringify(lines.map(({ product, quantity }) => [product.id, product.storeId, product.price, quantity]));
 
   useEffect(() => { saveCheckoutDraft(checkoutStorage(), service, regionId, draft); }, [draft, service, regionId]);
@@ -132,7 +137,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     setSavedMessage("");
   };
   const changeMethod = (method: PaymentMethod) => {
-    setDraft(current => ({ ...current, method: normalizePaymentMethod(method, service) }));
+    setDraft(current => ({ ...current, method: normalizePaymentMethod(method, service, storeId) }));
     setStatus("idle");
     setAnnouncement("");
   };
@@ -152,7 +157,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (runner.pending() || !payment || !totals.canContinue || !addressValid) return;
-    if (draft.method === "card-demo") {
+    if (method === "card-demo") {
       const nextErrors = validateCard(card, new Date(), selectedSaved);
       setCardErrors(nextErrors);
       const first = CARD_FIELDS.find(field => nextErrors[field]);
@@ -163,24 +168,24 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
       }
     }
     const version = ++attemptVersion.current;
-    const fixtureId = draft.method === "card-demo" ? selectedSaved?.fixtureId ?? cardFixture(card.number) : undefined;
+    const fixtureId = method === "card-demo" ? selectedSaved?.fixtureId ?? cardFixture(card.number) : undefined;
     setStatus("processing");
     setAnnouncement("");
-    const result = await runner.run({ method: draft.method, fixtureId, cardValidated: draft.method === "card-demo" });
+    const result = await runner.run({ method, fixtureId, cardValidated: method === "card-demo" });
     if (version !== attemptVersion.current || result.status === "cancelled" || result.status === "busy") return;
     if (result.status === "failed") { setStatus("failed"); return; }
 
     let order: DemoOrder;
     try {
       order = createDemoOrder({
-        service, method: draft.method, lines,
+        service, method, lines,
         address: { name: draft.name, address: draft.address, note: draft.note, regionLabel },
         deliveryFee: totals.deliveryFee, tip: totals.tip, deliveryTime: store?.deliveryTime,
       });
     } catch { setStatus("failed"); return; }
     let paymentNotice: string | undefined;
     const last4 = selectedSaved?.last4 ?? card.number.replace(/\s/g, "").slice(-4);
-    if (remember && draft.method === "card-demo" && !saveFixture(checkoutStorage(), fixtureId ?? "presentation-card", last4)) {
+    if (remember && method === "card-demo" && !saveFixture(checkoutStorage(), fixtureId ?? "presentation-card", last4)) {
       paymentNotice = "Siparişin oluşturuldu ancak kart tercihin kaydedilemedi. Sonraki siparişte kart bilgilerini yeniden girebilirsin.";
     }
     saveDemoOrder(order);
@@ -199,25 +204,32 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const nextHint = !payment ? "Sonraki adımda ödeme yöntemini seçeceksin."
     : processing ? "İşlem sürüyor. Tekrar tıklamana gerek yok."
     : !cardValid && firstCardError ? `Devam etmek için: ${cardValidation[firstCardError]}`
-    : draft.method === "card-demo" ? "Onayladığında siparişin oluşturulur."
+    : method === "card-demo" ? "Onayladığında siparişin oluşturulur."
     : "Ödemeyi siparişini teslim alırken yapacaksın.";
   const submitLabel = !payment ? "Ödemeye geç" : processing
-    ? draft.method === "card-demo" ? "Ödeme işleniyor…" : "Sipariş oluşturuluyor…"
+    ? method === "card-demo" ? "Ödeme işleniyor…" : "Sipariş oluşturuluyor…"
     : status === "failed" ? "Tekrar dene" : "Siparişi tamamla";
 
-  return <div className="space-y-6">
+  const submitAction = <div className="mt-4 space-y-3">
+    {!totals.canContinue && <p id="checkout-minimum" role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">Minimum sepet tutarı {formatTRY(totals.minimum)}. Devam etmek için {formatTRY(totals.remaining)} tutarında ürün ekle. Teslimat ücreti ve bahşiş minimum tutara dahil değildir.</p>}
+    <button ref={submitRef} id="checkout-submit" type="submit" form={payment ? "checkout-payment-form" : "checkout-address-form"} disabled={!totals.canContinue || processing || (payment && !cardValid)} aria-describedby={!totals.canContinue ? "checkout-minimum" : "checkout-next-hint"} className="btn-primary w-full">{submitLabel}</button>
+    <p id="checkout-next-hint" className="text-sm leading-5 text-slate-600" aria-live="polite">{nextHint}</p>
+    {announcement && <p role="alert" className="text-sm font-medium text-red-800">{announcement}</p>}
+  </div>;
+
+  return <div className={payment ? "space-y-4" : "space-y-6"}>
     <div className="flex items-center gap-6">
       {payment ? <button disabled={processing} className="min-h-12 rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold hover:border-brand" onClick={goAddress}>← Adrese dön</button> : <Link to={`/cart/${service}`} className="min-h-12 rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold hover:border-brand">← Sepete dön</Link>}
       <span className="text-sm font-semibold text-slate-600">{service === "food" ? "YEMEK" : "MARKET"}</span>
     </div>
     <CheckoutSteps payment={payment} onAddress={goAddress} disabled={processing} />
     <div className="pb-1">
-      <h1 ref={headingRef} tabIndex={-1} className="text-[32px] font-bold leading-10">{payment ? "Ödeme yöntemi" : "Teslimat adresi"}</h1>
-      <p className="mt-2 text-slate-600">{payment ? "Ödeme bilgilerini ve siparişini kontrol et." : "Siparişini nereye teslim edelim?"}</p>
+      <h1 ref={headingRef} tabIndex={-1} className="text-[32px] font-bold leading-10">{payment ? "Ödeme" : "Teslimat adresi"}</h1>
+      <p className="mt-1 text-slate-600">{payment ? "Ödeme yöntemini seç, siparişini kontrol et." : "Siparişini nereye teslim edelim?"}</p>
     </div>
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_392px]">
       {payment ? <PaymentForm
-        service={service} method={draft.method} card={card} errors={cardErrors} status={status}
+        service={service} storeId={storeId} method={method} card={card} errors={cardErrors} status={status}
         tip={tip} remember={remember} savedFixture={savedFixture} selectedSaved={selectedSaved} savedMessage={savedMessage}
         onMethodChange={changeMethod} onCardChange={changeCard}
         onCardBlur={field => setCardErrors(current => ({ ...current, [field]: validateCard(card, new Date(), selectedSaved)[field] }))}
@@ -237,18 +249,18 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
         }}
         onCancel={cancelPayment} onSubmit={submitOrder}
       /> : <AddressForm values={draft} errors={errors} regionLabel={regionLabel} onChange={change} onBlur={field => setErrors(current => ({ ...current, [field]: validateAddress(draft)[field] }))} onUseSaved={() => { setDraft(current => ({ ...current, ...SAVED_ADDRESS })); setErrors({}); setAnnouncement(""); }} onRegionChange={openAddress} onSubmit={continueToPayment} />}
-      <aside aria-label="Sipariş özeti ve devam işlemi" className="space-y-4">
-        <OrderSummary lines={lines} service={service} totals={totals} showTip={payment} disabled={processing} />
-        {payment && <section aria-labelledby="selected-address-title" className="rounded-2xl border border-slate-300 bg-white p-6">
-          <h2 id="selected-address-title" className="font-semibold">Teslimat adresi</h2>
-          <p className="mt-3 text-sm leading-6">{draft.name}<br />{draft.address}<br />{regionLabel}</p>
+      <aside aria-label="Sipariş özeti ve devam işlemi" className={"space-y-4 " + (payment ? "lg:sticky lg:top-24" : "")}>
+        <OrderSummary lines={lines} service={service} totals={totals} showTip={payment} disabled={processing} compact={payment} deliveryEstimate={deliveryEstimate}>
+          {payment && submitAction}
+        </OrderSummary>
+        {payment && <section aria-labelledby="selected-address-title" className="rounded-2xl border border-slate-300 bg-white p-4">
+          <div className="flex items-center justify-between gap-3"><h2 id="selected-address-title" className="font-semibold">Teslimat adresi</h2>
+            <button type="button" onClick={goAddress} disabled={processing} className="min-h-11 rounded-lg px-2 text-sm font-semibold text-brand underline underline-offset-4" aria-label="Teslimat adresini düzenle">Düzenle</button>
+          </div>
+          <p className="text-sm leading-6">{draft.name}<br />{draft.address}<br />{regionLabel}</p>
           {draft.note && <p className="mt-3 text-sm text-slate-600">Teslimat notu: {draft.note}</p>}
-          <button type="button" onClick={goAddress} disabled={processing} className="mt-5 min-h-12 w-full rounded-xl border border-slate-300 px-5 py-3 font-semibold hover:border-brand">Adresi düzenle</button>
         </section>}
-        {!totals.canContinue && <p id="checkout-minimum" role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-medium text-amber-900">Minimum sepet tutarı {formatTRY(totals.minimum)}. Devam etmek için {formatTRY(totals.remaining)} tutarında ürün ekle. Teslimat ücreti ve bahşiş minimum tutara dahil değildir.</p>}
-        <button ref={submitRef} id="checkout-submit" type="submit" form={payment ? "checkout-payment-form" : "checkout-address-form"} disabled={!totals.canContinue || processing || (payment && !cardValid)} aria-describedby={!totals.canContinue ? "checkout-minimum" : "checkout-next-hint"} className="btn-primary w-full">{submitLabel}</button>
-        <p id="checkout-next-hint" className="text-sm leading-6 text-slate-600" aria-live="polite">{nextHint}</p>
-        <p role="alert" className="text-sm font-medium text-red-800">{announcement}</p>
+        {!payment && submitAction}
       </aside>
     </div>
   </div>;
