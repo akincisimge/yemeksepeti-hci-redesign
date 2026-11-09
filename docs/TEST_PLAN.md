@@ -4,7 +4,7 @@
 Ön UX hipotezlerini gerçek kullanıcı görevleriyle sınamak. En az 5 gönüllü katılımcıyla başlangıç testi önerilir; küçük örneklemden genel nüfus hakkında sonuç çıkarılmaz.
 
 ## Test yaklaşımı
-Karşılaştırma yapılacaksa mevcut site ve yeni prototipe aynı görevleri ver; sıralamayı katılımcılar arasında dengele. Kişisel ödeme, kimlik veya gerçek sipariş işlemi isteme. Yalnızca sahte veriler kullanılmalı.
+Karşılaştırma yapılacaksa iki etkileşimli prototipte eşdeğer görevleri ver; sıralamayı katılımcılar arasında dengele. Canlı Yemeksepeti'ne kurgu kart/adres gönderme veya test için gerçek sipariş oluşturma. Mevcut site ekran kaydı yalnız görsel/anlama karşılaştırmasında kullanılabilir; etkileşimli görev süresiyle eşdeğer ölçüm sayılmaz. Projede yalnızca kurgu veriler kullanılmalı.
 
 ## Görev senaryoları
 - T1: Restorandan yemek sipariş edeceğin bölümü bul.
@@ -51,3 +51,14 @@ Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı 
 - Kurgu kart tercihini kaydet, sonraki siparişte kısayolu kullan, güvenlik kodunu gir ve sonra kaydı kaldır.
 
 Moderatör için: yalnız `0000 0000 0000 0000` (başarı) ve `0000 0000 0000 0002` (aynı checkout'ta önce hata, sonra başarı), `12/30`, `000` kullanılır. Katılımcının gerçek kart bilgisi istenmez. Sonuçlar henüz toplanmadı; her görev ilgili ekran sahibi tarafından yürütülüp ortak tabloya kaydedilir.
+
+## Melisa'nın sipariş sonucu ve takip bölümü
+
+- Siparişi tamamladıktan sonra oluşup oluşmadığını, hangi ürünlerin hangi adrese gideceğini, ödeme yöntemini ve toplamı açıkla.
+- Şu anda hangi aşamada olduğunu ve teslimatla ilgili hangi bilgilerin bulunduğunu söyle.
+- Sipariş hakkında yardıma ihtiyaç duyduğunda uygun bilgiye ulaş; sonra alışverişe geri dön.
+- Yeni alışverişe ürün ekledikten veya konum değiştirdikten sonra önceki siparişin bilgilerini kontrol et.
+
+Uygulama katılımcıya gerçek ödeme/GPS içermeyen bir prototip olarak tanıtılır. Durum çizelgesi sunum için 60 saniyeye sıkıştırılmıştır; bekleme süresi görev tamamlama süresine katılmaz. Kullanıcı yavaş ilerlediği için erken durumları göremezse bu görev başarısızlığı sayılmaz.
+
+[Ayrıntılı protokol ve boş kayıt tablosu](team/MELISA_USABILITY_TEST.md) hazırdır. Simge ana sayfa/araştırma, Hakan Yemek, Beyda Market, Melisa ortak checkout/sonuç görevlerini yürütür; herkes kendi bölümündeki bulguyu ortak biçimde raporlar. Melisa sonuçları koordine eder; tüm testleri tek başına üstlenmez. Henüz katılımcı verisi yoktur.

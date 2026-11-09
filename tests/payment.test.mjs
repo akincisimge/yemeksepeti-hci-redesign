@@ -145,8 +145,8 @@ test('order persistence accepts all Food methods but rejects unsupported Market 
       saveDemoOrder({ ...order, method });
       assert.equal(readDemoOrder().method, method);
     }
-    saveDemoOrder({ ...order, service: 'market', method: 'door-card-demo' });
-    assert.equal(readDemoOrder(), null);
+    assert.equal(saveDemoOrder({ ...order, service: 'market', method: 'door-card-demo' }), false);
+    assert.equal(readDemoOrder().service, 'food');
     saveDemoOrder({ ...order, service: 'market', method: 'card-demo' });
     assert.equal(readDemoOrder().amount, 235.89);
   } finally {

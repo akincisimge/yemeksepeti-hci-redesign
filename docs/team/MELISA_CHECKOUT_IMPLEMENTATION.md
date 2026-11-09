@@ -1,6 +1,6 @@
-# Adres, sipariş özeti ve ödeme — uygulama raporu
+# Ortak sipariş akışı — uygulama ve doğrulama raporu
 
-Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet ve ödeme bölümleri tamamlandı. Yeni sonuç/kurye ekranı henüz uygulanmadı. İlk bölüm `97315f3` commit'inde kayıtlıdır; aşağıdaki ödeme bölümü onun üzerine eklenmiştir.
+Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **44/44 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
 
 ## Değişiklik ve gerekçe
 
@@ -9,7 +9,7 @@ Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Ad
 | Yemek/Market için ortak form, adım göstergesi ve özet | K1: tutarlılık |
 | Kötekli'deki kurgu Ev adresini tek tıkla kullanma | K2: deneyimli kullanıcıya kısayol |
 | Seçili adım, alan hatası, toplam ve minimum tutar açıklaması | K3: bilgilendirici geri bildirim |
-| Sonraki adımın açık adı ve mevcut sipariş sonucuna geçiş | K4: kapanış; yeni sonuç tasarımı sonraki bölümde |
+| Açık son onay, sipariş numarası/özeti ve teslim edildi durumu | K4: işlemin tamamlandığının anlaşılması |
 | Alan doğrulaması, ilk hatalı alana odak, boş/minimum altı sepet engeli | K5: basit hata yönetimi |
 | Sepete/adrese dönme, taslağı koruma | K6: onay öncesi geri dönüş |
 | Adres/sepet düzenleme ve ayrı son sipariş onayı | K7: kullanıcı kontrolü |
@@ -19,9 +19,11 @@ Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başla
 
 ## Dosyalar ve ortak alanlar
 
-- `src/features/checkout`: AddressForm, CheckoutSteps, OrderSummary ve doğrulama/tutar/taslak modeli.
+- `src/features/checkout`: AddressForm, PaymentForm, CheckoutSteps, OrderSummary, OrderStatus, OrderHelp ve doğrulama/tutar/taslak/ödeme/durum modelleri.
 - `src/pages/CheckoutPage.tsx`: ortak akış, servis/bölgeye ayrılmış taslak, geri dönüşler ve mevcut yerel sipariş simülasyonu.
-- `src/components/Layout.tsx`: yalnız checkout yollarında resmî SVG logo, 1184px içerik sınırı, sade üst alan ve ekran içi demo alt bilgisinin kaldırılması. Diğer ekranların görünümü korunur.
+- `src/pages/SuccessPage.tsx`: tamamlanan sipariş, otomatik durum ilerlemesi, yardım, boş kayıt ve eski kayıt durumları.
+- `src/state/demoOrder.ts`: tamamlanma anındaki bilgilerin bağımsız kopyası, doğrulanan kayıt ve eski kayıt uyumluluğu.
+- `src/components/Layout.tsx`: yalnız checkout ve `/success` yollarında resmî SVG logo, 1184px içerik sınırı, sade üst alan ve ekran içi demo alt bilgisinin kaldırılması. Kayıtlı sonuç için güncel konum seçimi zorunlu tutulmaz. Diğer ekranların görünümü korunur.
 - `public/logos/yemeksepeti-official.svg`: onaylanan referans paketindeki resmî wordmark, oranı korunarak 180 × 46,5px. Eğitim amaçlı bağımsız yeniden tasarım; marka üzerinde mülkiyet iddiası yoktur.
 - `vite.config.ts`: geliştirme önizlemesi için yalnız `terminal.local` izinli host eklenir; tüm hostlara izin verilmez.
 - İlk bölüm domain/context sözleşmelerini değiştirmedi. İkinci bölüm `PaymentMethod` birliğine `door-card-demo` ve `meal-card-demo` ekler; eski değerler korunur. `PAYMENT_METHOD_LABELS` ortak etiketleri sağlar. Context'ler ve diğer ekip üyelerinin sayfaları değiştirilmedi. Yeni bağımlılık eklenmedi.
@@ -39,9 +41,9 @@ Tutarlar kuruş cinsinden toplanır. Minimum sepet tutarına teslimat ücreti ka
 - Üst alanda Figma'nın örnek Yardım/Deniz kontrolleri yerine mevcut çalışan bölge/profil paneli korunur.
 - Kart alanları, bahşiş ve ödeme hata durumları ikinci bölümde uygulandı. Yemek dört yöntem, Market yalnız online kart sunar. Yemek kartları bu kapsamda teslimatta ödeme seçeneğidir; sağlayıcı/şirket bazında entegrasyon yoktur.
 - Kurgu kayıtlı kartı seçme/kaldırma ve işlem sürerken iptal etme kontrolleri kısayol ve kullanıcı kontrolünü çalışır hâle getirir.
-- `SuccessPage.tsx` görünümü henüz yenilenmedi; yeni ödeme yöntemlerinin etiketleri ve kart tercihi kaydedilememe mesajı eklendi. Eski demo etiketleri yeni sonuç ekranıyla sonraki bölümde ele alınacaktır.
+- `SuccessPage.tsx` onaylı sipariş alındı/kurye/teslim edildi düzenine geçirildi. Aradaki hazırlanıyor durumu aynı bileşenleri kullanır. Durum, sipariş bilgileri, özet ve yardım alanları çalışır; ürün ekranında demo/HCI etiketi veya elle durum ilerletme düğmesi yoktur.
 - Figma'da üç adres ekranına kısayol kartı eklendi; kurye başlığı ve tek yöntemli Market hata metni düzeltildi; K2 panosu güncellendi. Önce ekranları korundu. Tıklanabilir Figma prototipi/Auto Layout kurulmadı.
-- İkinci bölüm mevcut onaylı tasarım paketinin 4. sürümünü uygular. Bu kod aşamasında Figma veya ZIP dosyası değiştirilmedi.
+- İkinci ve üçüncü bölümler mevcut onaylı tasarım paketinin 4. sürümünü uygular. Bu kod aşamalarında Figma veya ZIP dosyası değiştirilmedi. Üçüncü bölümde Figma bağlantısı Starter MCP çağrı sınırına ulaştığı için canlı katman denetimi yapılamadı; güncel paket yeniden alınıp onay/kurye ekranları görsel olarak incelendi. ZIP SHA-256: `f7c2d45c6d33fe571f003bf384431b1e4ca8ad67afc13cab678df867dffc84a9`.
 
 ## İlk bölümün teknik kontrolleri
 
@@ -85,7 +87,7 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 | K1 Tutarlılık | Ortak form, hata biçimi ve ödeme etiketleri; servis farkı yalnız uygun yöntemlerde |
 | K2 Kısayollar | Kurgu kayıtlı kartı tek tıkla kullanma; CVV yeniden istenir |
 | K3 Geri bildirim | İşleniyor, başarısızlık ve iptal mesajları; anlık toplam |
-| K4 Kapanış | Başarıda mevcut sipariş numarası/tutarı ekranına geçiş; yeni sonuç tasarımı bekliyor |
+| K4 Kapanış | Başarıda sipariş numarası, tutar, adres ve yöntem içeren sonuç ekranına geçiş |
 | K5 Hata yönetimi | Alan doğrulaması, açıklamalı pasif düğme, çift gönderim kilidi, tekrar deneme |
 | K6 Geri dönüş | Ödeme öncesi adres/sepet düzenleme, bahşiş kaldırma, bekleyen işlemi iptal |
 | K7 Kullanıcı kontrolü | Ödeme tercihi, isteğe bağlı kayıt/bahşiş, kayıt kaldırma |
@@ -93,7 +95,7 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 
 ### Ödeme bölümünün teknik kontrolleri
 
-Son kodda `npm run build`, `node --test tests/*.test.mjs` ve `git diff --check` geçti. Toplam **32/32 test**: önceki 16 + 16 yeni ödeme testi. Yeni testler yöntem kısıtları, alan/tarih doğrulaması, bahşiş/minimum ilişkisi, yalnız kurgu kimliği saklama, bozuk/engelli storage, çift gönderim, iptal ve tekrar denemeyi kapsar.
+Ödeme bölümü tamamlandığında `npm run build`, `node --test tests/*.test.mjs` ve `git diff --check` geçti. O aşamada **32/32 test**: önceki 16 + 16 yeni ödeme testi. Yeni testler yöntem kısıtları, alan/tarih doğrulaması, bahşiş/minimum ilişkisi, yalnız kurgu kimliği saklama, bozuk/engelli storage, çift gönderim, iptal ve tekrar denemeyi kapsar.
 
 Tarayıcı kontrolü 1363 × 936 masaüstü görünümünde yapıldı:
 
@@ -112,10 +114,60 @@ Tarayıcı kontrolü 1363 × 936 masaüstü görünümünde yapıldı:
 
 Bu sonuçlar teknik kontrol bulgularıdır; katılımcı kullanılabilirlik testi veya tasarımın daha iyi olduğuna dair ölçülmüş sonuç değildir.
 
+## Sipariş sonucu ve durum bölümünün davranışı
+
+- Onay anında ürünler/adetler/birim fiyatlar, mağaza, adres/not/bölge, teslimat ücreti, bahşiş ve yöntem kopyalanır. Sepet temizlendikten veya yeni alışveriş/konum değişikliğinden sonra bu bilgiler değişmez. Sipariş toplamı aynı kuruş hesabıyla yeniden doğrulanır.
+- `hci-yemeksepeti-last-demo-order-v1` anahtarı korunur. Aynı sekmede yalnız son sipariş saklanır; sekmeler/cihazlar arası senkronizasyon ya da gerçek sipariş geçmişi yoktur. Eski, ürün/adres içermeyen kayıtlar okunur; eksik ayrıntılar uydurulmaz.
+- Saklanan nesne izin verilen alanlardan yeniden oluşturulur. Kart numarası/CVV veya bilinmeyen iç içe alanlar kayda girmez. Bozuk kayıt boş sonuç olarak ele alınır. Başarısız yazma önceki geçerli kaydı bozmaz; yeni sipariş açık sonuç ekranında gösterilir ve kullanıcıya kaydın saklanamadığı bildirilir.
+- Yeni sipariş numaraları Yemek için `YMK-`, Market için `MKT-` ile başlar. Siparişin oluşma zamanı değişmez. Görselde eski `DEMO-` numaraları servis önekiyle gösterilir; mevcut kayıt yapısı okunmaya devam eder.
+- Yerel zaman çizelgesi: **0 sn alındı → 12 sn hazırlanıyor → 30 sn kurye teslim aldı → 60 sn teslim edildi**. Yenileme/başka sayfadan dönüşte geçen süre hesaplanır; durum gerilemez ve yeni sipariş oluşturulmaz. Bu hız sunum içindir. Ekrandaki tahmini zaman katalogdaki örnek dakika aralığından, tamamlanma zamanı 60 saniyelik çizelgeden gelir; gerçek teslimat tahmini değildir. Saatler Europe/Istanbul ile gösterilir.
+- Sonuç başlığı ilk açılışta odaklanır. Durum değişikliği canlı bölgeden duyurulur; odak kullanıcının bulunduğu kontrolde kalır. Tamamlanan adres/ödeme adımları değişiklik bağlantısı değildir. Sipariş ayrıntıları düğmesi ilgili başlığı odaklar.
+- Yardım, sipariş durumu/ödeme/adres hakkında sayfa içinde açılan bilgi alanıdır. Destek temsilcisi, mesaj gönderimi, gerçek iptal veya iade servisi yoktur. Onay sonrası iptal kapsam dışıdır; K6 onay öncesi geri dönüş ve bekleyen işlemi iptal ile karşılanır.
+- `/success` kayıtsız açıldığında açıklamalı boş durum ve alışverişe dönüş gösterilir. Tamamlanan siparişte alışverişe dönüş ilgili servisi açar.
+
+### Ders içeriğiyle eşleştirme
+
+Kaynaklar: yüklenen **Lec6-Design Rules.pdf**, özellikle s.7–10, 15–16, 18, 22–28 ve 34–37; **Lec5-Interaction design - III Prototyping.pdf**, s.2 ve 4–9; verilen Shneiderman sekiz kural görseli. Aşağıdaki eşleştirme tasarım gerekçesidir, kullanıcı başarısının ölçülmüş kanıtı değildir.
+
+| Kural / ders kavramı | Bu akıştaki karşılığı |
+| --- | --- |
+| K1; tutarlılık ve gruplama | İki serviste aynı adım, özet, form ve durum bileşenleri; solda işlem/durum, sağda özet |
+| K2; deneyimli kullanıcıya kısayol | Hazır kurgu adres ve kayıtlı kurgu kart tercihi; tekrar yazmayı azaltma |
+| K3; observability, responsiveness, microinteractions | Alan/işlem hataları, işleniyor, iptal ve otomatik durum geri bildirimi |
+| K4; synthesizability ve işlem kapanışı | Onay numarası, sabit sipariş ayrıntıları ve ayrı teslim edildi sonucu |
+| K5; recoverability | Geçersiz alanı bulma, açıklama, sepeti kaybetmeden yeniden deneme |
+| K6; geri alınabilirlik | Onaydan önce adres/sepet düzeltme, bahşiş kaldırma ve bekleyen işlemi iptal |
+| K7; dialog initiative | Yöntem/bahşiş/kayıt tercihi; geri dönüş, yardım ve ayrıntılara erişim |
+| K8; görünürlük, yakınlık ve bilişsel yük | Ürün, adet, toplam, adres ve yöntemin aynı akışta görünmesi; sonradan hatırlamayı gerektirmeyen sonuç |
+
+### Sonuç/durum bölümünün teknik kontrolleri
+
+`npm run build`, `node --test tests/*.test.mjs` ve `git diff --check` başarılı. Toplam **44/44 test**: önceki 32 + 12 yeni sipariş testi. Yeni testler bağımsız sipariş kopyası, tutar tutarlılığı, saklama alanının izinli alanları, eski/bozuk kayıt, başarısız yazma, eski kayıt yerine yeni sonucun seçilmesi, yenilemede ilerleme, dört zaman sınırı ve İstanbul saatini kapsar. Mevcut ödeme kaydı testi, geçersiz yazmanın önceki geçerli siparişi korumasına göre güncellendi.
+
+Normal kullanıcı etkileşimleriyle **1363 × 936 masaüstünde** yapılan kontroller:
+
+| Senaryo | Gözlenen sonuç |
+| --- | --- |
+| Yemek adresine not yazıp sepette adedi değiştirme | Not korundu; 2 Mercimek + 30 TL bahşiş = 220 TL nakit sipariş |
+| Yemek sonucunu izleme, yenileme | Alındı/hazırlanıyor/kurye/teslim edildi gözlendi; numara, tutar, not ve adres aynı kaldı |
+| Yardım ve sipariş bilgilerine klavyeyle erişme | Bilgi alanı açıldı; ayrıntı başlığı odaklandı, 3px görünür odak; durum değişimi odağı taşımadı |
+| Yeni Yemek sepetine Tavuklu Pilav ekleyip önceki siparişi açma | Önceki sonuç hâlâ 2 Mercimek ve 220 TL; yeni sepet sipariş kopyasını değiştirmedi |
+| Market adresini boş gönderme | Alan hataları ve ilk geçersiz alana odak |
+| Market kurgu kartıyla ilk başarısız deneme | Ürünler/adres/bahşiş korundu; tekrar deneme çalıştı |
+| Market siparişini tamamlama | Peynir 190,90 + ekmek 15 + teslimat 29,99 + bahşiş 50 = 285,89 TL; online yöntem ve adres doğru |
+| Sipariş sonrası iki sepeti kontrol etme | Market boşaldı; Yemek'teki 1 ürün korundu |
+| Market sonucunda Kötekli → Orhaniye seçme | Sipariş adresi Kötekli kaldı; durum ilerledi. Kontrol sonrası alışveriş konumu Kötekli'ye döndürüldü |
+| Ayrı boş sekmede sonuç yolunu açma | Açıklamalı boş durum, başlık odağı ve alışverişe dönüş |
+| Logo, ürün metni ve yerleşim | Resmî SVG yüklendi; ana sonuç içeriğinde demo/simülasyon etiketi ve 1363px'de yatay taşma yok |
+
+Tarayıcıda gözlenen uygulama hatası yoktu. Ekran okuyucuyla duyuru testi, 1440px'de ayrı tarayıcı testi ve mobil test yapılmadı. Katılımcı başarısı/süresi ölçülmedi; hazırlanmış [test protokolü](MELISA_USABILITY_TEST.md) bu sonraki insan çalışması içindir. [Sunum rehberi](MELISA_DEMO_GUIDE.md) çalıştırma, kurgu veriler ve hızlandırılmış akışı açıklar.
+
 ## PR #10 ile birleştirme notu
 
 İlk bölümde `feat/hci-responsive-a11y-undo-search` / `65e7641` ayrı geçici çalışma alanında kontrol edildi. Adres/özet özellikleri o dalın ortak Layout'u üzerine eklenince derleme ve 37 test geçti. Bu tarihsel kontrol ödeme bölümünü kapsamaz ve iki dalın otomatik/görsel olarak eksiksiz birleştiği anlamına gelmez.
 
 Ödeme bölümünde aynı `65e7641` tabanındaki ayrı çalışma alanına güncel checkout, ödeme modeli, domain/sipariş modeli ve testler aktarıldı; PR #10'un `Layout.tsx` dosyası korundu. Derleme ve **53/53 test** geçti. Bu yalnız kod/veri uyumluluğu kontrolüdür; gerçek merge yapılmadı ve birleşik görünüm tarayıcıda doğrulanmadı.
 
-Her iki dal `Layout.tsx` ve `CheckoutPage.tsx` dosyalarını değiştiriyor. Birleştirirken PR #10'daki UndoToast, ana içerik tabIndex, sepet erişilebilir isimleri ve diğer sayfaların genişlik/uyarlanabilirlik değişiklikleri korunmalı. Checkout için 1184px sınırı ve resmî logo koşulu bunların üzerine uygulanmalı. Bu akış bölgeyi DeliveryContext'ten zaten ayrı gösterir; PR #10'un bölge etiketini açık adres alanına başlangıç değeri olarak yazması tekrar eklenmemeli. PR #10 birleştirilmedi ve dalına değişiklik gönderilmedi.
+Sonuç/durum bölümünde aynı kontrol güncel dosyalarla tekrarlandı: PR #10'un `Layout.tsx` dosyası yine değiştirilmeden **derleme ve 65/65 test** geçti. Bu sonuç ortak veri/kod uyumluluğunu destekler; Layout birleşiminin veya birleşik arayüzün doğrulandığı anlamına gelmez. Bu dalın kendi ana dal tabanındaki güncel test sayısı 44'tür; 65 sayısı PR #10'un ek testlerini de içerir.
+
+Her iki dal `Layout.tsx` ve `CheckoutPage.tsx` dosyalarını değiştiriyor. Birleştirirken PR #10'daki UndoToast, ana içerik tabIndex, sepet erişilebilir isimleri ve diğer sayfaların genişlik/uyarlanabilirlik değişiklikleri korunmalı. Checkout **ve sonuç** için 1184px sınırı/resmî logo koşulu, sonuçta güncel konum zorunluluğunun kaldırılması bunların üzerine uygulanmalı. Bu akış bölgeyi DeliveryContext'ten zaten ayrı gösterir; PR #10'un bölge etiketini açık adres alanına başlangıç değeri olarak yazması tekrar eklenmemeli. PR #10 birleştirilmedi ve dalına değişiklik gönderilmedi.

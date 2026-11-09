@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate, useOutletContext, useParams, useSearchPara
 import type { LayoutContext } from "../components/Layout";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
-import { saveDemoOrder, type DemoOrder } from "../state/demoOrder";
+import { createDemoOrder, saveDemoOrder, type DemoOrder } from "../state/demoOrder";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
 import { marketStores } from "../features/market/data/marketData";
 import AddressForm from "../features/checkout/AddressForm";
@@ -161,14 +161,18 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     if (version !== attemptVersion.current || result.status === "cancelled" || result.status === "busy") return;
     if (result.status === "failed") { setStatus("failed"); return; }
 
+    let order: DemoOrder;
+    try {
+      order = createDemoOrder({
+        service, method: draft.method, lines,
+        address: { name: draft.name, address: draft.address, note: draft.note, regionLabel },
+        deliveryFee: totals.deliveryFee, tip: totals.tip, deliveryTime: store?.deliveryTime,
+      });
+    } catch { setStatus("failed"); return; }
     let paymentNotice: string | undefined;
     if (remember && fixtureId && !saveFixture(checkoutStorage(), fixtureId)) {
       paymentNotice = "Siparişin oluşturuldu ancak kart tercihin kaydedilemedi. Sonraki siparişte kart bilgilerini yeniden girebilirsin.";
     }
-    const order: DemoOrder = {
-      orderId: "DEMO-" + Date.now().toString().slice(-7), amount: totals.total,
-      service, method: draft.method, stage: 0, createdAt: new Date().toISOString(),
-    };
     saveDemoOrder(order);
     clearCheckoutDraft(checkoutStorage(), service, regionId);
     clear(service);

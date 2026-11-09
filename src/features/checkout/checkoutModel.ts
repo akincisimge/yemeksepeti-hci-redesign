@@ -1,9 +1,10 @@
-import type { CartLine, PaymentMethod, Service, Store } from "../../types/domain";
+import type { PaymentMethod, Product, Service, Store } from "../../types/domain";
 import { normalizePaymentMethod, TIP_AMOUNTS } from "./paymentModel.ts";
 
 export type AddressValues = { name: string; address: string; note: string };
 export type AddressErrors = Partial<Record<keyof AddressValues, string>>;
 export type CheckoutDraft = AddressValues & { method: PaymentMethod };
+export type SummaryLine = { product: Pick<Product, "id" | "name" | "price" | "storeName" | "unitLabel">; quantity: number };
 type DraftStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 // Fictional classroom fixture, never copied from a real account.
@@ -52,7 +53,7 @@ export function checkoutStorage(): Storage | undefined {
   try { return window.sessionStorage; } catch { return undefined; }
 }
 
-export function calculateCheckout(lines: CartLine[], store?: Pick<Store, "deliveryFee" | "minBasket">, tip = 0) {
+export function calculateCheckout(lines: SummaryLine[], store?: Pick<Store, "deliveryFee" | "minBasket">, tip = 0) {
   // Sum in kuruş to avoid floating-point rounding in totals and minimum checks.
   const subtotalCents = lines.reduce((sum, { product, quantity }) => sum + Math.round(product.price * 100) * quantity, 0);
   const deliveryCents = lines.length ? Math.round((store?.deliveryFee ?? 0) * 100) : 0;

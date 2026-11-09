@@ -40,14 +40,16 @@ export default function Layout() {
   const routeStore = productId ? marketProducts.find(p => p.id.toLowerCase() === productId.trim().toLowerCase())?.storeId
     : /^\/market\/[^/]+$/.test(path) ? path.split("/")[2] : undefined;
   const checkoutService = path.startsWith("/checkout/") ? (path === "/checkout/market" ? "market" : "food") : null;
+  const orderResult = path === "/success";
+  const checkoutShell = !!checkoutService || orderResult;
   const blocked = (routeStore && !available(routeStore)) || (checkoutService && carts[checkoutService].some(line => !available(line.product.storeId)));
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
       <a className="skip-link" href="#main-content">Ana içeriğe geç</a>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className={"mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:gap-6 " + (checkoutService ? "min-h-[72px] max-w-[1184px]" : "min-h-[80px] max-w-6xl")}>
+        <div className={"mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:gap-6 " + (checkoutShell ? "min-h-[72px] max-w-[1184px]" : "min-h-[80px] max-w-6xl")}>
           <Link to="/" className="text-2xl font-extrabold tracking-tight text-brand sm:text-[28px]" aria-label="Yemeksepeti ana sayfasına dön">
-            {checkoutService ? <img src="/logos/yemeksepeti-official.svg" alt="Yemeksepeti" width={180} height={46.5} /> : "yemeksepeti"}
+            {checkoutShell ? <img src="/logos/yemeksepeti-official.svg" alt="Yemeksepeti" width={180} height={46.5} /> : "yemeksepeti"}
           </Link>
           <nav aria-label="Hesap ve teslimat işlemleri" className="flex items-center gap-2 sm:gap-3">
             <button type="button" onClick={() => open("address")} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 transition hover:border-brand hover:bg-[#FFF1F6] sm:px-4" aria-label={"Teslimat konumu: " + (address ?? "Adres seç") + ". Değiştirmek için aç"}>
@@ -60,21 +62,21 @@ export default function Layout() {
             </button>
           </nav>
         </div>
-        {delivery && !checkoutService && <nav aria-label="Hizmetler ve sepetler" className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-2 text-sm">
+        {delivery && !checkoutShell && <nav aria-label="Hizmetler ve sepetler" className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-2 text-sm">
           <NavLink to="/food" className={({isActive})=>isActive?"nav-link nav-link-active font-bold":"nav-link font-semibold"}>YEMEK</NavLink>
           <NavLink to="/market" className={({isActive})=>isActive?"nav-link nav-link-active font-bold":"nav-link font-semibold"}>MARKET</NavLink>
           <div className="ml-auto flex flex-wrap gap-1"><Link to="/cart/food" className="nav-link">Yemek sepeti ({count("food")})</Link><Link to="/cart/market" className="nav-link">Market sepeti ({count("market")})</Link></div>
         </nav>}
       </header>
-      <main id="main-content" className={"mx-auto px-4 py-8 " + (checkoutService ? "max-w-[1184px]" : "max-w-6xl sm:py-12")}>
-        {!delivery ? <LocationPicker /> : blocked ? <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-8">
+      <main id="main-content" className={"mx-auto px-4 py-8 " + (checkoutShell ? "max-w-[1184px]" : "max-w-6xl sm:py-12")}>
+        {!delivery && !orderResult ? <LocationPicker /> : blocked ? <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-8">
           <h1 className="text-2xl font-bold">Bu mağaza konumuna teslimat yapmıyor</h1>
           <p>Seçili konum: {address}. Uygun işletmeleri seçebilir veya konumunu değiştirebilirsin.</p>
           <button className="btn-primary" onClick={() => open("address")}>Konumu değiştir</button>
           <Link className="nav-link" to="/">Uygun işletmeleri keşfet</Link>
-        </section> : <Outlet key={delivery.id} context={{ address, openAddress: () => open("address") } satisfies LayoutContext} />}
+        </section> : <Outlet key={delivery?.id ?? "no-region"} context={{ address, openAddress: () => open("address") } satisfies LayoutContext} />}
       </main>
-      {!checkoutService && <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
+      {!checkoutShell && <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
         Bağımsız HCI öğrenci projesidir. Gerçek sipariş, ödeme veya canlı destek hizmeti sunulmaz.
       </footer>}
       {panel && <SidePanel

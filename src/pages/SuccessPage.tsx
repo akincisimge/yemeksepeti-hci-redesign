@@ -1,116 +1,70 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { formatTRY, PAYMENT_METHOD_LABELS } from "../types/domain";
-import { readDemoOrder, saveDemoOrder, type DemoOrder, type DemoOrderStage } from "../state/demoOrder";
-
-const TRACKING_STEPS = [
-  { title: "Sipariş alındı", detail: "Demo siparişin oluşturuldu ve kaydedildi." },
-  { title: "Hazırlanıyor", detail: "Örnek hazırlık aşaması gösteriliyor." },
-  { title: "Yola çıktı", detail: "Örnek teslimat yolculuğu gösteriliyor." },
-  { title: "Teslim edildi", detail: "Demo sipariş süreci tamamlandı." }
-] as const;
+import { readDemoOrder, resolveDemoOrder, saveDemoOrder, type DemoOrder } from "../state/demoOrder";
+import CheckoutSteps from "../features/checkout/CheckoutSteps";
+import OrderSummary from "../features/checkout/OrderSummary";
+import OrderStatus from "../features/checkout/OrderStatus";
+import OrderHelp from "../features/checkout/OrderHelp";
+import { calculateCheckout } from "../features/checkout/checkoutModel";
+import { advanceDemoOrder, ORDER_TITLES } from "../features/checkout/orderStatusModel";
 
 export default function SuccessPage() {
   const location = useLocation();
-  const navigationOrder = location.state as DemoOrder | null;
-  const paymentNotice = (location.state as { paymentNotice?: string } | null)?.paymentNotice;
   const [order, setOrder] = useState<DemoOrder | null>(() => {
-    const saved = readDemoOrder();
-    return saved ?? (navigationOrder?.orderId ? navigationOrder : null);
+    const resolved = resolveDemoOrder(location.state, readDemoOrder());
+    return resolved ? advanceDemoOrder(resolved) : null;
   });
+  const [saveFailed, setSaveFailed] = useState(false);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const detailsRef = useRef<HTMLHeadingElement>(null);
+  const paymentNotice = typeof location.state?.paymentNotice === "string" ? location.state.paymentNotice : undefined;
+  useEffect(() => { titleRef.current?.focus(); }, []);
+  useEffect(() => { if (order) setSaveFailed(!saveDemoOrder(order)); }, [order]);
+  useEffect(() => {
+    if (!order || order.stage === 3) return;
+    const timer = window.setInterval(() => setOrder(current => current ? advanceDemoOrder(current) : null), 1000);
+    return () => window.clearInterval(timer);
+  }, [order?.orderId, order?.stage]);
+  const showDetails = () => {
+    detailsRef.current?.focus({ preventScroll: true });
+    detailsRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  };
 
-  function moveStage(direction: -1 | 1) {
-    if (!order) return;
-    const stage = Math.max(0, Math.min(3, order.stage + direction)) as DemoOrderStage;
-    const next = { ...order, stage };
-    setOrder(next);
-    saveDemoOrder(next);
-  }
+  if (!order) return <section className="mx-auto max-w-2xl space-y-6 rounded-2xl border border-slate-300 bg-white p-8">
+    <h1 ref={titleRef} tabIndex={-1} className="text-[32px] font-bold">Gösterilecek sipariş bulunamadı</h1>
+    <p className="leading-7 text-slate-600">Bu sekmede görüntülenebilen bir sipariş kaydı yok. Alışverişine dönüp sepetini kontrol edebilirsin.</p>
+    <Link to="/" className="btn-primary">Alışverişe dön</Link>
+  </section>;
 
-  if (!order) {
-    return (
-      <section className="mx-auto max-w-2xl rounded-2xl border border-slate-300 bg-white p-6 sm:p-8">
-        <h1 className="text-2xl font-bold">Sipariş takibi</h1>
-        <p className="my-5 text-slate-700">Bu sekmede henüz bir demo sipariş yok. Sipariş takibi için önce bir demo sipariş tamamlamalısın.</p>
-        <Link to="/" className="btn-primary">Sipariş oluşturmaya başla</Link>
-      </section>
-    );
-  }
-
-  const activeStep = TRACKING_STEPS[order.stage];
-  const completed = order.stage === TRACKING_STEPS.length - 1;
-  return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <section className="rounded-2xl border border-slate-300 bg-white p-6 sm:p-8">
-        <div className="inline-flex items-center gap-2 rounded-full bg-[#FFF1F6] px-4 py-2 text-sm font-semibold text-brand-dark">
-          <span aria-hidden="true">✓</span>
-          Demo sipariş oluşturuldu
-        </div>
-        <h1 className="mt-5 text-[32px] font-bold leading-10 text-[#0F172A] sm:text-[40px] sm:leading-[48px]">Siparişini takip et</h1>
-        <p className="mt-3 text-base leading-6 text-[#475569]">
-          Sipariş numaran ve takip adımları burada. Bu yalnızca eğitim simülasyonudur; gerçek sipariş, kurye veya teslimat yoktur.
-        </p>
-        {paymentNotice && <p role="status" className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{paymentNotice}</p>}
-        <dl className="mt-6 grid gap-4 rounded-xl bg-[#F8FAFC] p-5 sm:grid-cols-2">
-          <div><dt className="text-sm text-[#475569]">Demo sipariş numarası</dt><dd className="mt-1 font-bold text-[#0F172A]">{order.orderId}</dd></div>
-          <div><dt className="text-sm text-[#475569]">Bölüm</dt><dd className="mt-1 font-semibold">{order.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
-          <div><dt className="text-sm text-[#475569]">Demo sipariş tutarı</dt><dd className="mt-1 font-semibold">{formatTRY(order.amount)}</dd></div>
-          <div><dt className="text-sm text-[#475569]">Ödeme yöntemi</dt><dd className="mt-1 font-semibold">{PAYMENT_METHOD_LABELS[order.method]}</dd></div>
-          <div className="sm:col-span-2"><dt className="text-sm text-[#475569]">Oluşturulma zamanı</dt><dd className="mt-1 font-semibold">{new Date(order.createdAt).toLocaleString("tr-TR")}</dd></div>
-        </dl>
-      </section>
-
-      <section className="rounded-2xl border border-slate-300 bg-white p-6 sm:p-8" aria-labelledby="tracking-title">
-        <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-          <div>
-            <h2 id="tracking-title" className="text-[28px] font-bold leading-9">Sipariş takip durumu</h2>
-            <p className="mt-1 text-sm text-[#475569]">Dört örnek aşamadan {order.stage + 1}. aşamadasın.</p>
-          </div>
-          <span className="w-fit rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-sm font-semibold text-[#475569]">DEMO TAKİP</span>
-        </div>
-
-        <div role="status" aria-live="polite" className="mt-6 rounded-xl border border-[#CBD5E1] bg-[#FFF1F6] p-5">
-          <p className="text-sm font-semibold text-[#B6003C]">Şu anki aşama</p>
-          <p className="mt-1 text-xl font-bold text-[#0F172A]">{activeStep.title}</p>
-          <p className="mt-2 text-sm leading-5 text-[#475569]">{activeStep.detail}</p>
-        </div>
-
-        <ol className="mt-7 space-y-0">
-          {TRACKING_STEPS.map((step, index) => {
-            const past = index < order.stage;
-            const active = index === order.stage;
-            return (
-              <li key={step.title} aria-current={active ? "step" : undefined} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <span className={"flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-base font-bold " + (past ? "border-[#166534] bg-[#166534] text-white" : active ? "border-[#D90049] bg-[#D90049] text-white" : "border-[#CBD5E1] bg-white text-[#475569]")}>
-                    {past ? "✓" : index + 1}
-                  </span>
-                  {index < TRACKING_STEPS.length - 1 && <span aria-hidden="true" className={"h-12 w-0.5 " + (past ? "bg-[#166534]" : "bg-[#CBD5E1]")} />}
-                </div>
-                <div className="pt-1">
-                  <h3 className={"font-semibold " + (active ? "text-[#D90049]" : "text-[#0F172A]")}>{step.title}</h3>
-                  <p className="mt-1 text-sm text-[#475569]">{past ? "Demo aşaması tamamlandı" : active ? "Şu an gösterilen aşama" : "Henüz başlanmadı"}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-
-        <div className="mt-6 border-t border-[#CBD5E1] pt-6">
-          <h3 className="font-semibold text-[#0F172A]">Takip akışını test et</h3>
-          <p className="mt-1 text-sm text-[#475569]">Aşamalar yalnızca butona basıldığında ilerler; gerçek zamanlı teslimat verisi değildir.</p>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => moveStage(1)} disabled={completed} className="btn-primary flex-1">{completed ? "Tüm demo aşamaları tamamlandı" : "Sonraki demo aşamasına geç →"}</button>
-            <button type="button" onClick={() => moveStage(-1)} disabled={order.stage === 0} className="min-h-11 rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 font-semibold text-[#0F172A] transition hover:bg-[#F8FAFC] disabled:opacity-50">Önceki aşamaya dön</button>
-          </div>
-          {completed && <p className="mt-4 font-semibold text-[#166534]" role="status">Demo teslimat akışı başarıyla tamamlandı.</p>}
-        </div>
-      </section>
-
-      <div className="flex flex-wrap gap-3">
-        <Link to="/" className="btn-primary">Ana sayfaya dön</Link>
-        <Link to={order.service === "food" ? "/food" : "/market"} className="inline-flex min-h-11 items-center rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 font-semibold hover:border-brand">Yeni demo sipariş oluştur</Link>
-      </div>
+  const snapshot = order.snapshot;
+  const totals = snapshot ? calculateCheckout(snapshot.lines, { deliveryFee: snapshot.deliveryFee }, snapshot.tip) : undefined;
+  return <div className="space-y-6">
+    <CheckoutSteps complete />
+    <div className="flex items-center gap-4 py-2">
+      <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#166534] text-3xl text-white">✓</span>
+      <h1 ref={titleRef} tabIndex={-1} className="text-[32px] font-bold leading-10">{ORDER_TITLES[order.stage]}</h1>
     </div>
-  );
+    {paymentNotice && <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{paymentNotice}</p>}
+    {saveFailed && <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Siparişin oluşturuldu. Tarayıcı bu kaydı saklayamadığı için sayfayı yenilemeden sipariş numaranı ve bilgilerini not al.</p>}
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_392px]">
+      <div className="space-y-6">
+        <OrderStatus order={order} />
+        <section aria-labelledby="order-details-title" className="rounded-2xl border border-slate-300 bg-white p-6">
+          <h2 ref={detailsRef} id="order-details-title" tabIndex={-1} className="scroll-mt-24 text-xl font-semibold">Sipariş bilgileri</h2>
+          <dl className="mt-6 space-y-5">
+            <div><dt className="text-sm font-semibold text-slate-600">Sipariş numarası</dt><dd className="mt-2 font-medium">{order.orderId.replace(/^DEMO-/, order.service === "food" ? "YMK-" : "MKT-")}</dd></div>
+            <div><dt className="text-sm font-semibold text-slate-600">Hizmet</dt><dd className="mt-2">{order.service === "food" ? "Yemek" : "Market"}{snapshot && ` · ${snapshot.lines[0].product.storeName}`}</dd></div>
+            {snapshot ? <div><dt className="text-sm font-semibold text-slate-600">Teslimat adresi</dt><dd className="mt-2 break-words leading-7">{snapshot.address.name}<br />{snapshot.address.address}<br />{snapshot.address.regionLabel}</dd>{snapshot.address.note && <><dt className="mt-4 text-sm font-semibold text-slate-600">Teslimat notu</dt><dd className="mt-2 break-words leading-6">{snapshot.address.note}</dd></>}</div> : <div><dt className="text-sm font-semibold text-slate-600">Sipariş ayrıntıları</dt><dd className="mt-2 leading-6 text-slate-600">Bu eski kayıtta ürün ve teslimat adresi bilgileri bulunmuyor.</dd></div>}
+            <div><dt className="text-sm font-semibold text-slate-600">Ödeme yöntemi</dt><dd className="mt-2">{PAYMENT_METHOD_LABELS[order.method]}</dd></div>
+          </dl>
+        </section>
+      </div>
+      <aside aria-label="Sipariş özeti ve yardım" className="space-y-6">
+        {snapshot && totals ? <OrderSummary lines={snapshot.lines} service={order.service} totals={totals} completed showTip onDetails={showDetails} /> : <section className="space-y-4 rounded-2xl border border-slate-300 bg-white p-6"><h2 className="text-xl font-semibold">Sipariş özeti</h2><div className="flex justify-between gap-4 font-bold"><span>Toplam</span><span>{formatTRY(order.amount)}</span></div></section>}
+        <OrderHelp order={order} onDetails={showDetails} />
+      </aside>
+    </div>
+    <Link to={order.service === "food" ? "/food" : "/market"} className="btn-primary min-w-[280px]">Alışverişe dön</Link>
+  </div>;
 }
