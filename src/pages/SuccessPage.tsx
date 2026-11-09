@@ -7,13 +7,13 @@ import OrderSummary from "../features/checkout/OrderSummary";
 import OrderStatus from "../features/checkout/OrderStatus";
 import OrderHelp from "../features/checkout/OrderHelp";
 import { calculateCheckout } from "../features/checkout/checkoutModel";
-import { advanceDemoOrder, ORDER_TITLES } from "../features/checkout/orderStatusModel";
+import { confirmationOrder, ORDER_TITLES } from "../features/checkout/orderStatusModel";
 
 export default function SuccessPage() {
   const location = useLocation();
-  const [order, setOrder] = useState<DemoOrder | null>(() => {
+  const [order] = useState<DemoOrder | null>(() => {
     const resolved = resolveDemoOrder(location.state, readDemoOrder());
-    return resolved ? advanceDemoOrder(resolved) : null;
+    return resolved ? confirmationOrder(resolved) : null;
   });
   const [saveFailed, setSaveFailed] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -21,11 +21,6 @@ export default function SuccessPage() {
   const paymentNotice = typeof location.state?.paymentNotice === "string" ? location.state.paymentNotice : undefined;
   useEffect(() => { titleRef.current?.focus(); }, []);
   useEffect(() => { if (order) setSaveFailed(!saveDemoOrder(order)); }, [order]);
-  useEffect(() => {
-    if (!order || order.stage === 3) return;
-    const timer = window.setInterval(() => setOrder(current => current ? advanceDemoOrder(current) : null), 1000);
-    return () => window.clearInterval(timer);
-  }, [order?.orderId, order?.stage]);
   const showDetails = () => {
     detailsRef.current?.focus({ preventScroll: true });
     detailsRef.current?.scrollIntoView({ block: "start", behavior: "instant" });

@@ -15,7 +15,7 @@ export default function OrderStatus({ order }: { order: DemoOrder }) {
       })}
     </ol>
     <div className="mt-6 border-t border-slate-300 pt-6">
-      <p className="text-sm font-semibold text-slate-600">{order.stage === 3 ? "Teslimat tamamlandı" : "Tahmini teslimat"}</p>
+      <p className="text-sm font-semibold text-slate-600">Tahmini teslimat</p>
       <p className="mt-2 text-2xl font-bold tabular-nums">{deliveryTimeLabel(order)}</p>
       <p role="status" aria-live="polite" aria-atomic="true" className="mt-4 leading-6 text-slate-600">{orderStatusDescription(order)}</p>
     </div>

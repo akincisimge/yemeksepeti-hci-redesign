@@ -16,7 +16,7 @@ Simge giriş/ana sayfa ve araştırma, Hakan Yemek, Beyda Market, Melisa ortak c
 - Kayıt alınacaksa önceden izin iste; istemeyen kişiyi kayıtsız notlarla dahil et. Kimlik yerine P01 gibi kod kullan. Katılımcı istediği an bırakabilir.
 - Sadece prototipte çalış. Canlı Yemeksepeti'ne dummy veri gönderme veya test için gerçek ödeme/sipariş yaptırma.
 
-Başlangıç açıklaması: “Seni değil tasarımı değerlendiriyoruz. Bu prototip gerçek ödeme yapmıyor ve kurye durumları hızlandırılmış olarak değişiyor. Görevleri yaparken ne düşündüğünü söyleyebilirsin. Takıldığında önce nasıl ilerleyeceğini görmek istiyoruz; istediğin an durabilirsin.”
+Başlangıç açıklaması: “Seni değil tasarımı değerlendiriyoruz. Bu prototip gerçek ödeme yapmıyor; sonuç ekranı siparişin alındığı aşamada sabit kalıyor. Görevleri yaparken ne düşündüğünü söyleyebilirsin. Takıldığında önce nasıl ilerleyeceğini görmek istiyoruz; istediğin an durabilirsin.”
 
 ## Görevler
 
@@ -27,7 +27,7 @@ Aşağıdaki ilk sütun katılımcıya okunur. Başlangıç ve başarı ölçüt
 | M1 | “Bu yemekleri evine söylemek istiyorsun. Verilen kurgu teslimat bilgileriyle ilerle; sistem bir düzeltme isterse yap.” | Food sepeti hazır, adres boş. Verilen form kartında önce yalnız ad bulunur; adres gereksinimi fark edilince kurgu adres kartı verilir. Kullanıcının hatanın yerini/nedenini anlaması ve düzelterek ilerlemesi gözlenir. |
 | M2 | “Kurye için ‘Zile basma.’ notunu ekle. Sonra ürün adedini değiştirip siparişine devam et.” | M1'in adres adımı. Kullanıcı sepeti düzenleyip dönebilir; not/adres korunduğunu fark eder. Kısayol denemesinde alternatif görev: “Bir sonraki alışverişinde yine Ev adresine sipariş vermek istiyorsun; teslimat bilgilerini hazırla.” |
 | M3 | “Yemek siparişini nakit ödemek ve 30 TL bahşiş bırakmak istiyorsun. Ödeyeceğin toplamı söyle ve siparişini tamamla.” | İki Mercimek 190 TL. Nakit ve 30 TL seçer; toplam 220 TL'yi doğru açıklar. Yöntem ve toplamı bulmak için yardım gerekip gerekmediği kaydedilir. |
-| M4 | “Siparişinin oluştuğunu nasıl anlıyorsun? Neler hangi adrese gidecek, ödeme nasıl olacak ve şu an hangi aşamada?” | Yeni sonuç ekranı. Sipariş numarası/ürün/adres/yöntem/durumu doğru açıklar. 60 saniyelik hızlandırma nedeniyle ilk durum kaçırılırsa hata sayılmaz; gerekirse durum incelemesi ayrı yeni siparişte yapılır. |
+| M4 | “Siparişinin oluştuğunu nasıl anlıyorsun? Neler hangi adrese gidecek, ödeme nasıl olacak ve şu an hangi aşamada?” | Yeni sonuç ekranı. Sipariş numarası/ürün/adres/yöntem/durumu doğru açıklar. Durum değişmez; aktif aşama ile sonraki aşamaların ayırt edilmesi ve “sipariş alındı” ile “teslim edildi”nin karıştırılıp karıştırılmadığı gözlenir. |
 | M5 | “Market sepetini verilen kurgu kartla tamamlamak istiyorsun. Bir sorunla karşılaşırsan nasıl ilerleyeceğine karar ver.” | Peynir+ekmek, kart `0000 0000 0000 0002`, tarih `12/30`, CVV `000`, bahşiş 50 TL. İlk deneme hata verir. Kullanıcı açıklamayı anlar, korunan bilgilerle tekrar deneyerek 285,89 TL sipariş oluşturur. |
 | M6 | “Siparişinin adresi ve ödeme bilgisi hakkında yardım arıyorsun. İlgili bilgiye ulaş, sonra yeni bir alışverişe dön.” | Market sonucu. Yardım/ayrıntılar bulunur, ilgili servise dönülür. Yeni sepetteki değişikliğin eski siparişi değiştirmediğini açıklama ek gözlem olabilir. |
 
@@ -35,7 +35,7 @@ M1 için eksik bilgiyi moderatörün kontrollü vermesi, doğal hata oranı öl�
 
 ## Ölçüm ve müdahale
 
-- Süre görev okunup başlandığında başlar, gözlem ölçütü sağlandığında biter. Sistem/kurye bekleme süresini ayrı yaz; aktif görev süresine katma.
+- Süre görev okunup başlandığında başlar, gözlem ölçütü sağlandığında biter. Ödeme işlemi için sistem bekleme süresini ayrı yaz; aktif görev süresine katma.
 - **B**: bağımsız tamamlandı; **Y**: moderatör yardımıyla tamamlandı; **T**: tamamlanmadı. İlk açıklama dışındaki yönlendirmeyi yardım olarak kaydet.
 - Hata: görevin tamamlanmasını engelleyen yanlış giriş/seçim/geri dönüş. Tek olayı tekrar sayma; ekran ve davranışı tarif et. Bir kontrolü incelemek tek başına hata değildir.
 - Katılımcı takılırsa önce “Şu an ne yapmayı düşünüyorsun?” de. Gerekli yardımı verdiğinde zamanı ve yardım içeriğini kaydet. Katılımcının isteği veya makul görev sınırı (örneğin 3 dakika aktif süre) sonrası görevi sonlandırıp T yaz.

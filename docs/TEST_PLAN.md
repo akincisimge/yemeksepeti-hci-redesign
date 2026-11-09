@@ -59,6 +59,6 @@ Moderatör için standart örnekler: `1234 5678 9012 3456` veya `0000 0000 0000 
 - Sipariş hakkında yardıma ihtiyaç duyduğunda uygun bilgiye ulaş; sonra alışverişe geri dön.
 - Yeni alışverişe ürün ekledikten veya konum değiştirdikten sonra önceki siparişin bilgilerini kontrol et.
 
-Uygulama katılımcıya gerçek ödeme/GPS içermeyen bir prototip olarak tanıtılır. Durum çizelgesi sunum için 60 saniyeye sıkıştırılmıştır; bekleme süresi görev tamamlama süresine katılmaz. Kullanıcı yavaş ilerlediği için erken durumları göremezse bu görev başarısızlığı sayılmaz.
+Uygulama katılımcıya gerçek ödeme/GPS içermeyen bir prototip olarak tanıtılır. Aktif durum “Sipariş alındı” olarak sabittir; katılımcının aktif aşama ile sonraki aşamaları ayırt etmesi değerlendirilir. Kurye ilerlemesi beklenmez. Ödeme sırasında sistem beklemesi varsa görev süresinden ayrı kaydedilir.
 
 [Ayrıntılı protokol ve boş kayıt tablosu](team/MELISA_USABILITY_TEST.md) hazırdır. Simge ana sayfa/araştırma, Hakan Yemek, Beyda Market, Melisa ortak checkout/sonuç görevlerini yürütür; herkes kendi bölümündeki bulguyu ortak biçimde raporlar. Melisa sonuçları koordine eder; tüm testleri tek başına üstlenmez. Henüz katılımcı verisi yoktur.

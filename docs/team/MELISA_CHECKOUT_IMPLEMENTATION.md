@@ -9,7 +9,7 @@ Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Ad
 | Yemek/Market için ortak form, adım göstergesi ve özet | K1: tutarlılık |
 | Kötekli'deki kurgu Ev adresini tek tıkla kullanma | K2: deneyimli kullanıcıya kısayol |
 | Seçili adım, alan hatası, toplam ve minimum tutar açıklaması | K3: bilgilendirici geri bildirim |
-| Açık son onay, sipariş numarası/özeti ve teslim edildi durumu | K4: işlemin tamamlandığının anlaşılması |
+| Açık son onay, sipariş numarası/özeti ve “Siparişin alındı” mesajı | K4: sipariş verme işleminin tamamlandığının anlaşılması |
 | Alan doğrulaması, ilk hatalı alana odak, boş/minimum altı sepet engeli | K5: basit hata yönetimi |
 | Sepete/adrese dönme, taslağı koruma | K6: onay öncesi geri dönüş |
 | Adres/sepet düzenleme ve ayrı son sipariş onayı | K7: kullanıcı kontrolü |
@@ -21,7 +21,7 @@ Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başla
 
 - `src/features/checkout`: AddressForm, PaymentForm, CheckoutSteps, OrderSummary, OrderStatus, OrderHelp ve doğrulama/tutar/taslak/ödeme/durum modelleri.
 - `src/pages/CheckoutPage.tsx`: ortak akış, servis/bölgeye ayrılmış taslak, geri dönüşler ve mevcut yerel sipariş simülasyonu.
-- `src/pages/SuccessPage.tsx`: tamamlanan sipariş, otomatik durum ilerlemesi, yardım, boş kayıt ve eski kayıt durumları.
+- `src/pages/SuccessPage.tsx`: tamamlanan sipariş, sabit onay durumu, yardım, boş kayıt ve eski kayıt durumları.
 - `src/state/demoOrder.ts`: tamamlanma anındaki bilgilerin bağımsız kopyası, doğrulanan kayıt ve eski kayıt uyumluluğu.
 - `src/components/Layout.tsx`: yalnız checkout ve `/success` yollarında resmî SVG logo, 1184px içerik sınırı, sade üst alan ve ekran içi demo alt bilgisinin kaldırılması. Kayıtlı sonuç için güncel konum seçimi zorunlu tutulmaz. Diğer ekranların görünümü korunur.
 - `public/logos/yemeksepeti-official.svg`: onaylanan referans paketindeki resmî wordmark, oranı korunarak 180 × 46,5px. Eğitim amaçlı bağımsız yeniden tasarım; marka üzerinde mülkiyet iddiası yoktur.
@@ -120,8 +120,8 @@ Bu sonuçlar teknik kontrol bulgularıdır; katılımcı kullanılabilirlik test
 - `hci-yemeksepeti-last-demo-order-v1` anahtarı korunur. Aynı sekmede yalnız son sipariş saklanır; sekmeler/cihazlar arası senkronizasyon ya da gerçek sipariş geçmişi yoktur. Eski, ürün/adres içermeyen kayıtlar okunur; eksik ayrıntılar uydurulmaz.
 - Saklanan nesne izin verilen alanlardan yeniden oluşturulur. Kart numarası/CVV veya bilinmeyen iç içe alanlar kayda girmez. Bozuk kayıt boş sonuç olarak ele alınır. Başarısız yazma önceki geçerli kaydı bozmaz; yeni sipariş açık sonuç ekranında gösterilir ve kullanıcıya kaydın saklanamadığı bildirilir.
 - Yeni sipariş numaraları Yemek için `YMK-`, Market için `MKT-` ile başlar. Siparişin oluşma zamanı değişmez. Görselde eski `DEMO-` numaraları servis önekiyle gösterilir; mevcut kayıt yapısı okunmaya devam eder.
-- Yerel zaman çizelgesi: **0 sn alındı → 12 sn hazırlanıyor → 30 sn kurye teslim aldı → 60 sn teslim edildi**. Yenileme/başka sayfadan dönüşte geçen süre hesaplanır; durum gerilemez ve yeni sipariş oluşturulmaz. Bu hız sunum içindir. Ekrandaki tahmini zaman katalogdaki örnek dakika aralığından, tamamlanma zamanı 60 saniyelik çizelgeden gelir; gerçek teslimat tahmini değildir. Saatler Europe/Istanbul ile gösterilir.
-- Sonuç başlığı ilk açılışta odaklanır. Durum değişikliği canlı bölgeden duyurulur; odak kullanıcının bulunduğu kontrolde kalır. Tamamlanan adres/ödeme adımları değişiklik bağlantısı değildir. Sipariş ayrıntıları düğmesi ilgili başlığı odaklar.
+- Aktif durum **“Sipariş alındı” olarak sabittir**. Önceki 0/12/30/60 saniyelik ilerleme kaldırıldı; ekranda kalmak, yenilemek veya başka sayfadan dönmek durumu ilerletmez. Eski hızlandırılmış örnek kayıtlar da ürün/adres/tutar/numara korunarak onay durumunda gösterilir ve saklanır. Tahmini zaman katalogdaki örnek dakika aralığıdır; gerçek kurye tahmini veya teslim edildi saati üretilmez. Saatler Europe/Istanbul ile gösterilir.
+- Sonuç başlığı ilk açılışta odaklanır. Onay mesajı metinle ve durum alanıyla görünürdür; otomatik değişim veya odak sıçraması yoktur. Tamamlanan adres/ödeme adımları değişiklik bağlantısı değildir. Sipariş ayrıntıları düğmesi ilgili başlığı odaklar.
 - Yardım, sipariş durumu/ödeme/adres hakkında sayfa içinde açılan bilgi alanıdır. Destek temsilcisi, mesaj gönderimi, gerçek iptal veya iade servisi yoktur. Onay sonrası iptal kapsam dışıdır; K6 onay öncesi geri dönüş ve bekleyen işlemi iptal ile karşılanır.
 - `/success` kayıtsız açıldığında açıklamalı boş durum ve alışverişe dönüş gösterilir. Tamamlanan siparişte alışverişe dönüş ilgili servisi açar.
 
@@ -133,14 +133,14 @@ Kaynaklar: yüklenen **Lec6-Design Rules.pdf**, özellikle s.7–10, 15–16, 18
 | --- | --- |
 | K1; tutarlılık ve gruplama | İki serviste aynı adım, özet, form ve durum bileşenleri; solda işlem/durum, sağda özet |
 | K2; deneyimli kullanıcıya kısayol | Hazır kurgu adres ve kayıtlı kurgu kart tercihi; tekrar yazmayı azaltma |
-| K3; observability, responsiveness, microinteractions | Alan/işlem hataları, işleniyor, iptal ve otomatik durum geri bildirimi |
-| K4; synthesizability ve işlem kapanışı | Onay numarası, sabit sipariş ayrıntıları ve ayrı teslim edildi sonucu |
+| K3; observability, responsiveness, microinteractions | Alan/işlem hataları, işleniyor, iptal ve açık sipariş onayı |
+| K4; synthesizability ve işlem kapanışı | Onay numarası, sabit sipariş ayrıntıları ve siparişin alındığını belirten sonuç; K4 için teslimatı canlandırmak gerekmez |
 | K5; recoverability | Geçersiz alanı bulma, açıklama, sepeti kaybetmeden yeniden deneme |
 | K6; geri alınabilirlik | Onaydan önce adres/sepet düzeltme, bahşiş kaldırma ve bekleyen işlemi iptal |
 | K7; dialog initiative | Yöntem/bahşiş/kayıt tercihi; geri dönüş, yardım ve ayrıntılara erişim |
 | K8; görünürlük, yakınlık ve bilişsel yük | Ürün, adet, toplam, adres ve yöntemin aynı akışta görünmesi; sonradan hatırlamayı gerektirmeyen sonuç |
 
-### Sonuç/durum bölümünün teknik kontrolleri
+### Sonuç/durum bölümünün teknik kontrolleri — ilk sürüm
 
 `npm run build`, `node --test tests/*.test.mjs` ve `git diff --check` başarılı. Toplam **44/44 test**: önceki 32 + 12 yeni sipariş testi. Yeni testler bağımsız sipariş kopyası, tutar tutarlılığı, saklama alanının izinli alanları, eski/bozuk kayıt, başarısız yazma, eski kayıt yerine yeni sonucun seçilmesi, yenilemede ilerleme, dört zaman sınırı ve İstanbul saatini kapsar. Mevcut ödeme kaydı testi, geçersiz yazmanın önceki geçerli siparişi korumasına göre güncellendi.
 
@@ -169,6 +169,22 @@ Kullanıcı provasındaki “Bu kartla devam edilemiyor” mesajının nedeni ik
 Kayıtlı kart akışı da yeni girişleri destekler: sadece son dört hane ve senaryo kimliği saklanır; kısayolda maskeli kart + yeniden CVV, başka karta geçişte boş alanlar gösterilir. Tam numara/CVV/ad/tarih tercihe kaydedilmez. Bu görsel kısayol güncellemesi React uygulamasındadır; mevcut Figma/ZIP bu düzeltmede değiştirilmedi.
 
 Derleme, **49/49 test** ve `git diff --check` geçti. Beş yeni test; iki örnek dışındaki numarayla tamamlama, temel numara hatalarının korunması, maskeli kayıt/CVV davranışı, eski kayıt uyumluluğu ve geçersiz kayıt son ekini kapsar. Masaüstü tarayıcıda 15 haneli numara engellendi; `1234 5678 9012 3456`, `11/29`, dört haneli kurgu CVV ile **220,89 TL Market** siparişi tamamlandı. Sonraki Yemek akışında kayıt `•••• 3456` olarak göründü, eksik CVV engellendi, “Başka kart kullan” odağı boş ad alanına taşıdı ve kayıtlı kart + yeni CVV ile **180 TL Yemek** siparişi tamamlandı. Gerçek kart veya kullanıcı ekran görüntüsündeki numara test verilerine alınmadı. Önceki PR #10 kontrolü bu son düzeltmeden öncedir; tekrar merge/uyumluluk testi yapılmadı.
+
+## Son kapsam değişikliği: sunumda sabit onay
+
+Kullanıcının 9 Kasım provasındaki geri bildirimine göre hızlı kurye ilerlemesi sunumdan çıkarıldı. Yeni ve önceki örnek siparişler “Siparişin alındı” durumunda kalır. Alt aşamalar yol haritası olarak görünür; zamanlayıcı, arka planda ilerleme, elle ilerletme düğmesi ve uydurma tamamlanma saati yoktur. Sipariş ürünleri, adresi, yöntemi, tutarı ve numarası korunur. Yenilemede eski route state içindeki ilerlemiş durumun tekrar görünmesi de engellenir.
+
+Bu karar sunum kapsamıdır; gerçek bir sipariş sisteminde durum güncellemelerinin gereksiz olduğu anlamına gelmez. K4, bu görevde sipariş verme işleminin onaylanmasıyla karşılanır; fiziksel teslimatı canlandırmak zorunlu değildir.
+
+### Onay ekranının tasarım gerekçesi ve sınırı
+
+Orijinal kayıtların yeniden çiziminde mevcut aşama, teslimat zamanı, kurye görseli, yardım ve açılabilen sipariş ayrıntıları zaten vardır. Bunların yokluğu iddia edilmez. Kullanıcının belirttiği animasyonu kaldırmak tek başına bir HCI iyileştirmesi değildir; hareketli kurye görseli durumun anlaşılmasına ve marka hissine katkı sağlayabilir. Bu prototipte hareketli görselin uygulanmamış olması, orijinal animasyonun hatalı veya kullanılabilirliğinin düşük olduğuna dair bulgu değildir.
+
+Yeni tasarımın amacı: K3 için aktif ve sonraki aşamaları metinle açıklamak; K4 için siparişin oluştuğunu başlık ve numarayla belirtmek; K8 için ürün/ücret özetini ayrı bir açma işlemi gerektirmeden göstermek; K1 için adres/ödeme/sonuçta aynı özet bileşenini korumak. Dikey liste daha fazla alan kullanır ve görsel karakteri sadeleştirir; bunun kullanıcıya faydası henüz ölçülmedi. Orijinalin kurye görseli/animasyonu korunarak da bu bilgi düzeni uygulanabilir. Bu değişiklikte yeni animasyon eklenmedi; Figma/ZIP içindeki diğer durum örnekleri korunmuştur.
+
+### Doğrulama
+
+Derleme, **49/49 test** ve `git diff --check` geçti. Eski zaman çizelgesi testleri; önceki aşamaları sipariş ayrıntılarını değiştirmeden onaya alma ve eski gezinme kaydıyla yenilemede onayı koruma testleriyle değiştirildi. Masaüstü tarayıcıda önceki 180 TL siparişin numarası/ürünleri/adresi korunarak “Siparişin alındı” göründü; **101 saniye sonra** ve sayfa yenilendikten sonra aynı durumda kaldı. Bu, durumun otomatik ilerlemediğine dair teknik kontroldür; katılımcı kullanılabilirlik sonucu değildir.
 
 ## PR #10 ile birleştirme notu
 

@@ -13,7 +13,7 @@ Sunumdan önce Kötekli konumunu seç, ekranı normal yakınlaştırmada aç ve 
 
 ## Başta söylenecek açıklama
 
-“Bu çalışma Yemeksepeti'nin masaüstü sipariş deneyimini HCI kurallarına göre değerlendiren bağımsız bir ders prototipi. Ödeme, sipariş iletimi ve kurye durumları yerel olarak simüle ediliyor. Gerçek kart, ödeme servisi, restoran veya canlı GPS bağlantısı yok.”
+“Bu çalışma Yemeksepeti'nin masaüstü sipariş deneyimini HCI kurallarına göre değerlendiren bağımsız bir ders prototipi. Ödeme ve sipariş onayı yerel olarak simüle ediliyor; sonuç ekranı siparişin alındığı aşamada sabit kalıyor. Gerçek kart, ödeme servisi, restoran veya canlı GPS bağlantısı yok.”
 
 Ürün ekranlarına demo etiketi eklenmedi; bu kapsam sunumda açıkça anlatılır. Kurgu kartları yalnız bu yerel projede kullan, gerçek Yemeksepeti'nde kullanma.
 
@@ -37,7 +37,7 @@ Bu numaralar ödeme sağlayıcısına ait test kartları değildir. Kart adı, 1
 3. Hazır Ev adresini seç, not ekle. Gerekirse sepete dönüp adedi değiştirerek adres/notun korunduğunu göster.
 4. Ödeme adımında dört yöntemi göster: online kart, nakit, kapıda kredi kartı, yemek kartları. Sunumun bu akışında nakit ve 30 TL bahşiş seç.
 5. Özette 220 TL'yi doğrula ve siparişi tamamla. Yemek ücretleri mevcut katalogdan gelir; ayrıca teslimat/poşet ücreti uydurulmadı.
-6. Onay numarası, ürün/adet, tutar, teslimat adresi/not ve yöntemi göster. İlk 60 saniyede durumları izle.
+6. Onay numarası, ürün/adet, tutar, teslimat adresi/not ve yöntemi göster. Ekran “Siparişin alındı” durumunda kalır; tasarımını anlatırken kendiliğinden değişmez.
 
 ## 2. Market: hata, toparlanma ve sepet ayrımı
 
@@ -52,14 +52,14 @@ Fiyatlar ekip tarafından değiştirilirse ezberlenen tutar yerine canlı özeti
 
 ## 3. Sipariş sonucu ve durum sunumu
 
-| Oluşturulmadan sonra | Gösterilen durum |
+| Görünüm | Anlamı |
 | --- | --- |
-| 0 saniye | Sipariş alındı |
-| 12 saniye | Hazırlanıyor |
-| 30 saniye | Kurye siparişini teslim aldı |
-| 60 saniye | Teslim edildi |
+| Sipariş alındı — aktif | Sipariş verme işlemi tamamlandı. |
+| Hazırlanıyor — pasif | Sonraki aşama. |
+| Kurye siparişini teslim aldı — pasif | Sonraki aşama. |
+| Teslim edildi — pasif | Sürecin son aşaması; bu sunumda buraya ilerlenmez. |
 
-Zaman çizelgesi hızlandırılmıştır. Arayüzdeki tahmini zaman, katalogdaki örnek dakika aralığına dayanır; 60 saniyede teslim edildi gösterilmesi gerçek teslimat performansı değildir. Saat dilimi İstanbul'dur. Başka sayfaya geçip dönmek veya yenilemek çizelgeyi başlatmaz; geçen süreye göre ilerler. Tekrar başlangıcı göstermek için yeni kurgu sipariş oluştur.
+Otomatik zaman çizelgesi kaldırıldı. Onay ekranı beklemekle, yenilemekle veya başka sayfadan dönmekle ilerlemez. Önceki hızlandırılmış örnek kayıtlar da aynı onay görünümüne alınır; sipariş bilgileri korunur. Tahmini zaman, katalogdaki örnek dakika aralığına dayanır ve saat dilimi İstanbul'dur. Sunumda güncel saatli bir örnek göstermek için yeni kurgu sipariş oluştur.
 
 - “Sipariş ayrıntıları” ile adres/yönteme git; Tab/Enter odağını göster.
 - “Yardım al” yerel bilgi alanını açar; gerçek temsilciye bağlanmaz.
@@ -69,6 +69,6 @@ Zaman çizelgesi hızlandırılmıştır. Arayüzdeki tahmini zaman, katalogdaki
 
 ## Sunumda gerekçeyi bağlama
 
-K1 ortak bileşenler; K2 adres/kart kısayolları; K3 hata/işleniyor/durum geri bildirimi; K4 onay ve teslim edildi; K5 alan düzeltme/tekrar deneme; K6 onay öncesi geri dönüş; K7 yöntem ve bahşiş tercihi; K8 görünür sipariş özeti.
+K1 ortak bileşenler; K2 adres/kart kısayolları; K3 hata/işleniyor/durum geri bildirimi; K4 sipariş verme işleminin açık onayı; K5 alan düzeltme/tekrar deneme; K6 onay öncesi geri dönüş; K7 yöntem ve bahşiş tercihi; K8 görünür sipariş özeti.
 
 “Daha kullanışlı olduğunu kanıtladık” deme. Şu an kanıtlanan teknik davranışlardır. Tasarımın anlaşılabilirliği [katılımcı test protokolü](MELISA_USABILITY_TEST.md) ile ölçülecek. Orijinal sitede zaten bulunan özet/onay özelliklerini yeni icat edilmiş veya orijinalde eksikmiş gibi sunma. Önce/sonra karşılaştırmasını onaylı Figma ekranlarından göster; [uygulama raporundaki farkları](MELISA_CHECKOUT_IMPLEMENTATION.md) açıkla.

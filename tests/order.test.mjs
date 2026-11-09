@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDemoOrder, ORDER_STORAGE_KEY, parseDemoOrder, readDemoOrder, resolveDemoOrder, saveDemoOrder } from '../src/state/demoOrder.ts';
-import { advanceDemoOrder, deliveryTimeLabel, orderStatusDescription, STAGE_AFTER_MS } from '../src/features/checkout/orderStatusModel.ts';
+import { confirmationOrder, deliveryTimeLabel, orderStatusDescription } from '../src/features/checkout/orderStatusModel.ts';
 
 const created = new Date('2026-11-09T13:00:00.000Z');
 const input = (service = 'food') => ({
@@ -106,32 +106,29 @@ test('refreshing same order retains later saved progress instead of stale naviga
   assert.equal(resolveDemoOrder(initial, later).stage, 2);
   assert.equal(resolveDemoOrder(later, initial).stage, 2);
 });
-test('timeline changes only at the four specified boundaries', () => {
-  const initial = createDemoOrder(input());
-  const start = created.getTime();
-  assert.equal(advanceDemoOrder(initial, start - 1).stage, 0);
-  assert.equal(advanceDemoOrder(initial, start + 11_999).stage, 0);
-  assert.equal(advanceDemoOrder(initial, start + 12_000).stage, 1);
-  assert.equal(advanceDemoOrder(initial, start + 29_999).stage, 1);
-  assert.equal(advanceDemoOrder(initial, start + 30_000).stage, 2);
-  assert.equal(advanceDemoOrder(initial, start + 59_999).stage, 2);
-  assert.equal(advanceDemoOrder(initial, start + 60_000).stage, 3);
-  assert.deepEqual(STAGE_AFTER_MS, [0, 12_000, 30_000, 60_000]);
+test('old accelerated orders return to confirmation without losing or mutating their details', () => {
+  for (const stage of [0, 1, 2, 3]) {
+    const previous = { ...createDemoOrder(input()), stage };
+    const presented = confirmationOrder(previous);
+    assert.deepEqual(presented, { ...previous, stage: 0 });
+    assert.equal(previous.stage, stage);
+    assert.equal(presented.snapshot, previous.snapshot);
+  }
 });
-test('returning after inactivity catches up without creating another order or changing its snapshot', () => {
-  const initial = createDemoOrder(input());
-  const done = advanceDemoOrder(initial, created.getTime() + 180_000);
-  assert.equal(done.stage, 3);
-  assert.equal(done.orderId, initial.orderId);
-  assert.equal(done.snapshot, initial.snapshot);
-  assert.equal(done.amount, initial.amount);
-  assert.equal(advanceDemoOrder(done, created.getTime()), done);
-  assert.equal(advanceDemoOrder(done, created.getTime() + 600_000), done);
+test('refreshing an old navigation state keeps the stored confirmation and order details stable', () => {
+  const previous = { ...createDemoOrder(input()), stage: 3 };
+  const storage = memory();
+  const presented = confirmationOrder(previous);
+  assert.equal(saveDemoOrder(presented, storage), true);
+  const refreshed = confirmationOrder(resolveDemoOrder(previous, readDemoOrder(storage)));
+  assert.deepEqual(refreshed, presented);
+  assert.equal(confirmationOrder(refreshed), refreshed);
+  assert.equal(refreshed.createdAt, created.toISOString());
 });
-test('estimated and delivered time are stable in Turkey timezone across midnight', () => {
+test('estimated time is stable in Turkey timezone across midnight without a synthetic delivery time', () => {
   const order = createDemoOrder({ ...input(), now: new Date('2026-11-09T20:50:00Z') });
   assert.equal(deliveryTimeLabel(order), '00:10 – 00:20');
-  assert.equal(deliveryTimeLabel({ ...order, stage: 3 }), '23:51');
+  assert.equal(deliveryTimeLabel(confirmationOrder({ ...order, stage: 3 })), '00:10 – 00:20');
   assert.equal(deliveryTimeLabel({ ...order, snapshot: undefined }), 'Teslimat zamanı bu kayıtta bulunmuyor');
 });
 test('status copy follows service and current stage', () => {
