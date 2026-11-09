@@ -14,15 +14,15 @@
 ## Uygulama sırası
 
 1. **Tamamlanan ilk bölüm:** `/checkout/food` ve `/checkout/market` için ortak adres ve sipariş özeti. Kayıtlı kurgu adres kısayolu, alan hataları, geri dönüşte bilgi koruma, sepetteki ürün/toplam bilgisi ve minimum tutar açıklaması.
-2. **Sonraki bölüm:** Figma'daki kart alanları, isteğe bağlı tercihler, işleniyor/başarısızlık/tekrar deneme durumları; yalnız dummy verilerle ödeme simülasyonu. Mevcut basit ödeme seçimi şimdilik geçiş olarak korunur.
-3. **Sonraki bölüm:** Yeni sipariş onayı ve durum ekranları. Canlı kurye, GPS, gerçek ödeme veya restoran bağlantısı kurulmaz. `SuccessPage.tsx` bu ilk bölümde yeniden tasarlanmadı.
+2. **Tamamlanan ikinci bölüm:** Kart alanları ve alan doğrulaması; Yemek için dört yöntem, Market için online kart; bahşiş, kurgu kayıtlı kart kısayolu, işleniyor/iptal/başarısızlık/tekrar deneme durumları. Yalnız dummy verilerle yerel ödeme simülasyonu çalışır.
+3. **Sonraki bölüm:** Yeni sipariş onayı ve durum ekranları. Canlı kurye, GPS, gerçek ödeme veya restoran bağlantısı kurulmaz. `SuccessPage.tsx` yeniden tasarlanmadı; yalnız yeni yöntem adları ve kart tercihi kaydedilemezse bilgi mesajı eklendi.
 
 ## Veri ve ortak çalışma
 
 - Yemek ve Market sepetleri ayrıdır. Tamamlanan sipariş yalnız ilgili sepeti temizler.
-- Adres taslağı aynı sekmenin `sessionStorage` alanında servis ve bölgeye göre ayrılır; yalnız kurgu test verileri kullanılır. Kart numarası/CVV saklanmaz.
+- Adres taslağı aynı sekmenin `sessionStorage` alanında servis ve bölgeye göre ayrılır; yalnız kurgu test verileri kullanılır. Girilen kart alanları sadece açık formun belleğinde tutulur. Kart numarası/CVV saklama alanına yazılmaz; kayıtlı kart kısayolu yalnız önceden tanımlı kurgu kartın kimliğini saklar.
 - Kötekli için hazır Ev adresi kurgudur; başka bölgeye sessizce taşınmaz.
-- `CartContext`, `DeliveryContext` ve `domain.ts` sözleşmeleri değiştirilmez.
+- `CartContext` ve `DeliveryContext` değiştirilmedi. `domain.ts` içindeki `PaymentMethod` mevcut değerleri koruyarak `door-card-demo` ve `meal-card-demo` ile genişletildi; ortak yöntem etiketleri eklendi. Bu ortak sözleşme değişikliği PR açıklamasında belirtilir.
 - Ortak `Layout.tsx` değişikliği checkout görünümüyle sınırlıdır; PR açıklamasında ve uygulama raporunda belirtilir.
 
 ## HCI ve doğrulama

@@ -1,4 +1,5 @@
 import type { PaymentMethod, Service } from "../types/domain";
+import { isPaymentMethod } from "../features/checkout/paymentModel.ts";
 
 export type DemoOrderStage = 0 | 1 | 2 | 3;
 
@@ -23,7 +24,8 @@ export function readDemoOrder(): DemoOrder | null {
     if (typeof order.orderId !== "string" || !/^DEMO-\d{7}$/.test(order.orderId)) return null;
     if (typeof order.amount !== "number" || !Number.isFinite(order.amount) || order.amount < 0) return null;
     if (order.service !== "food" && order.service !== "market") return null;
-    if (order.method !== "cash-demo" && order.method !== "card-demo") return null;
+    if (!isPaymentMethod(order.method)) return null;
+    if (order.service === "market" && order.method !== "card-demo") return null;
     if (order.stage !== 0 && order.stage !== 1 && order.stage !== 2 && order.stage !== 3) return null;
     if (typeof order.createdAt !== "string" || !Number.isFinite(Date.parse(order.createdAt))) return null;
     return order as DemoOrder;

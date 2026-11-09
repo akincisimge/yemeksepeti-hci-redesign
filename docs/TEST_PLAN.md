@@ -40,3 +40,14 @@ Derste kullanılan Shneiderman sürümünde K2 deneyimli kullanıcıya kısayol 
 - Minimum tutarın altındaki Market sepetiyle devam etmeyi dene; devam edememe nedenini ve gereken ek tutarı açıkla.
 
 Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı testi yapılmadı. Otomatik/tarayıcı kontrolleri [teknik uygulama raporunda](team/MELISA_CHECKOUT_IMPLEMENTATION.md) ayrı tutulur.
+
+## Melisa'nın ödeme bölümü için ek görevler
+
+- Verilen kurgu kartla devam et; CVV eksik olduğunda düğmenin neden pasif olduğunu açıklayıp alanı düzelt.
+- 50 TL bahşiş seç, toplamı söyle, ardından bahşişten vazgeç ve yeni toplamı kontrol et.
+- Başarısız ödeme sonrasında hangi bilgilerin korunduğunu anlat; aynı bilgilerle tekrar dene.
+- Yemek siparişinde teslimatta nakit ödemeyi seç; hangi alanların değiştiğini anlat. Market akışında sunulan yöntemi kontrol et.
+- İşlem sürerken iptal et; sipariş oluşup oluşmadığını ve bir sonraki adımını açıkla.
+- Kurgu kart tercihini kaydet, sonraki siparişte kısayolu kullan, güvenlik kodunu gir ve sonra kaydı kaldır.
+
+Moderatör için: yalnız `0000 0000 0000 0000` (başarı) ve `0000 0000 0000 0002` (aynı checkout'ta önce hata, sonra başarı), `12/30`, `000` kullanılır. Katılımcının gerçek kart bilgisi istenmez. Sonuçlar henüz toplanmadı; her görev ilgili ekran sahibi tarafından yürütülüp ortak tabloya kaydedilir.

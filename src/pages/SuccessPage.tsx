@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { formatTRY } from "../types/domain";
+import { formatTRY, PAYMENT_METHOD_LABELS } from "../types/domain";
 import { readDemoOrder, saveDemoOrder, type DemoOrder, type DemoOrderStage } from "../state/demoOrder";
 
 const TRACKING_STEPS = [
@@ -13,6 +13,7 @@ const TRACKING_STEPS = [
 export default function SuccessPage() {
   const location = useLocation();
   const navigationOrder = location.state as DemoOrder | null;
+  const paymentNotice = (location.state as { paymentNotice?: string } | null)?.paymentNotice;
   const [order, setOrder] = useState<DemoOrder | null>(() => {
     const saved = readDemoOrder();
     return saved ?? (navigationOrder?.orderId ? navigationOrder : null);
@@ -49,11 +50,12 @@ export default function SuccessPage() {
         <p className="mt-3 text-base leading-6 text-[#475569]">
           Sipariş numaran ve takip adımları burada. Bu yalnızca eğitim simülasyonudur; gerçek sipariş, kurye veya teslimat yoktur.
         </p>
+        {paymentNotice && <p role="status" className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{paymentNotice}</p>}
         <dl className="mt-6 grid gap-4 rounded-xl bg-[#F8FAFC] p-5 sm:grid-cols-2">
           <div><dt className="text-sm text-[#475569]">Demo sipariş numarası</dt><dd className="mt-1 font-bold text-[#0F172A]">{order.orderId}</dd></div>
           <div><dt className="text-sm text-[#475569]">Bölüm</dt><dd className="mt-1 font-semibold">{order.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
           <div><dt className="text-sm text-[#475569]">Demo sipariş tutarı</dt><dd className="mt-1 font-semibold">{formatTRY(order.amount)}</dd></div>
-          <div><dt className="text-sm text-[#475569]">Ödeme yöntemi</dt><dd className="mt-1 font-semibold">{order.method === "cash-demo" ? "Teslimatta ödeme (demo)" : "Kartla ödeme (demo)"}</dd></div>
+          <div><dt className="text-sm text-[#475569]">Ödeme yöntemi</dt><dd className="mt-1 font-semibold">{PAYMENT_METHOD_LABELS[order.method]}</dd></div>
           <div className="sm:col-span-2"><dt className="text-sm text-[#475569]">Oluşturulma zamanı</dt><dd className="mt-1 font-semibold">{new Date(order.createdAt).toLocaleString("tr-TR")}</dd></div>
         </dl>
       </section>

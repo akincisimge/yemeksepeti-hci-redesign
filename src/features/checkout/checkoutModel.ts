@@ -1,4 +1,5 @@
 import type { CartLine, PaymentMethod, Service, Store } from "../../types/domain";
+import { normalizePaymentMethod, TIP_AMOUNTS } from "./paymentModel.ts";
 
 export type AddressValues = { name: string; address: string; note: string };
 export type AddressErrors = Partial<Record<keyof AddressValues, string>>;
@@ -23,7 +24,7 @@ export function validateAddress(values: AddressValues): AddressErrors {
 }
 
 export function readCheckoutDraft(storage: DraftStorage | undefined, service: Service, regionId: string): CheckoutDraft {
-  const empty: CheckoutDraft = { name: "", address: "", note: "", method: service === "market" ? "card-demo" : "cash-demo" };
+  const empty: CheckoutDraft = { name: "", address: "", note: "", method: "card-demo" };
   try {
     const raw = storage?.getItem(draftKey(service, regionId));
     if (!raw) return empty;
@@ -32,7 +33,7 @@ export function readCheckoutDraft(storage: DraftStorage | undefined, service: Se
     const draft = value as Partial<CheckoutDraft>;
     if (typeof draft.name !== "string" || draft.name.length > 100 || typeof draft.address !== "string" || draft.address.length > 300 || typeof draft.note !== "string" || draft.note.length > 200) return empty;
     return { name: draft.name, address: draft.address, note: draft.note,
-      method: service === "market" ? "card-demo" : draft.method === "card-demo" ? "card-demo" : "cash-demo" };
+      method: normalizePaymentMethod(draft.method, service) };
   } catch { return empty; }
 }
 
@@ -51,14 +52,15 @@ export function checkoutStorage(): Storage | undefined {
   try { return window.sessionStorage; } catch { return undefined; }
 }
 
-export function calculateCheckout(lines: CartLine[], store?: Pick<Store, "deliveryFee" | "minBasket">) {
+export function calculateCheckout(lines: CartLine[], store?: Pick<Store, "deliveryFee" | "minBasket">, tip = 0) {
   // Sum in kuruş to avoid floating-point rounding in totals and minimum checks.
   const subtotalCents = lines.reduce((sum, { product, quantity }) => sum + Math.round(product.price * 100) * quantity, 0);
   const deliveryCents = lines.length ? Math.round((store?.deliveryFee ?? 0) * 100) : 0;
   const minimumCents = Math.round((store?.minBasket ?? 0) * 100);
+  const tipCents = lines.length && TIP_AMOUNTS.some(amount => amount === tip) ? tip * 100 : 0;
   return { subtotal: subtotalCents / 100, deliveryFee: deliveryCents / 100,
     minimum: minimumCents / 100, remaining: Math.max(0, minimumCents - subtotalCents) / 100,
-    total: (subtotalCents + deliveryCents) / 100,
+    tip: tipCents / 100, total: (subtotalCents + deliveryCents + tipCents) / 100,
     count: lines.reduce((sum, line) => sum + line.quantity, 0),
     canContinue: lines.length > 0 && subtotalCents >= minimumCents };
 }

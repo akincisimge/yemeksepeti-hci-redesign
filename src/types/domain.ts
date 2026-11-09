@@ -1,6 +1,13 @@
 
 export type Service = "food" | "market";
-export type PaymentMethod = "cash-demo" | "card-demo";
+export type PaymentMethod = "cash-demo" | "card-demo" | "door-card-demo" | "meal-card-demo";
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  "card-demo": "Online Kredi Kartı/Banka Kartı",
+  "cash-demo": "Nakit",
+  "door-card-demo": "Kapıda Kredi Kartı",
+  "meal-card-demo": "Yemek Kartları",
+};
 
 export interface Product {
   id: string;
