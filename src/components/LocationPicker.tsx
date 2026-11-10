@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { filterProvinces } from "../data/provinces";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { provinces } from "../data/provinces";
 import {
   locationLabel,
   resolveLocation,
@@ -61,7 +61,6 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<DetailsFieldKey, string>>>({});
 
   const [notice, setNotice] = useState("");
-  const [query, setQuery] = useState("");
   const [pendingPlan, setPendingPlan] = useState<LocationChangePlan | null>(null);
 
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -87,13 +86,11 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
     };
   }, [allRegionsReady, delivery]);
 
-  const matchingCities = useMemo(() => filterProvinces(query), [query]);
   const districtOptions = useMemo(() => getDistrictsForCity(regions, city), [regions, city]);
   const neighborhoodOptions = useMemo(
     () => getNeighborhoodsForDistrict(regions, city, district),
     [regions, city, district],
   );
-  const trimmedQuery = query.trim();
 
   const resolvedTargetId = useMemo(
     () => resolveLocationIdForSelection(city, district, neighborhood) ?? "",
@@ -128,7 +125,6 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
     setDistrict("");
     setNeighborhood("");
     setNotice("");
-    setQuery("");
     setPendingPlan(null);
   }
 
@@ -137,14 +133,6 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
     setNeighborhood("");
     setNotice("");
     setPendingPlan(null);
-  }
-
-  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key !== "Enter") return;
-    event.preventDefault();
-    if (matchingCities.length === 1) {
-      changeCity(matchingCities[0]);
-    }
   }
 
   function clearFieldError(key: DetailsFieldKey) {
@@ -240,7 +228,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
         </div>
       )}
 
-      <fieldset className="min-w-0 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/75 p-4">
+      <fieldset className="min-w-0 space-y-2.5 rounded-2xl border border-slate-200 bg-slate-50/75 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <legend className="flex items-center gap-2 text-base font-bold text-slate-900">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
@@ -257,94 +245,23 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
           )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block min-w-0">
-            <span className="mb-1.5 block text-xs font-semibold text-slate-700">Yazarak ara</span>
-            <div className="relative">
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-              </svg>
-              <input
-                type="search"
-                data-autofocus
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Ör. Muğla, İstanbul..."
-                autoComplete="off"
-                className={trimmedQuery ? "field pl-10 pr-16 text-sm" : "field pl-10 pr-3 text-sm"}
-                aria-describedby="city-results"
-              />
-              {trimmedQuery && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-brand"
-                >
-                  Temizle
-                </button>
-              )}
-            </div>
-          </label>
-
-          <label className="block min-w-0">
-            <span className="mb-1.5 block text-xs font-semibold text-slate-700">Listeden seç</span>
-            <select
-              required
-              className="location-select text-sm"
-              value={city}
-              onChange={(event) => changeCity(event.target.value)}
-            >
-              <option value="">İl seçin (A–Z)</option>
-              {city && !matchingCities.includes(city) && <option value={city}>{city}</option>}
-              {matchingCities.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {trimmedQuery && (
-          <div className="space-y-2">
-            {matchingCities.length > 0 && matchingCities.length <= 6 && (
-              <div className="flex flex-wrap gap-2" aria-label="Eşleşen il hızlı seçimleri">
-                {matchingCities.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => changeCity(name)}
-                    aria-pressed={city === name}
-                    className={
-                      city === name
-                        ? "min-h-11 rounded-xl border-2 border-brand bg-[#FFF1F6] px-3.5 py-2 text-sm font-bold text-brand-dark"
-                        : "min-h-11 rounded-xl border border-brand/40 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 hover:border-brand hover:bg-[#FFF1F6]"
-                    }
-                  >
-                    {name} seç
-                  </button>
-                ))}
-              </div>
-            )}
-            <p id="city-results" role="status" className="text-xs font-medium text-slate-700">
-              {matchingCities.length
-                ? `${matchingCities.length} il bulundu.`
-                : "Bu isimde il bulunamadı. Yazımı kontrol edip tekrar deneyin."}
-            </p>
-          </div>
-        )}
-        {!trimmedQuery && <span id="city-results" className="sr-only">81 il listeleniyor.</span>}
+        <label className="block min-w-0">
+          <span className="sr-only">Şehir seçin</span>
+          <select
+            required
+            data-autofocus
+            className="location-select"
+            value={city}
+            onChange={(event) => changeCity(event.target.value)}
+          >
+            <option value="">İl seçin (A–Z)</option>
+            {provinces.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
       </fieldset>
 
       <div className="grid gap-3 sm:grid-cols-2">
