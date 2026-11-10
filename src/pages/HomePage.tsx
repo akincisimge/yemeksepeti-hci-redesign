@@ -1,15 +1,7 @@
 import { Link, useOutletContext } from "react-router-dom";
 import type { LayoutContext } from "../components/Layout";
-import { createCustomLocation } from "../data/delivery";
 import { useAccount } from "../state/AccountContext";
-import { useDelivery } from "../state/DeliveryContext";
-import {
-  DEMO_TRACKING_STEPS,
-  saveDemoOrder,
-  useDemoOrder,
-  type DemoOrderStage,
-} from "../state/demoOrder";
-import { formatTRY } from "../types/domain";
+import { DEMO_TRACKING_STEPS, useDemoOrders } from "../state/demoOrder";
 
 function FoodArt() {
   return (
@@ -56,38 +48,13 @@ const choices = [
   },
 ];
 
-const STARTER_LOCATIONS = [
-  { label: "İstanbul", id: createCustomLocation("İstanbul", "Merkez", "Merkez Mahallesi")?.id ?? "" },
-  { label: "Ankara", id: createCustomLocation("Ankara", "Merkez", "Merkez Mahallesi")?.id ?? "" },
-  { label: "İzmir", id: createCustomLocation("İzmir", "Merkez", "Merkez Mahallesi")?.id ?? "" },
-  { label: "Muğla · Kötekli", id: "kotekli" },
-  { label: "Muğla · Bodrum", id: "bodrum-merkez" },
-].filter((item) => Boolean(item.id));
-
 export default function HomePage() {
-  const { address, openAddress } = useOutletContext<LayoutContext>();
-  const { previewLocationChange, selectLocation } = useDelivery();
+  const { address, openAddress, openPanel } = useOutletContext<LayoutContext>();
   const { account } = useAccount();
-  const activeOrder = useDemoOrder();
-
-  function pickStarterLocation(targetId: string) {
-    const plan = previewLocationChange(targetId);
-    if (!plan) return;
-    if (plan.affected.length > 0) {
-      openAddress();
-      return;
-    }
-    selectLocation(targetId, { confirmed: true });
-  }
-
-  function advanceOrderStage() {
-    if (!activeOrder) return;
-    const nextStage = Math.min(3, activeOrder.stage + 1) as DemoOrderStage;
-    saveDemoOrder({ ...activeOrder, stage: nextStage });
-  }
-
-  const activeStep = activeOrder ? DEMO_TRACKING_STEPS[activeOrder.stage] : null;
-  const orderProgress = activeOrder ? ((activeOrder.stage + 1) / DEMO_TRACKING_STEPS.length) * 100 : 0;
+  const orders = useDemoOrders();
+  const latestOrder = orders[0] ?? null;
+  const activeStep = latestOrder ? DEMO_TRACKING_STEPS[latestOrder.stage] : null;
+  const inProgressCount = orders.filter((item) => item.stage < 3).length;
 
   return (
     <div className="space-y-8 sm:space-y-10">
@@ -162,77 +129,39 @@ export default function HomePage() {
             </span>
           </button>
 
-          {!address && (
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-1" aria-label="Hızlı adres seçimi">
-              <span className="text-xs font-semibold text-slate-600">Hızlı seç:</span>
-              {STARTER_LOCATIONS.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => pickStarterLocation(item.id)}
-                  className="min-h-10 rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-800 shadow-xs transition hover:border-brand hover:bg-[#FFF1F6] hover:text-brand-dark sm:text-sm"
+          <div className="flex justify-center pt-1">
+            <button
+              type="button"
+              data-orders-trigger="home"
+              onClick={() => openPanel("orders")}
+              className="inline-flex min-h-12 items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-900 shadow-sm transition hover:border-brand hover:bg-[#FFF1F6]"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand" aria-hidden="true">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <path d="M9 12h6M9 16h4" />
+              </svg>
+              <span>Aktif Siparişlerim</span>
+              {latestOrder && activeStep ? (
+                <span
+                  className={
+                    inProgressCount > 0
+                      ? "inline-flex items-center gap-1.5 rounded-full bg-[#FFF1F6] px-3 py-1 text-xs font-bold text-brand-dark"
+                      : "inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800"
+                  }
                 >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
+                  {inProgressCount > 0 && <span className="h-2 w-2 animate-pulse rounded-full bg-brand" aria-hidden="true" />}
+                  {orders.length} sipariş · {activeStep.title}
+                </span>
+              ) : (
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  Takip için tıkla
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </section>
-
-      {activeOrder && activeStep && (
-        <section
-          aria-labelledby="active-order-title"
-          className="mx-auto max-w-4xl rounded-2xl border-2 border-brand/30 bg-white p-5 shadow-sm sm:p-6"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
-                SİPARİŞ TAKİBİ
-              </span>
-              <span className="text-sm font-bold text-slate-900">{activeOrder.orderId}</span>
-            </div>
-            <span className="text-sm font-semibold text-slate-700">
-              {activeOrder.storeName ?? (activeOrder.service === "food" ? "Restoran" : "Market")} · {formatTRY(activeOrder.amount)}
-            </span>
-          </div>
-
-          <h2 id="active-order-title" className="mt-3 text-xl font-bold text-slate-900">
-            {activeStep.title}
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">{activeStep.detail}</p>
-
-          <div
-            role="progressbar"
-            aria-label="Aktif sipariş ilerleme durumu"
-            aria-valuemin={1}
-            aria-valuemax={4}
-            aria-valuenow={activeOrder.stage + 1}
-            aria-valuetext={`${activeOrder.stage + 1}/4: ${activeStep.title}`}
-            className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
-          >
-            <div
-              className="h-full rounded-full bg-brand transition-all duration-300"
-              style={{ width: `${orderProgress}%` }}
-            />
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link to="/track" className="btn-primary">
-              Sipariş takibini aç →
-            </Link>
-            {activeOrder.stage < 3 && (
-              <button
-                type="button"
-                onClick={advanceOrderStage}
-                className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
-              >
-                Sonraki aşamaya geç
-              </button>
-            )}
-          </div>
-        </section>
-      )}
 
       <section aria-label="Hizmet seçimi" className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
         {choices.map(({ to, label, eyebrow, description, cta, Art }) => (

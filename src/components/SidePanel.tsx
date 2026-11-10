@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
 import { useAccount } from "../state/AccountContext";
-import { DEMO_TRACKING_STEPS, useDemoOrder } from "../state/demoOrder";
+import { DEMO_TRACKING_STEPS, useDemoOrders } from "../state/demoOrder";
+import { formatTRY } from "../types/domain";
 import { foodCoupons } from "../features/food/data/foodData";
 import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
@@ -91,12 +92,13 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
     address: "Teslimat Adresini Seç",
     profile: "Profil ve hesabım",
     account: account ? "Profil bilgilerim" : "Hesap oluştur",
-    orders: "Siparişlerim",
+    orders: "Aktif Siparişlerim",
     coupons: "Kuponlarım",
   };
-  const isCenteredModal = view === "address";
-  const subpage = account !== null && view !== "profile" && view !== "address";
-  const lastOrder = useDemoOrder();
+  const isCenteredModal = view === "address" || view === "orders";
+  const subpage = account !== null && view !== "profile" && view !== "address" && view !== "orders";
+  const orders = useDemoOrders();
+  const lastOrder = orders[0] ?? null;
 
   return (
     <div className={isCenteredModal ? "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" : "fixed inset-0 z-50"}>
@@ -136,16 +138,27 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
           )}
           {isCenteredModal && (
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FFF1F6] text-brand" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-                <circle cx="12" cy="10" r="2.5" />
-              </svg>
+              {view === "address" ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                  <rect x="9" y="3" width="6" height="4" rx="1" />
+                  <path d="M9 12h6M9 16h4" />
+                </svg>
+              )}
             </span>
           )}
           <div className="min-w-0 flex-1">
             <h2 id="panel-title" className="text-xl font-bold text-slate-900">{title[view]}</h2>
-            {isCenteredModal && (
-              <p className="mt-0.5 text-sm text-slate-600">Önce şehrini seç, ardından ilçe ve mahalleni belirle.</p>
+            {view === "address" && (
+              <p className="mt-0.5 text-sm text-slate-600">Önce şehrini seç, ardından gerçek ilçe ve mahalleni belirle.</p>
+            )}
+            {view === "orders" && (
+              <p className="mt-0.5 text-sm text-slate-600">Sipariş aşamaların otomatik olarak canlı güncellenir.</p>
             )}
           </div>
           <button
@@ -201,25 +214,128 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
           )}
           {view === "orders" && (
             <div className="space-y-4">
-              {lastOrder ? (
+              {orders.length > 0 ? (
                 <>
-                  <p className="rounded-xl bg-[#FFF1F6] p-4 text-slate-700">Aktif siparişin:</p>
-                  <dl className="space-y-3 rounded-xl border border-slate-300 bg-white p-4">
-                    <div><dt className="text-sm text-slate-600">Sipariş numarası</dt><dd className="font-bold">{lastOrder.orderId}</dd></div>
-                    <div><dt className="text-sm text-slate-600">Hizmet</dt><dd className="font-semibold">{lastOrder.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
-                    <div><dt className="text-sm text-slate-600">Durum</dt><dd className="font-semibold text-brand-dark">{lastOrder.stage + 1}/4 · {DEMO_TRACKING_STEPS[lastOrder.stage].title}</dd></div>
-                    {lastOrder.locationLabel && <div><dt className="text-sm text-slate-600">Teslimat bölgesi</dt><dd className="font-semibold">{lastOrder.locationLabel}</dd></div>}
-                  </dl>
-                  <Link to="/track" onClick={onClose} className="btn-primary w-full">Sipariş takibini aç</Link>
+                  {orders.map((item) => {
+                    const step = DEMO_TRACKING_STEPS[item.stage];
+                    const done = item.stage === DEMO_TRACKING_STEPS.length - 1;
+                    const percent = ((item.stage + 1) / DEMO_TRACKING_STEPS.length) * 100;
+                    return (
+                      <article
+                        key={item.orderId}
+                        className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/75 p-4 sm:p-5"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-lg bg-[#FFF1F6] px-2.5 py-1 text-xs font-bold text-brand-dark">
+                              {item.service === "food" ? "YEMEK" : "MARKET"}
+                            </span>
+                            <span className="font-bold text-slate-900">{item.orderId}</span>
+                          </div>
+                          <span className="text-sm font-bold text-slate-900">{formatTRY(item.amount)}</span>
+                        </div>
+
+                        <div className="space-y-1 text-sm text-slate-700">
+                          <p className="font-semibold text-slate-900">
+                            {item.storeName ?? (item.service === "food" ? "Restoran siparişi" : "Market siparişi")}
+                            {item.itemCount ? ` · ${item.itemCount} ürün` : ""}
+                          </p>
+                          {item.locationLabel && <p className="text-xs text-slate-600">Teslimat: {item.locationLabel}</p>}
+                          <p className="text-xs text-slate-500">
+                            {new Date(item.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+
+                        <div
+                          role="status"
+                          aria-live="polite"
+                          className={
+                            done
+                              ? "flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-950"
+                              : "flex items-center gap-2.5 rounded-xl border border-rose-200 bg-[#FFF1F6] px-3.5 py-2.5 text-sm text-slate-900"
+                          }
+                        >
+                          {done ? (
+                            <span className="font-bold text-emerald-700" aria-hidden="true">✓</span>
+                          ) : (
+                            <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-brand" aria-hidden="true" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-bold">{step.title}</p>
+                            <p className="text-xs text-slate-700">{step.detail}</p>
+                          </div>
+                        </div>
+
+                        <div
+                          role="progressbar"
+                          aria-label={`${item.orderId} sipariş ilerleme durumu`}
+                          aria-valuemin={1}
+                          aria-valuemax={DEMO_TRACKING_STEPS.length}
+                          aria-valuenow={item.stage + 1}
+                          aria-valuetext={`${item.stage + 1}/4: ${step.title}`}
+                          className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
+                        >
+                          <div
+                            className={done ? "h-full rounded-full bg-emerald-600 transition-all duration-500" : "h-full rounded-full bg-brand transition-all duration-500"}
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+
+                        <ol className="grid grid-cols-4 gap-1.5 text-center text-[11px] leading-tight">
+                          {DEMO_TRACKING_STEPS.map((s, idx) => {
+                            const reached = idx <= item.stage;
+                            const isCurrent = idx === item.stage;
+                            return (
+                              <li
+                                key={s.title}
+                                className={
+                                  isCurrent
+                                    ? "rounded-lg bg-[#FFF1F6] px-1.5 py-1.5 font-bold text-brand-dark"
+                                    : reached
+                                      ? "rounded-lg bg-emerald-50 px-1.5 py-1.5 font-semibold text-emerald-800"
+                                      : "rounded-lg bg-white px-1.5 py-1.5 text-slate-500"
+                                }
+                              >
+                                {idx < item.stage ? "✓ " : `${idx + 1}. `}
+                                {s.title}
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </article>
+                    );
+                  })}
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    <Link to="/track" onClick={onClose} className="btn-primary flex-1">
+                      Tam sayfa sipariş takibini aç
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 hover:border-brand"
+                    >
+                      Kapat
+                    </button>
+                  </div>
                 </>
               ) : (
-                <>
-                  <p className="rounded-xl bg-slate-50 p-4 text-slate-700">
-                    Henüz aktif siparişin yok. Yemek veya market siparişi verdiğinde sipariş durumunu buradan izleyebilirsin.
+                <div className="space-y-4 py-2 text-center">
+                  <p className="rounded-2xl bg-slate-50 p-5 text-slate-700">
+                    Henüz aktif siparişin yok. Yemek veya market siparişi verdiğinde sipariş durumlarını buradan canlı izleyebilirsin.
                   </p>
-                  <Link to="/food" onClick={onClose} className="btn-primary w-full">Yemekleri keşfet</Link>
-                  <Link to="/market" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand">Marketlere git</Link>
-                </>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Link to="/food" onClick={onClose} className="btn-primary flex-1">
+                      Yemekleri keşfet
+                    </Link>
+                    <Link
+                      to="/market"
+                      onClick={onClose}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand"
+                    >
+                      Marketlere git
+                    </Link>
+                  </div>
+                </div>
               )}
             </div>
           )}
