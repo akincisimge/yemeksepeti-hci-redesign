@@ -12,6 +12,7 @@ import {
   resolveLocationIdForSelection,
 } from "../src/data/delivery.ts";
 import {
+  getCachedTurkeyRegions,
   getDistrictsForCity,
   getNeighborhoodsForDistrict,
   loadTurkeyRegions,
@@ -132,4 +133,14 @@ test("turkeyRegions dataset includes all 81 provinces with real districts and ne
   const kadikoyId = resolveLocationIdForSelection("İstanbul", "Kadıköy", "Caferağa Mah");
   assert.ok(kadikoyId);
   assert.equal(locationLabel(resolveLocation(kadikoyId)), "Caferağa Mah, Kadıköy, İstanbul");
+});
+
+test("all 13 Muğla districts and neighborhoods are available synchronously without waiting", () => {
+  const syncRegions = getCachedTurkeyRegions();
+  const muglaDistricts = getDistrictsForCity(syncRegions, "Muğla");
+  assert.equal(muglaDistricts.length, 13);
+  for (const required of ["Bodrum", "Fethiye", "Marmaris", "Menteşe", "Milas", "Datça"]) {
+    assert.equal(muglaDistricts.includes(required), true);
+  }
+  assert.equal(getNeighborhoodsForDistrict(syncRegions, "Muğla", "Menteşe").includes("Kötekli Mah"), true);
 });

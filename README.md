@@ -55,5 +55,5 @@ Mevcut başlangıç iskeleti iki hizmetli giriş, örnek arama/ürün kataloğu,
 
 ## 5. Güvenlik, veri kaynakları ve kapsam
 
-- **İl, ilçe ve mahalle verisi:** Türkiye'nin 81 il, 973 ilçe ve gerçek mahalle verileri (`src/data/turkeyRegions.json`), PTT resmî posta kodu veri tabanından (`postakodu.ptt.gov.tr`) derlenen **MIT lisanslı** [`turkey-neighbourhoods`](https://github.com/muratgozel/turkey-neighbourhoods) (`v4.0.3`) paketinden üretilmiştir.
+- **İl, ilçe ve mahalle verisi:** Türkiye'nin 81 il, 973 ilçe ve gerçek mahalle verileri (`src/data/muglaRegions.ts` ve `src/data/turkeyRegionsData.js`), PTT resmî posta kodu veri tabanından (`postakodu.ptt.gov.tr`) derlenen **MIT lisanslı** [`turkey-neighbourhoods`](https://github.com/muratgozel/turkey-neighbourhoods) (`v4.0.3`) paketinden üretilmiştir.
 - **Kapsam:** Gerçek kişisel bilgiler, gerçek ödeme, banka/kart verileri veya canlı restoran teslimatı sunulmaz; sipariş takibi, sepet, profil ve canlı destek tarayıcı depolaması üzerinde çalışır.

@@ -1,3 +1,5 @@
+import { muglaRegions } from "./muglaRegions.ts";
+
 /**
  * Turkey 81 provinces -> real districts (ilçe) -> real neighborhoods (mahalle).
  * Source: `turkey-neighbourhoods@4.0.3` (https://github.com/muratgozel/turkey-neighbourhoods),
@@ -6,22 +8,36 @@
  */
 export type TurkeyRegionsMap = Record<string, Record<string, string[]>>;
 
-let cachedRegions: TurkeyRegionsMap | null = null;
+const SYNC_FALLBACK_REGIONS: TurkeyRegionsMap = {
+  Muğla: muglaRegions,
+};
+
+let cachedRegions: TurkeyRegionsMap = { ...SYNC_FALLBACK_REGIONS };
+let fullyLoaded = false;
 let pendingPromise: Promise<TurkeyRegionsMap> | null = null;
 
-/** Return already-loaded region dataset synchronously if cached. */
-export function getCachedTurkeyRegions(): TurkeyRegionsMap | null {
+/** Return currently available region map synchronously (includes full Muğla immediately). */
+export function getCachedTurkeyRegions(): TurkeyRegionsMap {
   return cachedRegions;
 }
 
-/** Lazy-load and cache all 81 Turkish provinces, 973 districts, and ~73k neighborhoods. */
+/** Whether all 81 provinces have finished loading into cache. */
+export function areAllRegionsLoaded(): boolean {
+  return fullyLoaded;
+}
+
+/** Lazy-load all 81 provinces, 973 districts, and real neighborhoods via standard ES module. */
 export function loadTurkeyRegions(): Promise<TurkeyRegionsMap> {
-  if (cachedRegions) return Promise.resolve(cachedRegions);
+  if (fullyLoaded) return Promise.resolve(cachedRegions);
   if (!pendingPromise) {
-    pendingPromise = import("./turkeyRegions.json", { with: { type: "json" } }).then((mod) => {
-      cachedRegions = (mod.default ?? mod) as TurkeyRegionsMap;
-      return cachedRegions;
-    });
+    pendingPromise = import("./turkeyRegionsData.js")
+      .then((mod) => {
+        const loaded = (mod.default ?? mod) as TurkeyRegionsMap;
+        cachedRegions = { ...loaded, ...SYNC_FALLBACK_REGIONS };
+        fullyLoaded = true;
+        return cachedRegions;
+      })
+      .catch(() => cachedRegions);
   }
   return pendingPromise;
 }
