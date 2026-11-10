@@ -84,17 +84,7 @@ const originalProducts: Product[] = [
     service: "market",
     image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500",
   },
-  {
-    id: "m6",
-    name: "Sütaş Yoğurt 1 kg",
-    description: "1 kg",
-    price: 79.9,
-    category: "Süt Ürünleri ve Kahvaltılık",
-    storeId: "ymarket-1",
-    storeName: "Yemeksepeti Market",
-    service: "market",
-    image: "/product/sütaşyoğurt.png",
-  },
+ 
   {
     id: "m7",
     name: "Barilla Burgu Makarna 500 g",
@@ -370,7 +360,7 @@ export const marketProducts: Product[] = originalProducts.map(product => {
 
     b1: { amount: 0.5, unitBasis: "kg", unitLabel: "500 g", brand: "Dost" },
     b2: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
-    b3: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Günlük" },
+    b3: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Bili Bili" },
     b4: { amount: 0.87, unitBasis: "kg", unitLabel: "870 g", brand: "Bol Bol" },
     b5: { amount: 0.15, unitBasis: "kg", unitLabel: "150 g", brand: "Daphné" },
     b6: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Saban" },
