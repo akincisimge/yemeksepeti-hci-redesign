@@ -44,12 +44,12 @@ const choices = [
 export default function HomePage() {
   const { address, openAddress } = useOutletContext<LayoutContext>();
   return (
-    <div className="space-y-10 sm:space-y-12">
-      <section className="mx-auto max-w-4xl pt-6 text-center sm:pt-10">
+    <div className="space-y-6 sm:space-y-8">
+      <section className="mx-auto max-w-4xl pt-2 text-center sm:pt-4">
         <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">Hoş geldin</p>
         <h1 className="text-[32px] font-bold leading-[40px] tracking-tight text-slate-900 sm:text-[40px] sm:leading-[48px]">Bugün ne sipariş etmek istersin?</h1>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-6 text-slate-600">
-          Teslimat konumunu belirle, ardından ihtiyacına uygun bölümü seç.
+          İhtiyacına uygun bölümü seç. İşletmeleri görmek için teslimat konumunu belirle.
         </p>
       </section>
 
@@ -69,21 +69,20 @@ export default function HomePage() {
 
       <section aria-label="Yemek ve Market hizmet seçimi" className="grid gap-6 md:grid-cols-2">
         {choices.map(({ to, label, eyebrow, description, cta, Art }) => (
-          <article key={to} className="group relative flex min-h-[430px] flex-col justify-between overflow-hidden rounded-[24px] border border-slate-300 bg-white p-6 shadow-sm transition duration-200 hover:border-brand hover:shadow-xl sm:p-8">
+          <article key={to} className="group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[24px] border border-slate-300 bg-white p-6 shadow-sm transition duration-200 hover:border-brand hover:shadow-xl focus-within:border-brand sm:p-8">
             <div className="pointer-events-none absolute -right-4 top-1 sm:right-2">
               <Art />
             </div>
             <div className="relative max-w-[75%] pt-3">
               <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-2 text-xs font-bold tracking-wider text-brand-dark">{eyebrow}</p>
-              <h2 className="mt-8 text-[28px] font-bold leading-9 tracking-tight text-slate-900">{label}</h2>
+              <h2 id={`${label}-title`} className="mt-8 text-[28px] font-bold leading-9 tracking-tight text-slate-900">{label}</h2>
               <p className="mt-4 text-base leading-6 text-slate-600">{description}</p>
             </div>
-            <div className="relative mt-10 border-t border-slate-200 pt-6">
-              <Link to={to} className="inline-flex min-h-12 w-full items-center justify-between gap-4 rounded-xl bg-brand px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-4 focus-visible:outline-offset-2">
-                {cta}
+            <div className="relative mt-6 border-t border-slate-200 pt-4">
+              <Link to={to} aria-labelledby={`${label}-title ${label}-action`} className="inline-flex min-h-12 w-full items-center justify-between gap-4 rounded-xl bg-brand px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-4 focus-visible:outline-offset-2">
+                <span id={`${label}-action`}>{cta}</span>
                 <span aria-hidden="true" className="text-2xl">→</span>
               </Link>
-              <p className="mt-4 text-sm text-slate-600">İstediğinde ana sayfaya dönerek diğer bölümü seçebilirsin.</p>
             </div>
           </article>
         ))}

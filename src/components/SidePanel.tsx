@@ -19,8 +19,8 @@ type PanelProps = {
 
 const TOPICS = [
   { name: "Siparişimi takip etmek istiyorum", answer: "Demo sipariş tamamlandıktan sonra takip ekranında dört örnek aşamayı izleyebilirsin. Son siparişine Profil → Önceki siparişlerim bölümünden de dönebilirsin." },
-  { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Ana sayfadaki Adres seç butonundan örnek teslimat konumunu değiştirebilirsin. Siparişi tamamlarken ayrıntılı demo adresini ayrıca düzenleyebilirsin." },
-  { name: "Kuponumla ilgili yardım istiyorum", answer: "Bu öğrenci prototipinde gerçek kupon kullanımı yok. Kuponlarım alanında örnek kupon durumları gösteriliyor." },
+  { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Üst çubuktaki teslimat konumuna veya ana sayfadaki Konumu değiştir butonuna bas. İlk kez konum belirliyorsan Adres seç butonunu kullan. İl, ilçe ve mahalleyi seçip onayla." },
+  { name: "Kuponumla ilgili yardım istiyorum", answer: "Bu öğrenci prototipinde gerçek kupon kullanımı yok. Kuponlarım alanından demo kupon durumunu görebilirsin." },
   { name: "Siparişimi iptal veya iade etmek istiyorum", answer: "Bu uygulama gerçek sipariş oluşturmadığı için para çekme, iptal veya iade işlemi yapılmaz." },
   { name: "Başka bir konuda yardım istiyorum", answer: "Bu bir otomatik demo sohbetidir. Gerçek müşteri temsilcisine mesaj gönderilmez. Yardım seçeneklerini inceleyebilir veya yeni konu seçebilirsin." }
 ];
@@ -134,7 +134,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
   }, [onClose, view]);
 
   const title: Record<Exclude<PanelView, null>, string> = {
-    address: "Teslimat konumu", profile: "Profil ve hesabım", account: "Demo hesabım",
+    address: address ? "Teslimat konumunu değiştir" : "Teslimat konumu seç", profile: "Profil ve hesabım", account: "Demo hesabım",
     orders: "Önceki siparişlerim", coupons: "Kuponlarım", help: "Yardım ve canlı destek"
   };
   const subpage = view !== "profile" && view !== "address";
@@ -142,7 +142,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
 
   return (
     <div className="fixed inset-0 z-50">
-      <button type="button" aria-label="Paneli kapat" onClick={onClose} className="absolute inset-0 h-full w-full cursor-default bg-slate-900/40" />
+      <button type="button" tabIndex={-1} aria-label="Paneli kapat" onClick={onClose} className="absolute inset-0 h-full w-full cursor-default bg-slate-900/40" />
       <aside ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="panel-title" className="absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl sm:max-w-[440px]">
         <header className="flex min-h-[76px] shrink-0 items-center gap-3 border-b border-slate-200 px-4 sm:px-6">
           {subpage && <button type="button" onClick={() => onNavigate("profile")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 hover:bg-slate-50" aria-label="Profil menüsüne dön">←</button>}
@@ -150,7 +150,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
           <button data-close type="button" onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-xl text-slate-700 hover:bg-slate-50" aria-label="Paneli kapat">×</button>
         </header>
         <div className={"min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 " + (view === "help" ? "flex flex-col" : "")}>
-          {view === "address" && <LocationPicker onDone={onClose} />}
+          {view === "address" && <LocationPicker inPanel onDone={onClose} onCancel={onClose} />}
           {view === "profile" && <div className="space-y-3">
             <div className="mb-5 rounded-2xl bg-[#FFF1F6] p-5">
               <p className="text-sm font-semibold text-brand">HOŞ GELDİN</p>
@@ -158,9 +158,9 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
               <p className="mt-1 text-sm text-slate-700">{account ? "Demo profilin oluşturuldu." : "Adreslerini, siparişlerini ve kuponlarını tek yerden yönet."}</p>
               <button type="button" onClick={() => onNavigate("account")} className="mt-4 min-h-11 rounded-xl border border-brand px-4 font-semibold text-brand hover:bg-white">{account ? "Profil bilgilerimi düzenle" : "Demo profil oluştur"}</button>
             </div>
-            <PanelRow label="Kayıtlı adreslerim" detail={address ?? "Henüz adres seçilmedi"} onClick={() => onNavigate("address")} />
+            <PanelRow label="Teslimat konumum" detail={address ?? "Henüz adres seçilmedi"} onClick={() => onNavigate("address")} />
             <PanelRow label="Önceki siparişlerim" detail="Demo sipariş geçmişi" onClick={() => onNavigate("orders")} />
-            <PanelRow label="Tanımlı kuponlarım" detail="Kupon durumlarını incele" onClick={() => onNavigate("coupons")} />
+            <PanelRow label="Kuponlarım" detail="Demo kupon durumunu gör" onClick={() => onNavigate("coupons")} />
             <PanelRow label="Yardım / Canlı destek" detail="Otomatik örnek destek sohbeti" onClick={() => onNavigate("help")} />
             <div className="border-t border-slate-200 pt-4">
               <p className="mb-3 text-sm font-semibold text-slate-700">Sepetlerim</p>
@@ -186,7 +186,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
           </div>}
           {view === "coupons" && <div className="space-y-4">
             <p className="rounded-xl bg-slate-50 p-4 text-slate-700">Bu eğitim simülasyonunda henüz tanımlı gerçek veya kullanılabilir kupon yok.</p>
-            <div className="rounded-xl border border-dashed border-slate-300 p-5"><p className="font-semibold">Kuponun yok</p><p className="mt-2 text-sm text-slate-600">Aktif, kullanılmış ve süresi dolmuş kupon durumları sonraki sürümde gösterilecek.</p></div>
+            <div className="rounded-xl border border-dashed border-slate-300 p-5"><p className="font-semibold">Kuponun yok</p><p className="mt-2 text-sm text-slate-600">Bu demo hesapta görüntülenecek kupon bulunmuyor.</p></div>
           </div>}
           {view === "help" && <HelpView />}
         </div>
