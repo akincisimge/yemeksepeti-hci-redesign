@@ -103,7 +103,11 @@ export default function PaymentForm(props: Props) {
       {method === "card-demo" ? <section aria-labelledby="card-details-title" className="space-y-4 border-t border-slate-200 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 id="card-details-title" className="font-semibold">Kart bilgileri</h2>
-          <span className="text-sm text-slate-600">VISA · Mastercard · Troy</span>
+          <ul aria-label="Kart markaları" className="flex shrink-0 items-center gap-4">
+            <li><img src="/logos/payments/visa.png" alt="Visa" width="1920" height="622" className="h-4 w-auto" /></li>
+            <li><img src="/logos/payments/mastercard.svg" alt="Mastercard" width="152" height="108" className="h-7 w-auto" /></li>
+            <li><img src="/logos/payments/troy.svg" alt="Troy" width="298" height="137" className="h-5 w-auto" /></li>
+          </ul>
         </div>
         {props.savedFixture && <div className="rounded-xl border border-slate-300 bg-slate-50 p-4">
           <p className="font-semibold">{props.selectedSaved ? "Seçili kart" : "Kayıtlı kart"} · {fixtureLabel(props.savedFixture)}</p>

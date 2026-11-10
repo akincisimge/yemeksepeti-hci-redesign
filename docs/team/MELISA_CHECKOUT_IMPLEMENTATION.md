@@ -17,6 +17,14 @@ Son güncelleme: 10 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-ch
 
 Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başlangıç kodundaki hatalar orijinal Yemeksepeti'ne atfedilmez.
 
+## Kart markası logoları — 10 Kasım 2026
+
+Ortak `PaymentForm` içindeki “VISA · Mastercard · Troy” metni, markaların kendi kaynaklarından alınan üç özgün görselle değiştirildi. Yemek ve Market aynı bileşeni kullanır. Logolar “Kart bilgileri” başlığının sağında, oranları ve renkleri korunarak hizalanır; bağlantı veya düğme değildir. `alt` metinleri Visa, Mastercard ve Troy olarak korunur. Amaç, özgün ödeme ekranındaki tanıdık görsel ipuçlarını korumaktır (K1/K8); ölçülmüş bir kullanılabilirlik kazanımı iddia edilmez.
+
+Dosyalar `public/logos/payments/` altındadır; çalışma sırasında haricî görsel isteği yapılmaz. Kaynaklar ve üçüncü taraf hakları aynı klasörün [README dosyasında](../../public/logos/payments/README.md) kayıtlıdır. Ödeme yöntemleri, doğrulama ve sipariş mantığı değişmedi. Figma/ZIP bu kod değişikliğinde güncellenmedi.
+
+**Doğrulama:** TypeScript/Vite derlemesi geçti. 1363px masaüstü ödeme ekranında üç görsel yüklendi; en-boy oranları korundu ve yatay taşma görülmedi. Erişilebilirlik ağacında üç marka adı ayrı görseller olarak mevcut; ek klavye durakları yok. Bu küçük görsel değişiklik için yeni otomatik test eklenmedi ve katılımcı testi yapılmış sayılmadı.
+
 ## BİM ve CarrefourSA ödeme kapsamı düzeltmesi — 10 Kasım 2026
 
 Kullanıcının BİM ödeme ekranında yalnız online kart görünüyordu. Sebep checkout'ın satıcı eşlemesiydi: önceki değişiklik üç yöntemi yalnız Y-Market'e açmış, BİM/CarrefourSA'yı online kartla sınırlı bırakmıştı. Bu sorun `delivery.ts` birleştirme çakışmasından bağımsızdır.
