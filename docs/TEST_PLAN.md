@@ -63,4 +63,4 @@ Uygulama katılımcıya gerçek ödeme/GPS içermeyen bir prototip olarak tanıt
 
 [Ayrıntılı protokol ve boş kayıt tablosu](team/MELISA_USABILITY_TEST.md) hazırdır. Simge ana sayfa/araştırma, Hakan Yemek, Beyda Market, Melisa ortak checkout/sonuç görevlerini yürütür; herkes kendi bölümündeki bulguyu ortak biçimde raporlar. Melisa sonuçları koordine eder; tüm testleri tek başına üstlenmez. Henüz katılımcı verisi yoktur.
 
-Son ödeme UX düzeninde ayrıca tahmini teslimat aralığını ve toplamın yanındaki onay düğmesini bulma, uzun sepette diğer ürünleri açma, CVV yardımını anlama ve restorana göre yemek kartı kapsamını okuma gözlenir. Yeni animasyon yalnız onay geri bildirimidir; durum ilerlemez.
+Son ödeme UX düzeninde ayrıca tahmini teslimat aralığını ve toplamın yanındaki onay düğmesini bulma, uzun sepette tüm ürün/adetleri gözden geçirme, ürün ekleme ile sepet düzenleme işlemlerini ayırt etme ve alışverişten ödemeye geri dönme, CVV yardımını anlama ve restorana göre yemek kartı kapsamını okuma gözlenir. Yeni animasyon yalnız onay geri bildirimidir; durum ilerlemez.

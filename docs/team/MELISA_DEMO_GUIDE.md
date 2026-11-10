@@ -52,7 +52,8 @@ Fiyatlar ekip tarafından değiştirilirse ezberlenen tutar yerine canlı özeti
 
 ## Ek ödeme UX kontrolleri
 
-- Özette tahmini teslimatı, adresi, seçili ödeme yöntemini ve tüm ücretleri göster. Son düğme toplamı da yazar; üçüncü adım “Sipariş sonucu”dur. Dört çeşit sepetle ilk üç ürünün ardından kalan ürünün toplamdan önce açıldığını gösterebilirsin.
+- Özette tahmini teslimatı, adresi, seçili ödeme yöntemini ve tüm ücretleri göster. Son düğme toplamı da yazar; üçüncü adım “Sipariş sonucu”dur. Beş farklı ürünle tüm satırların adedi ve tutarıyla açık göründüğünü göster. “Daha fazla ürün ekle” aynı mağazaya, “Sepeti düzenle” mevcut sepete gider; bunlar farklı işlemlerdir.
+- Ödeme adımında nakit ve 30 TL bahşiş seç; sepeti düzenleyip geri gel. Adres, yöntem ve bahşiş korunarak ödeme açılır. Ürün ekleme bağlantısıyla da aynı mağazaya gidip dönebilirsin. Online kartın tam numarası/CVV sayfadan çıkınca silinir; dönüşte yeniden girilir.
 - Online kart formu boşken “Siparişi tamamla”ya bas: sipariş oluşmaz, alan mesajları görünür ve ilk hatalı alan odaklanır. Verileri düzeltip yeniden devam et. Düğmenin etkin olması kartın doğrulandığı anlamına gelmez.
 - Yemeksepeti Market, BİM ve CarrefourSA senaryolarının üçünde de online kart, nakit ve kapıda temassız kart görünür. Nakit/kapıda kart online kart bilgisi istemez. Bu ortak demo kapsamıdır; gerçek mağazaların ödeme politikası veya sağlayıcı anlaşması olarak anlatma.
 - Yemek kartını seçince iki kurgu restoran için tanımlanan sağlayıcı adlarını göster; bunlar örnek senaryo verisidir, gerçek anlaşma/entegrasyon değildir.

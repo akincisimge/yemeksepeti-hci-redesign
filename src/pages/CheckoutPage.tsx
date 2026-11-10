@@ -11,6 +11,7 @@ import AddressForm from "../features/checkout/AddressForm";
 import CheckoutSteps from "../features/checkout/CheckoutSteps";
 import OrderSummary from "../features/checkout/OrderSummary";
 import PaymentForm from "../features/checkout/PaymentForm";
+import { checkoutCatalogPath, clearCheckoutReturn, readCheckoutReturn, rememberCheckoutReturn } from "../features/checkout/checkoutNavigation";
 import {
   calculateCheckout, checkoutStorage, clearCheckoutDraft, deliveryMinutes, readCheckoutDraft,
   saveCheckoutDraft, SAVED_ADDRESS, validateAddress, type AddressErrors, type AddressValues,
@@ -31,6 +32,10 @@ export default function CheckoutPage() {
 
 function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; regionId: string; regionLabel: string }) {
   const { carts, clear } = useCart();
+  const lines = carts[service];
+  const storeId = lines[0]?.product.storeId ?? "";
+  const [returnVisit] = useState(() => readCheckoutReturn(checkoutStorage(), service, regionId, storeId));
+  const returnHandled = useRef(false);
   const { openAddress } = useOutletContext<LayoutContext>();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -41,7 +46,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const [card, setCard] = useState<CardValues>({ ...EMPTY_CARD });
   const [cardErrors, setCardErrors] = useState<CardErrors>({});
   const [status, setStatus] = useState<PaymentStatus>("idle");
-  const [tip, setTip] = useState(0);
+  const [tip, setTip] = useState(returnVisit?.tip ?? 0);
   const [remember, setRemember] = useState(false);
   const [savedFixture, setSavedFixture] = useState(() => readSavedFixture(checkoutStorage()));
   const [selectedSaved, setSelectedSaved] = useState<SavedCardPreference>();
@@ -52,8 +57,6 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const submitRef = useRef<HTMLButtonElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousStep = useRef(false);
-  const lines = carts[service];
-  const storeId = lines[0]?.product.storeId ?? "";
   const store = (service === "market" ? marketStores : stores).find(item => item.id === storeId);
   const method = normalizePaymentMethod(draft.method, service, storeId);
   const totals = calculateCheckout(lines, store, tip);
@@ -65,6 +68,16 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const cartSignature = JSON.stringify(lines.map(({ product, quantity }) => [product.id, product.storeId, product.price, quantity]));
 
   useEffect(() => { saveCheckoutDraft(checkoutStorage(), service, regionId, draft); }, [draft, service, regionId]);
+  useEffect(() => {
+    if (returnHandled.current) return;
+    returnHandled.current = true;
+    clearCheckoutReturn(checkoutStorage(), service, regionId);
+    if (returnVisit && returnVisit.storeId === storeId && addressValid && params.get("step") !== "payment") {
+      const next = new URLSearchParams(params);
+      next.set("step", "payment");
+      setParams(next, { replace: true });
+    }
+  }, [returnVisit, service, regionId, storeId, addressValid, params, setParams]);
   useEffect(() => {
     if (selectedSaved) document.getElementById("checkout-card-cvv")?.focus();
   }, [selectedSaved]);
@@ -107,6 +120,10 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
     const next = new URLSearchParams(params);
     next.delete("step");
     setParams(next);
+  };
+  const rememberShoppingReturn = () => {
+    if (payment) rememberCheckoutReturn(checkoutStorage(), service, regionId, { storeId, tip });
+    else clearCheckoutReturn(checkoutStorage(), service, regionId);
   };
   const continueToPayment = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -246,7 +263,7 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
         onCancel={cancelPayment} onSubmit={submitOrder}
       /> : <AddressForm values={draft} errors={errors} regionLabel={regionLabel} onChange={change} onBlur={field => setErrors(current => ({ ...current, [field]: validateAddress(draft)[field] }))} onUseSaved={() => { setDraft(current => ({ ...current, ...SAVED_ADDRESS })); setErrors({}); setAnnouncement(""); }} onRegionChange={openAddress} onSubmit={continueToPayment} />}
       <aside aria-label="Sipariş özeti ve devam işlemi" className={"space-y-4 " + (payment ? "lg:sticky lg:top-24" : "")}>
-        <OrderSummary lines={lines} service={service} totals={totals} showTip={payment} disabled={processing} compact={payment} deliveryEstimate={deliveryEstimate} review={payment && <section aria-labelledby="selected-address-title" className="mb-4 border-t border-slate-200 pt-2 text-sm">
+        <OrderSummary lines={lines} service={service} totals={totals} showTip={payment} disabled={processing} compact={payment} deliveryEstimate={deliveryEstimate} addMoreTo={checkoutCatalogPath(service, storeId)} onShoppingNavigate={rememberShoppingReturn} review={payment && <section aria-labelledby="selected-address-title" className="mb-4 border-t border-slate-200 pt-2 text-sm">
           <div className="flex items-center justify-between gap-3"><h3 id="selected-address-title" className="font-semibold">Teslimat adresi</h3>
             <button type="button" onClick={goAddress} disabled={processing} className="min-h-11 rounded-lg px-2 font-semibold text-brand underline underline-offset-4" aria-label="Teslimat adresini düzenle">Düzenle</button>
           </div>

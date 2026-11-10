@@ -35,6 +35,9 @@ M1 için eksik bilgiyi moderatörün kontrollü vermesi, doğal hata oranı öl�
 
 ## Son ödeme düzeni için ek gözlemler
 
+- M2 varyantını ödeme adımından başlat: “Sipariş vermeden önce bir ürünün adedini değiştir, sonra aynı mağazadan başka bir ürün daha ekle ve ödemeye dön.” İki farklı bağlantıyı ayırt edebilme, adres/yöntem/bahşişin korunmasını fark etme ve doğru toplamı açıklama gözlenir. Bağlantı adlarını önceden söyleme. İlk denemeyi nakit ile yap; online kart varyantında sayfadan ayrılınca kart bilgilerinin yeniden girilmesinin etkisini ayrıca kaydet.
+- Beş farklı ürün ve altı adet içeren sepetle ürün/adet listesini gözden geçirmesini iste. Tüm satırları kontrol edebilme ve toplam/son düğmeye ulaşma sırasında kaydırma gereksinimini gözle; görünür listenin otomatik olarak daha iyi olduğunu varsayma.
+
 - M3/M5 sırasında kullanıcı toplamı, tahmini teslimat süresini ve onay düğmesini yardım almadan bulabiliyor mu? Gereksiz kaydırma veya arama davranışını kaydet.
 - M3 sırasında isteğe bağlı bahşiş alanını bulup açabilmesini ve kapatınca seçilen tutarı anlayabilmesini gözle. Son düğmeden önce adresi, yöntemi ve toplamı doğru açıklayıp açıklamadığını kaydet.
 - Alan hatası varyantında eksik CVV ile gönderimi denet; odak ve mesaj yardımıyla düzeltmeyi gözle. Bu kontrollü hata görevi, doğal hata oranı olarak raporlanmaz.

@@ -29,7 +29,7 @@
 
 ## HCI ve doğrulama
 
-Dersin kullandığı Shneiderman sürümünde K2 **deneyimli kullanıcıya kısayol** anlamındadır. Klavye ve kontrast ayrıca kontrol edilir. [Uygulama raporu](MELISA_CHECKOUT_IMPLEMENTATION.md) tamamlanan davranışları, teknik kontrolleri ve Figma farklarını kaydeder. Bu dalda derleme ve **53/53 otomatik test** geçti; iki servis masaüstünde uçtan uca kontrol edildi. [TEST_PLAN.md](../TEST_PLAN.md) gerçek katılımcı çalışması içindir; otomatik testler kullanılabilirlik testi sonucu sayılmaz.
+Dersin kullandığı Shneiderman sürümünde K2 **deneyimli kullanıcıya kısayol** anlamındadır. Klavye ve kontrast ayrıca kontrol edilir. [Uygulama raporu](MELISA_CHECKOUT_IMPLEMENTATION.md) tamamlanan davranışları, teknik kontrolleri ve Figma farklarını kaydeder. Bu dalda derleme ve **58/58 otomatik test** geçti; iki servis masaüstünde uçtan uca kontrol edildi. [TEST_PLAN.md](../TEST_PLAN.md) gerçek katılımcı çalışması içindir; otomatik testler kullanılabilirlik testi sonucu sayılmaz.
 
 İlgili görev: [Issue #5](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/5).
 

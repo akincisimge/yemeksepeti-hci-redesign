@@ -1,6 +1,6 @@
 # Ortak sipariş akışı — uygulama ve doğrulama raporu
 
-Son güncelleme: 10 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **53/53 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
+Son güncelleme: 10 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **58/58 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
 
 ## Değişiklik ve gerekçe
 
@@ -17,15 +17,34 @@ Son güncelleme: 10 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-ch
 
 Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başlangıç kodundaki hatalar orijinal Yemeksepeti'ne atfedilmez.
 
+## Ürün özeti ve alışverişe dönüş — 10 Kasım 2026
+
+- Tüm sepet satırları adedi, birim fiyatı ve satır toplamıyla açık görünür. “Diğer … ürün çeşidini göster” kaldırıldı. Başlıktaki ürün sayısı adet toplamıdır; örneğin beş satırdaki bir üründen iki adet varsa toplam altı üründür. K8: siparişi hafızadan kontrol etmek yerine ekranda gözden geçirme; K5: onay öncesi hatayı fark etme.
+- “Daha fazla ürün ekle” aynı Market mağazasını veya aynı restoranı açar. “Sepeti düzenle” ayrı bir işlemdir ve mevcut sepet ekranına gider. Son sipariş düğmesi ana işlem olarak kalır. K1/K7: tutarlı adlandırma ve kullanıcı kontrolü.
+- Ödeme adımından bu iki bağlantıyla ayrılıp aynı servis, bölge ve satıcıya dönülürse adres/not, ödeme tercihi ve bahşiş korunur; geçerli adres yeniden doldurtulmadan ödeme açılır. Dönüş işareti bir kez tüketilir; “Adrese dön” sonrasında kullanıcı adres adımında kalabilir. Satıcı/bölge/servis değişirse veya adres geçersizse adres kontrolü atlanmaz. K6/K7: güvenli geri dönüş ve kontrol.
+- Kartın tam numarası ve CVV kaydedilmez; checkout sayfasından çıkılırsa mevcut güvenlik davranışı gereği yeniden girilir. Dönüş verisi yalnız satıcı kimliği ve izin verilen bahşiş tutarını içerir. Depolama kullanılamazsa normal adres adımı çalışır.
+
+**Teknik kapsam:** `OrderSummary`, `CheckoutPage` ve yeni `checkoutNavigation` yardımcıları. Yemek kataloğuna yalnız mevcut restoranı `?store=` üzerinden başlangıçta seçebilme desteği eklendi; Market/sepet sayfaları ve ortak sepet state'i değiştirilmedi. Hakan'ın yeni restoran rotaları birleştirilirken `checkoutCatalogPath` o rotalara uyarlanmalıdır.
+
+**Doğrulama:** Derleme ve **58/58 test** geçti. Beş yeni test satıcıya dönüşü, servis/bölge/satıcı ayrımını, tek kullanımlık dönüşü, kart verisinin dışlanmasını ve bozuk/engelli depolamayı kapsar. Masaüstü tarayıcıda:
+
+- Y-Market'te ekmek 1'den 2'ye çıkarılınca doğrudan ödeme açıldı; nakit, adres ve 30 TL bahşiş korundu; toplam 430,69 TL oldu.
+- “Daha fazla ürün ekle” Enter ile aynı Y-Market'i açtı. Süt eklenip dönüldüğünde beş satırın tamamı görünürdü; altı adet ürün ve 415,70 + 29,99 + 30,00 = 475,69 TL gösterildi.
+- “Adrese dön” otomatik olarak tekrar ödeme açmadı; not eklemek ve yeniden ilerlemek mümkündü.
+- Meydan Pizza'dan ürün ekleme bağlantısı varsayılan ilk restoran yerine Meydan Pizza'yı açtı. Salata eklenip dönüldüğünde kapıda kart tercihi ve adres korundu, toplam 360 TL oldu.
+- 1363px görünümünde yatay taşma yoktu; uzun özetin toplamı ve son düğmesi sayfa kaydırmasıyla erişilebildi.
+
+Bu kontrol kullanılabilirlik testi değildir; uzun listede kaydırma ve iki bağlantının anlaşılması katılımcı testinde ayrıca değerlendirilecek. Figma/ZIP bu kod revizyonunda güncellenmedi.
+
 ## Ödeme sayfasının bütün olarak yeniden değerlendirilmesi — 10 Kasım 2026
 
-Bu bölüm güncel düzeni tanımlar; aşağıdaki 9 Kasım ve ilk ödeme uygulaması kayıtları tarihseldir. Önceki iki sütunlu kart formu ve geçersiz girişte pasif devam düğmesi bu düzenle değiştirildi.
+Bu bölüm ödeme formu düzenini tanımlar; ürün listesi ve alışverişe dönüş için yukarıdaki son revizyon geçerlidir. Aşağıdaki 9 Kasım ve ilk ödeme uygulaması kayıtları tarihseldir. Önceki iki sütunlu kart formu ve geçersiz girişte pasif devam düğmesi bu düzenle değiştirildi.
 
 | Güncel karar | Ders / kural karşılığı |
 | --- | --- |
 | Üç Market yöntemi başta görünür; seçili yöntemin ayrıntıları hemen altında aynı grup içindedir. | K1/K7; Lec5 s.8–9, yakınlık ve gruplama |
 | Kart sahibi ve numara tam satır; tarih ve CVV aynı satırdadır. Kalıcı etiketler, zorunlu alan açıklaması ve özgün marka görselleri korunur. | K5/K8; Lec5 s.15, doğal okuma ve giriş sırası |
-| Ürünler, adres, seçilen ödeme yöntemi, ücretler ve toplam son düğmeden önce aynı özettedir. İlk üç çeşit görünür; kalan ürünler toplamdan önce açılır. | K8; Lec6 s.27, siparişi tamamlamadan gözden geçirme |
+| Ürünler, adres, seçilen ödeme yöntemi, ücretler ve toplam son düğmeden önce aynı özettedir. Tüm ürün satırları toplamdan önce açık görünür. | K8; Lec6 s.27, siparişi tamamlamadan gözden geçirme |
 | Son düğme “Siparişi tamamla · [toplam]”; üçüncü adım “Sipariş sonucu” olarak adlandırılır. | K3/K4; beklenen sonucun açıklığı |
 | Boş veya hatalı kartla düğmeye basılabilir; alan mesajları gösterilir ve ilk hatalı alana odaklanılır. Doğrulama geçmeden işlem/sipariş başlamaz. | K5; Lec6 s.23, hatadan toparlanma |
 | Bahşiş başlangıçta kapalı, isteğe bağlı bir açılır alandır; seçilmiş tutar kapalı başlıkta da görünür. Kart kaydı seçili gelmez. | K7; Lec4 s.3 ve Lec5 s.11, görsel hiyerarşi |
@@ -33,7 +52,7 @@ Bu bölüm güncel düzeni tanımlar; aşağıdaki 9 Kasım ve ilk ödeme uygula
 
 Kaynaklar, kullanıcı tarafından paylaşılan Lec4-InteractiondesignII, Lec5-InteractiondesignIIIPrototyping ve Lec6-DesignRules slaytlarıdır. Dersin K2 tanımı sık kullananlara kısayoldur. Düzenin daha hızlı veya daha başarılı olduğu henüz katılımcıyla ölçülmedi.
 
-**Doğrulama:** `npm run build` ve `node --test tests/*.test.mjs` geçti (53/53). Masaüstü tarayıcıda boş kartla dört hata ve kart sahibine odak; diğer alanlar düzeltilince yalnız CVV hatası ve CVV'ye odak; adrese gidip gelince alanların ve 30 TL bahşişin korunması doğrulandı. Nakit/kapıda kartta online alanlar gizlendi ve özet yöntemi değişti. Online'a dönüşte bilgiler korundu; CarrefourSA için 278,00 + 39,99 + 30,00 = 347,99 TL sipariş başarıyla oluştu. Dört çeşit Y-Market sepetinde ilk üçü görünür, dördüncü Enter ile açılır; toplam 385,69 TL kaldı. 1363px masaüstünde yatay taşma görülmedi. Yeni otomatik test eklenmedi; değişen etkileşimler doğrudan tarayıcıda sınandı.
+**İlk düzenin doğrulaması (ürün özeti düzeltmesinden önce):** `npm run build` ve `node --test tests/*.test.mjs` geçti (53/53). Masaüstü tarayıcıda boş kartla dört hata ve kart sahibine odak; diğer alanlar düzeltilince yalnız CVV hatası ve CVV'ye odak; adrese gidip gelince alanların ve 30 TL bahşişin korunması doğrulandı. Nakit/kapıda kartta online alanlar gizlendi ve özet yöntemi değişti. Online'a dönüşte bilgiler korundu; CarrefourSA için 278,00 + 39,99 + 30,00 = 347,99 TL sipariş başarıyla oluştu. Dört çeşit Y-Market sepetinde ilk üçü görünür, dördüncü Enter ile açılır; toplam 385,69 TL kaldı. 1363px masaüstünde yatay taşma görülmedi. Yeni otomatik test eklenmedi; değişen etkileşimler doğrudan tarayıcıda sınandı.
 
 Bu sonuçlar teknik kontroldür; katılımcı testi, mobil veya ekran okuyucu testi değildir.
 
