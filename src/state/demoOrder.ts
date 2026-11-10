@@ -1,12 +1,13 @@
+import { useEffect, useState } from "react";
 import type { PaymentMethod, Service } from "../types/domain";
 
 export type DemoOrderStage = 0 | 1 | 2 | 3;
 
 export const DEMO_TRACKING_STEPS = [
-  { title: "Sipariş alındı", detail: "Demo siparişin oluşturuldu ve kaydedildi." },
-  { title: "Hazırlanıyor", detail: "Örnek hazırlık aşaması gösteriliyor." },
-  { title: "Yola çıktı", detail: "Örnek teslimat yolculuğu gösteriliyor." },
-  { title: "Teslim edildi", detail: "Demo sipariş süreci tamamlandı." },
+  { title: "Sipariş alındı", detail: "Siparişin işletmeye iletildi ve onaylandı." },
+  { title: "Hazırlanıyor", detail: "Siparişin özenle hazırlanıyor." },
+  { title: "Yola çıktı", detail: "Kurye siparişini teslim etmek üzere yola çıktı." },
+  { title: "Teslim edildi", detail: "Siparişin teslim edildi. Afiyet olsun!" },
 ] as const;
 
 export type DemoOrder = {
@@ -23,6 +24,7 @@ export type DemoOrder = {
 };
 
 const STORAGE_KEY = "hci-yemeksepeti-last-demo-order-v1";
+const ORDER_EVENT = "ys-order-updated";
 
 export function readDemoOrder(): DemoOrder | null {
   try {
@@ -31,7 +33,7 @@ export function readDemoOrder(): DemoOrder | null {
     const item: unknown = JSON.parse(raw);
     if (!item || typeof item !== "object") return null;
     const order = item as Partial<DemoOrder>;
-    if (typeof order.orderId !== "string" || !/^DEMO-\d{7}$/.test(order.orderId)) return null;
+    if (typeof order.orderId !== "string" || !/^(?:YS|DEMO)-\d{7}$/.test(order.orderId)) return null;
     if (typeof order.amount !== "number" || !Number.isFinite(order.amount) || order.amount < 0) return null;
     if (order.service !== "food" && order.service !== "market") return null;
     if (order.method !== "cash-demo" && order.method !== "card-demo") return null;
@@ -50,6 +52,9 @@ export function readDemoOrder(): DemoOrder | null {
 export function saveDemoOrder(order: DemoOrder): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(ORDER_EVENT));
+    }
   } catch {
     /* Browser storage can be unavailable; navigation state still works. */
   }
@@ -58,22 +63,22 @@ export function saveDemoOrder(order: DemoOrder): void {
 export function clearDemoOrder(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(ORDER_EVENT));
+    }
   } catch {
     /* storage optional */
   }
 }
 
-export function createSamplePreviewOrder(locationText?: string): DemoOrder {
-  return {
-    orderId: "DEMO-" + Date.now().toString().slice(-7),
-    amount: 245,
-    service: "food",
-    method: "card-demo",
-    stage: 1,
-    createdAt: new Date().toISOString(),
-    locationLabel: locationText ?? "Kötekli, Menteşe, Muğla (Örnek)",
-    storeName: "Crispy Co Burger (Önizleme)",
-    itemCount: 2,
-    customerName: "Örnek Kullanıcı",
-  };
+export function useDemoOrder(): DemoOrder | null {
+  const [order, setOrder] = useState<DemoOrder | null>(readDemoOrder);
+
+  useEffect(() => {
+    const sync = () => setOrder(readDemoOrder());
+    window.addEventListener(ORDER_EVENT, sync);
+    return () => window.removeEventListener(ORDER_EVENT, sync);
+  }, []);
+
+  return order;
 }

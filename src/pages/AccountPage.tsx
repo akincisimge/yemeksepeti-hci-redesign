@@ -4,7 +4,7 @@ import { locationLabel } from "../data/delivery";
 import { useAccount } from "../state/AccountContext";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
-import { DEMO_TRACKING_STEPS, readDemoOrder } from "../state/demoOrder";
+import { DEMO_TRACKING_STEPS, useDemoOrder } from "../state/demoOrder";
 import type { LayoutContext } from "../components/Layout";
 
 export default function AccountPage() {
@@ -12,7 +12,7 @@ export default function AccountPage() {
   const { delivery } = useDelivery();
   const { count } = useCart();
   const { openAddress } = useOutletContext<LayoutContext>();
-  const lastOrder = readDemoOrder();
+  const lastOrder = useDemoOrder();
 
   return (
     <div className="space-y-6">
@@ -21,19 +21,19 @@ export default function AccountPage() {
       </Link>
 
       <header className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
-        <p className="font-semibold text-brand">HESAP VE PROFİL · DEMO</p>
+        <p className="font-semibold text-brand">HESAP VE PROFİL</p>
         <h1 className="mt-2 text-3xl font-bold text-[#0F172A] sm:text-4xl">
-          {account ? `Hoş geldin, ${account.name}` : "Demo Hesap Oluştur"}
+          {account ? `Hoş geldin, ${account.name}` : "Hesap Oluştur"}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-6 text-slate-600">
           {account
-            ? "Demo profil bilgilerini güncelleyebilir, kayıtlı teslimat notunu değiştirebilir veya kaydı temizleyebilirsin."
-            : "Sipariş tamamlama formunu hızlı doldurmak için örnek profil oluştur. Gerçek ad, telefon veya şifre gerekmez."}
+            ? "Profil bilgilerini güncelleyebilir, kayıtlı teslimat notunu değiştirebilir veya çıkış yapabilirsin."
+            : "Sipariş tamamlama formunu hızlı doldurmak için profilini oluştur."}
         </p>
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section aria-label="Demo hesap formu" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <section aria-label="Hesap formu" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <AccountForm autofocus />
         </section>
 
@@ -44,7 +44,7 @@ export default function AccountPage() {
               <div className="rounded-xl bg-slate-50 p-3">
                 <dt className="text-slate-600">Durum</dt>
                 <dd className="mt-1 font-semibold text-slate-900">
-                  {account ? `Aktif demo profili (${account.email})` : "Misafir kullanıcı"}
+                  {account ? `Aktif profil (${account.email})` : "Misafir kullanıcı"}
                 </dd>
               </div>
               <div className="rounded-xl bg-slate-50 p-3">
@@ -81,22 +81,20 @@ export default function AccountPage() {
                   Market ({count("market")})
                 </Link>
               </div>
-              <Link
-                to="/track"
-                className="flex min-h-11 items-center justify-between rounded-xl border border-slate-300 px-4 py-2 font-semibold text-slate-800 hover:border-brand hover:bg-[#FFF1F6]"
-              >
-                <span>
-                  {lastOrder
-                    ? `Sipariş takibi (${lastOrder.orderId} · ${DEMO_TRACKING_STEPS[lastOrder.stage].title})`
-                    : "Sipariş takibi sayfasını aç"}
-                </span>
-                <span aria-hidden="true" className="text-brand">→</span>
-              </Link>
+              {lastOrder && (
+                <Link
+                  to="/track"
+                  className="flex min-h-11 items-center justify-between rounded-xl border border-slate-300 px-4 py-2 font-semibold text-slate-800 hover:border-brand hover:bg-[#FFF1F6]"
+                >
+                  <span>Sipariş takibi ({lastOrder.orderId} · {DEMO_TRACKING_STEPS[lastOrder.stage].title})</span>
+                  <span aria-hidden="true" className="text-brand">→</span>
+                </Link>
+              )}
               <Link
                 to="/support"
                 className="flex min-h-11 items-center justify-between rounded-xl border border-slate-300 px-4 py-2 font-semibold text-slate-800 hover:border-brand hover:bg-[#FFF1F6]"
               >
-                <span>Canlı destek (demo)</span>
+                <span>Canlı destek</span>
                 <span aria-hidden="true" className="text-brand">→</span>
               </Link>
             </div>

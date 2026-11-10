@@ -4,7 +4,7 @@ import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
 import LiveSupportChat from "./LiveSupportChat";
 import { useAccount } from "../state/AccountContext";
-import { DEMO_TRACKING_STEPS, readDemoOrder } from "../state/demoOrder";
+import { DEMO_TRACKING_STEPS, useDemoOrder } from "../state/demoOrder";
 import { foodCoupons } from "../features/food/data/foodData";
 import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
@@ -91,13 +91,13 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
   const title: Record<Exclude<PanelView, null>, string> = {
     address: "Teslimat konumu",
     profile: "Profil ve hesabım",
-    account: "Demo hesabım",
-    orders: "Önceki siparişlerim",
+    account: "Hesabım",
+    orders: "Siparişlerim",
     coupons: "Kuponlarım",
     help: "Yardım ve canlı destek",
   };
   const subpage = view !== "profile" && view !== "address";
-  const lastOrder = view === "orders" ? readDemoOrder() : null;
+  const lastOrder = useDemoOrder();
 
   return (
     <div className="fixed inset-0 z-50">
@@ -146,20 +146,24 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                 <p className="text-sm font-semibold text-brand-dark">HOŞ GELDİN</p>
                 <p className="mt-2 text-xl font-bold text-slate-900">{account?.name ?? "Misafir kullanıcı"}</p>
                 <p className="mt-1 text-sm text-slate-700">
-                  {account ? "Demo profilin oluşturuldu." : "Adreslerini, siparişlerini ve kuponlarını tek yerden yönet."}
+                  {account ? account.email : "Adreslerini, siparişlerini ve kuponlarını tek yerden yönet."}
                 </p>
                 <button
                   type="button"
                   onClick={() => onNavigate("account")}
                   className="mt-4 min-h-11 rounded-xl border border-brand px-4 font-semibold text-brand-dark hover:bg-white"
                 >
-                  {account ? "Profil bilgilerimi düzenle" : "Demo profil oluştur"}
+                  {account ? "Profil bilgilerimi düzenle" : "Hesap oluştur"}
                 </button>
               </div>
               <PanelRow label="Kayıtlı adreslerim" detail={address ?? "Henüz adres seçilmedi"} onClick={() => onNavigate("address")} />
-              <PanelRow label="Önceki siparişlerim" detail="Demo sipariş geçmişi" onClick={() => onNavigate("orders")} />
+              <PanelRow
+                label="Siparişlerim"
+                detail={lastOrder ? `${lastOrder.orderId} · ${DEMO_TRACKING_STEPS[lastOrder.stage].title}` : "Aktif ve geçmiş siparişlerin"}
+                onClick={() => onNavigate("orders")}
+              />
               <PanelRow label="Tanımlı kuponlarım" detail="Kupon durumlarını incele" onClick={() => onNavigate("coupons")} />
-              <PanelRow label="Yardım / Canlı destek" detail="Otomatik örnek destek sohbeti" onClick={() => onNavigate("help")} />
+              <PanelRow label="Yardım / Canlı destek" detail="Hızlı destek asistanı" onClick={() => onNavigate("help")} />
               <div className="border-t border-slate-200 pt-4">
                 <p className="mb-3 text-sm font-semibold text-slate-700">Sepetlerim</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -189,7 +193,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
             <div className="space-y-4">
               {lastOrder ? (
                 <>
-                  <p className="rounded-xl bg-[#FFF1F6] p-4 text-slate-700">Bu tarayıcı sekmesinde son oluşturduğun demo sipariş:</p>
+                  <p className="rounded-xl bg-[#FFF1F6] p-4 text-slate-700">Aktif siparişin:</p>
                   <dl className="space-y-3 rounded-xl border border-slate-300 bg-white p-4">
                     <div><dt className="text-sm text-slate-600">Sipariş numarası</dt><dd className="font-bold">{lastOrder.orderId}</dd></div>
                     <div><dt className="text-sm text-slate-600">Hizmet</dt><dd className="font-semibold">{lastOrder.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
@@ -201,10 +205,10 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
               ) : (
                 <>
                   <p className="rounded-xl bg-slate-50 p-4 text-slate-700">
-                    Henüz demo sipariş oluşturmadın. Sipariş takibi sayfasından örnek önizleme başlatabilir veya restoranları keşfedebilirsin.
+                    Henüz aktif siparişin yok. Yemek veya market siparişi verdiğinde sipariş durumunu buradan izleyebilirsin.
                   </p>
-                  <Link to="/track" onClick={onClose} className="btn-primary w-full">Sipariş takibi sayfasını aç</Link>
-                  <Link to="/food" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand">Yemekleri keşfet</Link>
+                  <Link to="/food" onClick={onClose} className="btn-primary w-full">Yemekleri keşfet</Link>
+                  <Link to="/market" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand">Marketlere git</Link>
                 </>
               )}
             </div>
@@ -269,9 +273,6 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
               />
             </div>
           )}
-        </div>
-        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs text-slate-600 sm:px-6">
-          Bağımsız HCI öğrenci projesi · Gerçek müşteri desteği değildir.
         </div>
       </aside>
     </div>

@@ -7,7 +7,7 @@ import {
   validateDemoAccount,
 } from "../src/state/demoAccount.ts";
 import { buildSupportReply, SUPPORT_TOPICS } from "../src/data/supportAssistant.ts";
-import { createSamplePreviewOrder, DEMO_TRACKING_STEPS } from "../src/state/demoOrder.ts";
+import { DEMO_TRACKING_STEPS } from "../src/state/demoOrder.ts";
 
 test("demo account validation rejects invalid name, email, or phone and accepts sample account", () => {
   const invalid = validateDemoAccount({ name: "A", email: "bad-email", phone: "123" });
@@ -58,12 +58,12 @@ test("support assistant uses active order, location and account context honestly
     locationText: null,
     accountName: null,
   });
-  assert.match(noOrderReply.text, /henüz aktif bir demo sipariş bulunmuyor/i);
+  assert.match(noOrderReply.text, /aktif bir siparişin bulunmuyor/i);
   assert.equal(noOrderReply.action?.to, "/food");
 
   const withOrderReply = buildSupportReply("Siparişim nerede?", {
     order: {
-      orderId: "DEMO-1234567",
+      orderId: "YS-1234567",
       amount: 245,
       service: "food",
       method: "cash-demo",
@@ -71,9 +71,9 @@ test("support assistant uses active order, location and account context honestly
       createdAt: new Date().toISOString(),
     },
     locationText: "Kötekli, Menteşe, Muğla",
-    accountName: "Ayşe Yılmaz (Demo)",
+    accountName: "Ayşe Yılmaz",
   });
-  assert.match(withOrderReply.text, /DEMO-1234567/);
+  assert.match(withOrderReply.text, /YS-1234567/);
   assert.match(withOrderReply.text, /2\. aşamada \(Hazırlanıyor\)/);
   assert.equal(withOrderReply.action?.to, "/track");
 
@@ -88,17 +88,9 @@ test("support assistant uses active order, location and account context honestly
   const accountReply = buildSupportReply("Hesap nasıl açılır?", {
     order: null,
     locationText: null,
-    accountName: "Ayşe Yılmaz (Demo)",
+    accountName: "Ayşe Yılmaz",
   });
-  assert.match(accountReply.text, /Ayşe Yılmaz \(Demo\)/);
+  assert.match(accountReply.text, /Ayşe Yılmaz/);
   assert.equal(accountReply.action?.to, "/account");
-});
-
-test("sample preview demo order creates valid 4-stage tracking state", () => {
   assert.equal(DEMO_TRACKING_STEPS.length, 4);
-  const preview = createSamplePreviewOrder("Çarşı, Bodrum, Muğla");
-  assert.match(preview.orderId, /^DEMO-\d{7}$/);
-  assert.equal(preview.stage, 1);
-  assert.equal(preview.locationLabel, "Çarşı, Bodrum, Muğla");
-  assert.equal(preview.service, "food");
 });

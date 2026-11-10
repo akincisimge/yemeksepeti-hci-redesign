@@ -3,19 +3,15 @@ import { Link, useLocation } from "react-router-dom";
 import { formatTRY } from "../types/domain";
 import {
   clearDemoOrder,
-  createSamplePreviewOrder,
   DEMO_TRACKING_STEPS,
   readDemoOrder,
   saveDemoOrder,
   type DemoOrder,
   type DemoOrderStage,
 } from "../state/demoOrder";
-import { useDelivery } from "../state/DeliveryContext";
-import { locationLabel } from "../data/delivery";
 
 export default function SuccessPage() {
   const location = useLocation();
-  const { delivery } = useDelivery();
   const navigationOrder = location.state as DemoOrder | null;
   const [order, setOrder] = useState<DemoOrder | null>(() => {
     const saved = readDemoOrder();
@@ -30,12 +26,6 @@ export default function SuccessPage() {
     saveDemoOrder(next);
   }
 
-  function startSamplePreview() {
-    const preview = createSamplePreviewOrder(delivery ? locationLabel(delivery) : undefined);
-    saveDemoOrder(preview);
-    setOrder(preview);
-  }
-
   function resetTracking() {
     clearDemoOrder();
     setOrder(null);
@@ -48,32 +38,15 @@ export default function SuccessPage() {
           ← Ana sayfaya dön
         </Link>
         <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <p className="font-semibold text-brand">SİPARİŞ TAKİBİ · DEMO</p>
-          <h1 className="text-3xl font-bold text-[#0F172A]">Yemek &amp; Market Sipariş Takibi</h1>
+          <p className="font-semibold text-brand">SİPARİŞ TAKİBİ</p>
+          <h1 className="text-3xl font-bold text-[#0F172A]">Henüz aktif siparişin yok</h1>
           <p className="max-w-2xl text-base leading-6 text-slate-600">
-            Bu tarayıcı sekmesinde henüz aktif bir demo sipariş bulunmuyor. Restoran veya marketten demo sipariş oluşturabilir ya da
-            aşağıdaki örnek önizleme düğmesiyle 4 aşamalı sipariş takibi akışını hemen deneyebilirsin.
+            Restoran veya marketlerden bir sipariş oluşturduktan sonra teslimat adımlarını buradan takip edebilirsin.
           </p>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {DEMO_TRACKING_STEPS.map((step, index) => (
-              <div key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase text-brand-dark">Aşama {index + 1}</p>
-                <p className="mt-1 font-bold text-slate-900">{step.title}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-600">{step.detail}</p>
-              </div>
-            ))}
-          </div>
-
           <div className="flex flex-wrap gap-3 pt-2">
-            <button type="button" onClick={startSamplePreview} className="btn-primary">
-              Örnek sipariş takibini başlat (önizleme)
-            </button>
-            <Link
-              to="/food"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-900 hover:border-brand hover:text-brand"
-            >
-              Yemek restoranlarını keşfet
+            <Link to="/food" className="btn-primary">
+              Restoranları keşfet
             </Link>
             <Link
               to="/market"
@@ -100,17 +73,17 @@ export default function SuccessPage() {
       <section className="rounded-2xl border border-slate-300 bg-white p-6 sm:p-8">
         <div className="inline-flex items-center gap-2 rounded-full bg-[#FFF1F6] px-4 py-2 text-sm font-semibold text-brand-dark">
           <span aria-hidden="true">✓</span>
-          Demo sipariş oluşturuldu
+          Siparişin alındı
         </div>
         <h1 className="mt-5 text-[32px] font-bold leading-10 text-[#0F172A] sm:text-[40px] sm:leading-[48px]">
           Siparişini takip et
         </h1>
         <p className="mt-3 text-base leading-6 text-[#475569]">
-          Sipariş numaran ve takip adımları burada. Bu yalnızca eğitim simülasyonudur; gerçek sipariş, kurye veya teslimat yoktur.
+          Sipariş numaran ve güncel teslimat durumun aşağıda yer alıyor.
         </p>
         <dl className="mt-6 grid gap-4 rounded-xl bg-[#F8FAFC] p-5 sm:grid-cols-2">
           <div>
-            <dt className="text-sm text-[#475569]">Demo sipariş numarası</dt>
+            <dt className="text-sm text-[#475569]">Sipariş numarası</dt>
             <dd className="mt-1 font-bold text-[#0F172A]">{order.orderId}</dd>
           </div>
           <div>
@@ -127,29 +100,29 @@ export default function SuccessPage() {
             </div>
           )}
           <div>
-            <dt className="text-sm text-[#475569]">Demo sipariş tutarı</dt>
+            <dt className="text-sm text-[#475569]">Sipariş tutarı</dt>
             <dd className="mt-1 font-semibold">{formatTRY(order.amount)}</dd>
           </div>
           <div>
             <dt className="text-sm text-[#475569]">Ödeme yöntemi</dt>
             <dd className="mt-1 font-semibold">
-              {order.method === "cash-demo" ? "Teslimatta ödeme (demo)" : "Kartla ödeme (demo)"}
+              {order.method === "cash-demo" ? "Kapıda ödeme" : "Online kart ile ödeme"}
             </dd>
           </div>
           {order.customerName && (
             <div>
-              <dt className="text-sm text-[#475569]">Alıcı (demo)</dt>
+              <dt className="text-sm text-[#475569]">Alıcı</dt>
               <dd className="mt-1 font-semibold">{order.customerName}</dd>
             </div>
           )}
           {order.locationLabel && (
             <div className="sm:col-span-2">
-              <dt className="text-sm text-[#475569]">Demo teslimat bölgesi</dt>
+              <dt className="text-sm text-[#475569]">Teslimat bölgesi</dt>
               <dd className="mt-1 font-semibold">{order.locationLabel}</dd>
             </div>
           )}
           <div className="sm:col-span-2">
-            <dt className="text-sm text-[#475569]">Oluşturulma zamanı</dt>
+            <dt className="text-sm text-[#475569]">Sipariş zamanı</dt>
             <dd className="mt-1 font-semibold">{new Date(order.createdAt).toLocaleString("tr-TR")}</dd>
           </div>
         </dl>
@@ -158,19 +131,19 @@ export default function SuccessPage() {
       <section className="rounded-2xl border border-slate-300 bg-white p-6 sm:p-8" aria-labelledby="tracking-title">
         <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
           <div>
-            <h2 id="tracking-title" className="text-[28px] font-bold leading-9">Sipariş takip durumu</h2>
+            <h2 id="tracking-title" className="text-[28px] font-bold leading-9">Sipariş durumu</h2>
             <p className="mt-1 text-sm text-[#475569]">
-              Dört örnek aşamadan {order.stage + 1}. aşamadasın.
+              Dört aşamadan {order.stage + 1}. aşamadasın.
             </p>
           </div>
           <span className="w-fit rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-sm font-semibold text-[#475569]">
-            DEMO TAKİP
+            {order.stage + 1} / {DEMO_TRACKING_STEPS.length}
           </span>
         </div>
 
         <div
           role="progressbar"
-          aria-label="Demo sipariş ilerleme durumu"
+          aria-label="Sipariş ilerleme durumu"
           aria-valuemin={1}
           aria-valuemax={DEMO_TRACKING_STEPS.length}
           aria-valuenow={order.stage + 1}
@@ -215,7 +188,7 @@ export default function SuccessPage() {
                 <div className="pt-1">
                   <h3 className={"font-semibold " + (active ? "text-[#D90049]" : "text-[#0F172A]")}>{step.title}</h3>
                   <p className="mt-1 text-sm text-[#475569]">
-                    {past ? "Demo aşaması tamamlandı" : active ? "Şu an gösterilen aşama" : "Henüz başlanmadı"}
+                    {past ? "Tamamlandı" : active ? "Güncel aşama" : "Sıradaki aşama"}
                   </p>
                 </div>
               </li>
@@ -224,13 +197,10 @@ export default function SuccessPage() {
         </ol>
 
         <div className="mt-6 border-t border-[#CBD5E1] pt-6">
-          <h3 className="font-semibold text-[#0F172A]">Takip akışını test et</h3>
-          <p className="mt-1 text-sm text-[#475569]">
-            Aşamalar yalnızca butona basıldığında ilerler; gerçek zamanlı teslimat verisi değildir.
-          </p>
+          <h3 className="font-semibold text-[#0F172A]">Teslimat aşamasını güncelle</h3>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <button type="button" onClick={() => moveStage(1)} disabled={completed} className="btn-primary flex-1">
-              {completed ? "Tüm demo aşamaları tamamlandı" : "Sonraki demo aşamasına geç →"}
+              {completed ? "Sipariş teslim edildi" : "Sonraki aşamaya geç →"}
             </button>
             <button
               type="button"
@@ -243,7 +213,7 @@ export default function SuccessPage() {
           </div>
           {completed && (
             <p className="mt-4 font-semibold text-[#166534]" role="status">
-              Demo teslimat akışı başarıyla tamamlandı.
+              Siparişin başarıyla teslim edildi.
             </p>
           )}
         </div>
@@ -255,7 +225,7 @@ export default function SuccessPage() {
           to={order.service === "food" ? "/food" : "/market"}
           className="inline-flex min-h-11 items-center rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 font-semibold hover:border-brand"
         >
-          Yeni demo sipariş oluştur
+          Yeni sipariş oluştur
         </Link>
         <Link
           to="/support"
@@ -268,7 +238,7 @@ export default function SuccessPage() {
           onClick={resetTracking}
           className="min-h-11 rounded-xl px-3 py-2 text-sm font-semibold text-[#991B1B] underline underline-offset-2 hover:bg-red-50"
         >
-          Takip kaydını temizle
+          Siparişi gizle
         </button>
       </div>
     </div>

@@ -3,14 +3,14 @@ import LiveSupportChat from "../components/LiveSupportChat";
 import { locationLabel } from "../data/delivery";
 import { useAccount } from "../state/AccountContext";
 import { useDelivery } from "../state/DeliveryContext";
-import { DEMO_TRACKING_STEPS, readDemoOrder } from "../state/demoOrder";
+import { DEMO_TRACKING_STEPS, useDemoOrder } from "../state/demoOrder";
 import type { LayoutContext } from "../components/Layout";
 
 export default function SupportPage() {
   const { delivery } = useDelivery();
   const { account } = useAccount();
   const { openAddress } = useOutletContext<LayoutContext>();
-  const lastOrder = readDemoOrder();
+  const lastOrder = useDemoOrder();
 
   return (
     <div className="space-y-6">
@@ -19,27 +19,27 @@ export default function SupportPage() {
       </Link>
 
       <header className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
-        <p className="font-semibold text-brand">CANLI DESTEK · DEMO</p>
+        <p className="font-semibold text-brand">CANLI DESTEK</p>
         <h1 className="mt-2 text-3xl font-bold text-[#0F172A] sm:text-4xl">Nasıl yardımcı olabiliriz?</h1>
         <p className="mt-3 max-w-2xl text-base leading-6 text-slate-600">
-          Sipariş takibi, teslimat konumu, kuponlar ve demo hesap konularında hızlı yanıt alabilirsin. Bu ekran gerçek müşteri temsilcisine bağlanmaz.
+          Sipariş takibi, teslimat konumu, kuponlar ve hesabınla ilgili konularda anında destek alabilirsin.
         </p>
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_340px]">
-        <section aria-label="Demo canlı destek sohbeti" className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <section aria-label="Canlı destek sohbeti" className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <LiveSupportChat onOpenAddress={openAddress} />
         </section>
 
         <aside className="space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900">Aktif oturum özeti</h2>
+            <h2 className="text-lg font-bold text-slate-900">Oturum özeti</h2>
             <dl className="mt-4 space-y-3 text-sm">
               <div className="rounded-xl bg-slate-50 p-3">
-                <dt className="text-slate-600">Demo profil</dt>
+                <dt className="text-slate-600">Profil</dt>
                 <dd className="mt-1 font-semibold text-slate-900">{account?.name ?? "Misafir kullanıcı"}</dd>
                 <Link to="/account" className="mt-2 inline-block font-semibold text-brand underline">
-                  {account ? "Hesabımı yönet" : "Demo hesap oluştur"}
+                  {account ? "Hesabımı yönet" : "Hesap oluştur"}
                 </Link>
               </div>
               <div className="rounded-xl bg-slate-50 p-3">
@@ -56,29 +56,18 @@ export default function SupportPage() {
                   Konumu değiştir
                 </button>
               </div>
-              <div className="rounded-xl bg-slate-50 p-3">
-                <dt className="text-slate-600">Son demo sipariş</dt>
-                {lastOrder ? (
-                  <>
-                    <dd className="mt-1 font-semibold text-slate-900">
-                      {lastOrder.orderId} · {DEMO_TRACKING_STEPS[lastOrder.stage].title}
-                    </dd>
-                    <Link to="/track" className="mt-2 inline-block font-semibold text-brand underline">
-                      Sipariş takibini aç
-                    </Link>
-                  </>
-                ) : (
-                  <dd className="mt-1 text-slate-700">Henüz aktif sipariş yok</dd>
-                )}
-              </div>
+              {lastOrder && (
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <dt className="text-slate-600">Aktif siparişin</dt>
+                  <dd className="mt-1 font-semibold text-slate-900">
+                    {lastOrder.orderId} · {DEMO_TRACKING_STEPS[lastOrder.stage].title}
+                  </dd>
+                  <Link to="/track" className="mt-2 inline-block font-semibold text-brand underline">
+                    Sipariş takibini aç
+                  </Link>
+                </div>
+              )}
             </dl>
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-base font-bold text-slate-900">Prototip Sınırı</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Eğitim amaçlı simülasyondur. Gerçek ödeme, iade, kurye araması veya canlı temsilci desteği sunulmaz.
-            </p>
           </section>
         </aside>
       </div>

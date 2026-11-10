@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
 import { useAccount } from "../state/AccountContext";
+import { useDemoOrder } from "../state/demoOrder";
 import { locationLabel } from "../data/delivery";
 import { foodRestaurants } from "../features/food/data/foodData";
 import { marketProducts } from "../features/market/data/marketData";
@@ -19,6 +20,7 @@ export default function Layout() {
   const { count, carts } = useCart();
   const { delivery, available, statusMessage, clearStatusMessage } = useDelivery();
   const { account } = useAccount();
+  const activeOrder = useDemoOrder();
   const address = delivery ? locationLabel(delivery) : null;
   const location = useLocation();
   const [panel, setPanel] = useState<PanelView>(null);
@@ -132,9 +134,11 @@ export default function Layout() {
               <NavLink to="/market" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-semibold")}>
                 MARKET
               </NavLink>
-              <NavLink to="/track" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-medium")}>
-                Sipariş Takibi
-              </NavLink>
+              {activeOrder && (
+                <NavLink to="/track" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-medium")}>
+                  Sipariş Takibi
+                </NavLink>
+              )}
               <NavLink to="/support" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-medium")}>
                 Canlı Destek
               </NavLink>
@@ -167,7 +171,7 @@ export default function Layout() {
             <div className="space-y-4">
               <div role="status" className="mx-auto max-w-xl rounded-2xl border border-slate-300 bg-white p-4 text-sm leading-6 text-slate-700">
                 <strong className="text-slate-900">Önce teslimat bölgesi seçmelisin:</strong>{" "}
-                Restoran ve market kapsamını gösterebilmek için 81 il arasından demo destekli bir mahalle seç.
+                Restoran ve market kapsamını gösterebilmek için bölgeni seç.
               </div>
               <LocationPicker />
             </div>
@@ -187,10 +191,10 @@ export default function Layout() {
 
         <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-            <p>Bağımsız HCI öğrenci projesidir. Gerçek sipariş, ödeme veya canlı destek hizmeti sunulmaz.</p>
+            <p className="font-medium text-slate-700">yemeksepeti</p>
             <nav aria-label="Hızlı bağlantılar" className="flex flex-wrap justify-center gap-2">
-              <Link to="/track" className="nav-link text-sm font-medium">Sipariş Takibi</Link>
-              <Link to="/account" className="nav-link text-sm font-medium">Demo Hesap</Link>
+              {activeOrder && <Link to="/track" className="nav-link text-sm font-medium">Sipariş Takibi</Link>}
+              <Link to="/account" className="nav-link text-sm font-medium">Hesabım</Link>
               <Link to="/support" className="nav-link text-sm font-medium">Canlı Destek</Link>
             </nav>
           </div>
