@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
+import CourierNoteForm from "./CourierNoteForm";
 import { useAccount } from "../state/AccountContext";
 import { formatAddressDetails, useDelivery } from "../state/DeliveryContext";
 import { DEMO_TRACKING_STEPS, useDemoOrders } from "../state/demoOrder";
@@ -9,7 +10,7 @@ import { formatTRY } from "../types/domain";
 import { foodCoupons } from "../features/food/data/foodData";
 import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
-export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | null;
+export type PanelView = "address" | "courier-note" | "profile" | "account" | "orders" | "coupons" | null;
 
 type PanelProps = {
   view: Exclude<PanelView, null>;
@@ -92,13 +93,14 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
 
   const title: Record<Exclude<PanelView, null>, string> = {
     address: "Teslimat Adresini Seç",
+    "courier-note": "Kuryeye Not Bırak",
     profile: "Profil ve hesabım",
     account: account ? "Profil bilgilerim" : "Hesap oluştur",
     orders: "Aktif Siparişlerim",
     coupons: "Kuponlarım",
   };
-  const isCenteredModal = view === "address" || view === "orders";
-  const subpage = account !== null && view !== "profile" && view !== "address" && view !== "orders";
+  const isCenteredModal = view === "address" || view === "orders" || view === "courier-note";
+  const subpage = account !== null && view !== "profile" && view !== "address" && view !== "orders" && view !== "courier-note";
   const orders = useDemoOrders();
   const lastOrder = orders[0] ?? null;
 
@@ -145,6 +147,11 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                   <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
                   <circle cx="12" cy="10" r="2.5" />
                 </svg>
+              ) : view === "courier-note" ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
               ) : (
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
@@ -158,6 +165,9 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
             <h2 id="panel-title" className="text-xl font-bold text-slate-900">{title[view]}</h2>
             {view === "address" && (
               <p className="mt-0.5 text-sm text-slate-600">Önce şehrini seç, ardından gerçek ilçe ve mahalleni belirle.</p>
+            )}
+            {view === "courier-note" && (
+              <p className="mt-0.5 text-sm text-slate-600">Teslimatta kuryenin görmesini istediğin notu ekle.</p>
             )}
             {view === "orders" && (
               <p className="mt-0.5 text-sm text-slate-600">Sipariş aşamaların otomatik olarak canlı güncellenir.</p>
@@ -175,6 +185,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
         </header>
         <div className={isCenteredModal ? "min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6" : "min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6"}>
           {view === "address" && <LocationPicker variant="modal" onDone={onClose} />}
+          {view === "courier-note" && <CourierNoteForm onDone={onClose} />}
           {view === "profile" && (
             <div className="space-y-3">
               <div className="mb-5 rounded-2xl bg-[#FFF1F6] p-5">
@@ -253,6 +264,9 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                             {item.itemCount ? ` · ${item.itemCount} ürün` : ""}
                           </p>
                           {item.locationLabel && <p className="text-xs text-slate-600">Teslimat: {item.locationLabel}</p>}
+                          {item.courierNote && (
+                            <p className="text-xs font-medium text-amber-800">Kurye notu: {item.courierNote}</p>
+                          )}
                           <p className="text-xs text-slate-500">
                             {new Date(item.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                           </p>

@@ -28,6 +28,7 @@ export type DemoOrder = {
   storeName?: string;
   itemCount?: number;
   customerName?: string;
+  courierNote?: string;
 };
 
 const STORAGE_KEY = "hci-yemeksepeti-last-demo-order-v1";
@@ -57,6 +58,7 @@ function normalizeOrder(raw: unknown, nowMs = Date.now()): DemoOrder | null {
   if (order.locationLabel !== undefined && typeof order.locationLabel !== "string") return null;
   if (order.storeName !== undefined && typeof order.storeName !== "string") return null;
   if (order.customerName !== undefined && typeof order.customerName !== "string") return null;
+  if (order.courierNote !== undefined && typeof order.courierNote !== "string") return null;
   if (order.itemCount !== undefined && (!Number.isInteger(order.itemCount) || order.itemCount < 1)) return null;
 
   const autoStage = getAutoOrderStage(order.createdAt, nowMs);

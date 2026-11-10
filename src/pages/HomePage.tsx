@@ -51,7 +51,7 @@ const choices = [
 
 export default function HomePage() {
   const { address, openAddress, openPanel } = useOutletContext<LayoutContext>();
-  const { addressDetails } = useDelivery();
+  const { addressDetails, courierNote } = useDelivery();
   const { account } = useAccount();
   const orders = useDemoOrders();
   const latestOrder = orders[0] ?? null;
@@ -69,14 +69,8 @@ export default function HomePage() {
         </p>
 
         <div className="mx-auto mt-6 max-w-2xl space-y-3">
-          <button
-            type="button"
-            data-address-trigger="home"
-            onClick={openAddress}
-            aria-label={address ? `Teslimat adresi: ${address}. Değiştirmek için tıklayın` : "Teslimat adresi seçmek için tıklayın"}
-            className="group flex w-full flex-col items-stretch justify-between gap-4 rounded-3xl border-2 border-slate-200 bg-white p-4 text-left shadow-md transition hover:border-brand hover:shadow-lg sm:flex-row sm:items-center sm:p-5"
-          >
-            <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+          <div className="flex w-full flex-col items-stretch justify-between gap-4 rounded-3xl border-2 border-slate-200 bg-white p-4 text-left shadow-md sm:flex-row sm:items-center sm:p-5">
+            <div className="flex min-w-0 flex-1 items-center gap-3.5 sm:gap-4">
               <span
                 className={
                   address
@@ -102,7 +96,7 @@ export default function HomePage() {
                     <p className="mt-0.5 text-xs font-medium text-slate-600">
                       {addressDetails
                         ? formatAddressDetails(addressDetails)
-                        : "Başka bir adrese göndermek için buraya dokunabilirsin."}
+                        : "Teslimat adresini veya kurye notunu sağdan düzenleyebilirsin."}
                     </p>
                   </>
                 ) : (
@@ -114,24 +108,53 @@ export default function HomePage() {
                       Nereye getirelim?
                     </p>
                     <p className="mt-0.5 text-xs font-medium text-slate-600 sm:text-sm">
-                      Şehir, ilçe ve mahalle seçmek için buraya dokun.
+                      Şehir, ilçe ve mahalle seçip istersen kuryeye not bırak.
                     </p>
                   </>
+                )}
+                {courierNote && (
+                  <p className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-950">
+                    <span aria-hidden="true">📝</span>
+                    <span className="truncate">Kurye notu: {courierNote}</span>
+                  </p>
                 )}
               </div>
             </div>
 
-            <span
-              aria-hidden="true"
-              className={
-                address
-                  ? "inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl border-2 border-brand/25 bg-[#FFF1F6] px-5 py-2.5 text-sm font-bold text-brand-dark transition group-hover:border-brand group-hover:bg-brand group-hover:text-white"
-                  : "inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-brand px-6 py-2.5 text-sm font-bold text-white shadow-sm transition group-hover:bg-brand-dark"
-              }
-            >
-              {address ? "Adresi Değiştir ▾" : "Adres Seç →"}
-            </span>
-          </button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <button
+                type="button"
+                data-address-trigger="home"
+                onClick={openAddress}
+                aria-label={address ? `Teslimat adresi: ${address}. Değiştirmek için tıklayın` : "Teslimat adresi seçmek için tıklayın"}
+                className={
+                  address
+                    ? "inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border-2 border-brand/25 bg-[#FFF1F6] px-4 py-2.5 text-sm font-bold text-brand-dark transition hover:border-brand hover:bg-brand hover:text-white sm:flex-initial"
+                    : "inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark sm:flex-initial"
+                }
+              >
+                {address ? "Adresi Değiştir ▾" : "Adres Seç →"}
+              </button>
+
+              <button
+                type="button"
+                data-note-trigger="home"
+                onClick={() => openPanel("courier-note")}
+                aria-label={courierNote ? `Kurye notunu düzenle: ${courierNote}` : "Kuryeye not bırak"}
+                className={
+                  courierNote
+                    ? "inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-900 transition hover:border-emerald-500 sm:flex-initial"
+                    : "inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border-2 border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-bold text-slate-800 transition hover:border-brand hover:bg-[#FFF1F6] hover:text-brand-dark sm:flex-initial"
+                }
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden="true">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+                <span>{courierNote ? "Kurye Notu ✓" : "Kuryeye Not"}</span>
+              </button>
+            </div>
+          </div>
 
           <div className="flex justify-center pt-1">
             <button

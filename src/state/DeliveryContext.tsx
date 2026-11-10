@@ -12,6 +12,7 @@ import { useCart } from "./CartContext";
 
 const KEY = "hci-delivery-location-v1";
 const DETAILS_KEY = "hci-delivery-details-v1";
+const COURIER_NOTE_KEY = "hci-courier-note-v1";
 
 export type AddressDetails = {
   street: string;
@@ -55,6 +56,15 @@ function initialDetails(): AddressDetails | null {
   }
 }
 
+function initialCourierNote(): string {
+  try {
+    const raw = localStorage.getItem(COURIER_NOTE_KEY);
+    return typeof raw === "string" ? raw.trim().slice(0, 160) : "";
+  } catch {
+    return "";
+  }
+}
+
 type SelectLocationOptions = {
   confirmed?: boolean;
   details?: AddressDetails;
@@ -63,6 +73,8 @@ type SelectLocationOptions = {
 type DeliveryContextValue = {
   delivery: DeliveryLocation | null;
   addressDetails: AddressDetails | null;
+  courierNote: string;
+  saveCourierNote: (note: string) => void;
   selectLocation: (id: string, options?: SelectLocationOptions) => boolean;
   previewLocationChange: (id: string) => LocationChangePlan | null;
   available: (storeId: string) => boolean;
@@ -75,8 +87,23 @@ const Context = createContext<DeliveryContextValue | null>(null);
 export function DeliveryProvider({ children }: { children: ReactNode }) {
   const [delivery, setDelivery] = useState<DeliveryLocation | null>(initial);
   const [addressDetails, setAddressDetails] = useState<AddressDetails | null>(initialDetails);
+  const [courierNote, setCourierNote] = useState<string>(initialCourierNote);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const { carts, clearServices } = useCart();
+
+  const saveCourierNote = useCallback((rawNote: string) => {
+    const clean = rawNote.trim().slice(0, 160);
+    setCourierNote(clean);
+    try {
+      if (clean) localStorage.setItem(COURIER_NOTE_KEY, clean);
+      else localStorage.removeItem(COURIER_NOTE_KEY);
+    } catch {
+      /* storage optional */
+    }
+    setStatusMessage(
+      clean ? `Kuryeye notun kaydedildi: "${clean}"` : "Kuryeye bırakılan not temizlendi.",
+    );
+  }, []);
 
   const previewLocationChange = useCallback(
     (id: string) => analyzeLocationChange(carts, id),
@@ -139,6 +166,8 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
       value={{
         delivery,
         addressDetails,
+        courierNote,
+        saveCourierNote,
         selectLocation,
         previewLocationChange,
         available: (id) => deliversTo(id, delivery?.id),

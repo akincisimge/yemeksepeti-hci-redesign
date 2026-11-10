@@ -123,6 +123,12 @@ export default function SuccessPage() {
               <dd className="mt-1 font-semibold">{order.locationLabel}</dd>
             </div>
           )}
+          {order.courierNote && (
+            <div className="sm:col-span-2">
+              <dt className="text-sm text-[#475569]">Kuryeye not</dt>
+              <dd className="mt-1 font-semibold">{order.courierNote}</dd>
+            </div>
+          )}
           <div className="sm:col-span-2">
             <dt className="text-sm text-[#475569]">Sipariş zamanı</dt>
             <dd className="mt-1 font-semibold">{new Date(order.createdAt).toLocaleString("tr-TR")}</dd>

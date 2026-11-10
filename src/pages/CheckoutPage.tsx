@@ -17,7 +17,7 @@ export default function CheckoutPage() {
   const service: Service = segment === "market" ? "market" : "food";
 
   const { carts, total, clear } = useCart();
-  const { delivery, addressDetails } = useDelivery();
+  const { delivery, addressDetails, courierNote } = useDelivery();
   const { account } = useAccount();
   const { openAddress } = useOutletContext<LayoutContext>();
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
@@ -25,6 +25,7 @@ export default function CheckoutPage() {
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState(() => (addressDetails ? formatAddressDetails(addressDetails) : ""));
+  const [orderCourierNote, setOrderCourierNote] = useState(courierNote);
   const [method, setMethod] = useState<PaymentMethod>("cash-demo");
   const [fieldErrors, setFieldErrors] = useState<{ name?: string; address?: string }>({});
   const [error, setError] = useState("");
@@ -96,6 +97,7 @@ export default function CheckoutPage() {
       storeName: store?.name ?? foodRestaurant?.name ?? lines[0]?.product.storeName,
       itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
       customerName: name.trim(),
+      courierNote: orderCourierNote.trim() || undefined,
     };
 
     saveDemoOrder(order);
@@ -222,6 +224,20 @@ export default function CheckoutPage() {
                 {fieldErrors.address}
               </span>
             )}
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-800">
+              Kuryeye not (isteğe bağlı)
+            </span>
+            <input
+              type="text"
+              maxLength={160}
+              className="field"
+              value={orderCourierNote}
+              onChange={(e) => setOrderCourierNote(e.target.value)}
+              placeholder="Örn. Kapıya bırakınız, zile basmayınız"
+            />
           </label>
 
           <fieldset className="space-y-3">
