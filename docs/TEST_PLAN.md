@@ -43,7 +43,7 @@ Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı 
 
 ## Melisa'nın ödeme bölümü için ek görevler
 
-- Verilen kurgu kartla devam et; CVV eksik olduğunda düğmenin neden pasif olduğunu açıklayıp alanı düzelt.
+- Verilen kurgu kartla devam et; CVV eksik bırakıldığında gönderimi dene, odaklanan alanın mesajını açıklayıp bilgiyi düzelt. Geçersiz girişte sipariş oluşmadığını kontrol et.
 - 50 TL bahşiş seç, toplamı söyle, ardından bahşişten vazgeç ve yeni toplamı kontrol et.
 - Başarısız ödeme sonrasında hangi bilgilerin korunduğunu anlat; aynı bilgilerle tekrar dene.
 - Yemek siparişinde teslimatta nakit ödemeyi seç; hangi alanların değiştiğini anlat. Yemeksepeti Market, BİM ve CarrefourSA senaryolarında online kart/nakit/kapıda kart seçeneklerini kontrol et; nakit seçerek kart bilgisi girmeden ilerle.

@@ -36,6 +36,8 @@ M1 için eksik bilgiyi moderatörün kontrollü vermesi, doğal hata oranı öl�
 ## Son ödeme düzeni için ek gözlemler
 
 - M3/M5 sırasında kullanıcı toplamı, tahmini teslimat süresini ve onay düğmesini yardım almadan bulabiliyor mu? Gereksiz kaydırma veya arama davranışını kaydet.
+- M3 sırasında isteğe bağlı bahşiş alanını bulup açabilmesini ve kapatınca seçilen tutarı anlayabilmesini gözle. Son düğmeden önce adresi, yöntemi ve toplamı doğru açıklayıp açıklamadığını kaydet.
+- Alan hatası varyantında eksik CVV ile gönderimi denet; odak ve mesaj yardımıyla düzeltmeyi gözle. Bu kontrollü hata görevi, doğal hata oranı olarak raporlanmaz.
 - M5-K varyantı: “Yemeksepeti Market siparişini teslimatta nakit ödemek istiyorsun; siparişini tamamla.” Başlangıç aynı Y-Market sepeti; online kart alanlarını doldurmadan doğru yöntem/tutarla onaylayabilmesi gözlenir. Ana kart hata görevi M5 ile ayrı kaydet.
 - CVV konumunu bilmeyen katılımcının yardımı bulması ve açıklamayı anlaması ayrıca gözlenebilir. Görev sırasında doğrudan yardım bağlantısını işaret etme.
 - M4'te kısa animasyonun mevcut aşamayı açıklamaya katkısı/karışıklığı sorulabilir; “animasyon daha iyidir” varsayımıyla yönlendirme yapma.

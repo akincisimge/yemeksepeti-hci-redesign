@@ -77,17 +77,18 @@ export default function PaymentForm(props: Props) {
       ].filter(Boolean).join(" ") || undefined}
       className={"field disabled:bg-slate-50 " + (errors[field] ? "border-red-800 focus:border-red-800" : "")}
     />
-    <p id={`checkout-card-${field}-error`} className="mt-1 min-h-5 text-sm font-medium leading-5 text-red-800">{errors[field] ?? ""}</p>
+    {errors[field] && <p id={`checkout-card-${field}-error`} className="mt-2 text-sm font-medium leading-5 text-red-800">{errors[field]}</p>}
     {options.hint && <p id={`checkout-card-${field}-hint`} className="mt-2 text-sm text-slate-600">{options.hint}</p>}
     {field === "cvv" && <CardSecurityHelp />}
   </div>;
 
-  return <form id="checkout-payment-form" onSubmit={props.onSubmit} noValidate autoComplete="off" aria-busy={processing} className="space-y-5 rounded-2xl border border-slate-300 bg-white p-6">
+  return <form id="checkout-payment-form" onSubmit={props.onSubmit} noValidate autoComplete="off" aria-busy={processing} className="space-y-4">
     {status === "failed" && <div ref={failureRef} tabIndex={-1} role="alert" className="rounded-xl bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800">
       Ödeme tamamlanamadı. Sipariş oluşturulmadı; sepetin ve adresin korundu. Tekrar deneyebilirsin.
     </div>}
-    <fieldset disabled={processing} className="min-w-0 space-y-5">
+    <fieldset disabled={processing} className="min-w-0 space-y-4">
       <legend className="sr-only">Ödeme bilgileri</legend>
+      <div className="rounded-2xl border border-slate-300 bg-white p-6">
       <fieldset className="min-w-0">
         <legend className="mb-3 text-xl font-semibold">Ödeme yöntemi</legend>
         <div className={"grid gap-3 " + (methods.length === 3 ? "grid-cols-3" : methods.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
@@ -100,15 +101,16 @@ export default function PaymentForm(props: Props) {
         </div>
       </fieldset>
 
-      {method === "card-demo" ? <section aria-labelledby="card-details-title" className="space-y-4 border-t border-slate-200 pt-4">
+      {method === "card-demo" ? <section aria-labelledby="card-details-title" className="mt-5 space-y-4 rounded-xl border border-brand/30 bg-pink-50/30 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="card-details-title" className="font-semibold">Kart bilgileri</h2>
+          <h2 id="card-details-title" className="font-semibold">Online kart bilgileri</h2>
           <ul aria-label="Kart markaları" className="flex shrink-0 items-center gap-4">
             <li><img src="/logos/payments/visa.png" alt="Visa" width="1920" height="622" className="h-4 w-auto" /></li>
             <li><img src="/logos/payments/mastercard.svg" alt="Mastercard" width="152" height="108" className="h-7 w-auto" /></li>
             <li><img src="/logos/payments/troy.svg" alt="Troy" width="298" height="137" className="h-5 w-auto" /></li>
           </ul>
         </div>
+        {!props.selectedSaved && <p className="text-sm text-slate-600">* işaretli alanlar zorunludur.</p>}
         {props.savedFixture && <div className="rounded-xl border border-slate-300 bg-slate-50 p-4">
           <p className="font-semibold">{props.selectedSaved ? "Seçili kart" : "Kayıtlı kart"} · {fixtureLabel(props.savedFixture)}</p>
           <div className="mt-2 flex flex-wrap gap-4">
@@ -117,19 +119,21 @@ export default function PaymentForm(props: Props) {
           </div>
         </div>}
         <p role="status" className={props.savedMessage ? "text-sm text-slate-600" : "sr-only"}>{props.savedMessage}</p>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
           {!props.selectedSaved && <>
             {cardField("holder", "Kart sahibinin adı", "Kartın üzerindeki ad soyad", { maxLength: 100 })}
             {cardField("number", "Kart numarası", "Kart numaranı gir", { maxLength: 19, numeric: true })}
           </>}
-          {!props.selectedSaved && cardField("expiry", "Son kullanma tarihi", "AA/YY", { maxLength: 5, numeric: true })}
-          {cardField("cvv", "Güvenlik kodu (CVV)", "3 veya 4 hane", { maxLength: 4, numeric: true, secret: true })}
+          <div className={props.selectedSaved ? "max-w-xs" : "grid grid-cols-2 gap-4"}>
+            {!props.selectedSaved && cardField("expiry", "Son kullanma tarihi", "AA/YY", { maxLength: 5, numeric: true })}
+            {cardField("cvv", "Güvenlik kodu (CVV)", "3 veya 4 hane", { maxLength: 4, numeric: true, secret: true })}
+          </div>
         </div>
         {!props.selectedSaved && <label className="flex min-h-11 cursor-pointer items-center gap-3">
           <input type="checkbox" checked={props.remember} onChange={event => props.onRememberChange(event.target.checked)} className="h-5 w-5 shrink-0 accent-brand" />
           <span className="text-sm">Bu kartı sonraki siparişlerim için kaydet</span>
         </label>}
-      </section> : <section aria-labelledby="delivery-payment-title" className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      </section> : <section aria-labelledby="delivery-payment-title" className="mt-5 space-y-3 rounded-xl border border-brand/30 bg-pink-50/30 p-5">
         <h2 id="delivery-payment-title" className="font-semibold">{method === "door-card-demo" && props.service === "market" ? "Teslimatta temassız kartla ödeme" : DELIVERY_TITLES[method]}</h2>
         {method === "meal-card-demo" && <div className="space-y-2 text-sm leading-6">
           <p className="font-medium">Bu restoranda geçerli yemek kartları:</p>
@@ -138,10 +142,18 @@ export default function PaymentForm(props: Props) {
         </div>}
         <p className="text-sm leading-6 text-slate-700">Siparişini teslim alırken ödeyeceksin. Kapıda ödeme ek ücreti: {formatTRY(0)}.</p>
       </section>}
+      </div>
 
-      <fieldset className="min-w-0 border-t border-slate-300 pt-4">
+      <details className="group rounded-2xl border border-slate-300 bg-white px-5 py-3">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg [&::-webkit-details-marker]:hidden">
+          <span className="font-medium">Kurye bahşişi <span className="ml-1 text-sm font-normal text-slate-600">(isteğe bağlı)</span></span>
+          <span className="flex shrink-0 items-center gap-2 text-sm font-medium text-slate-600">
+            {props.tip ? formatTRY(props.tip) : "Eklenmedi"}
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
+          </span>
+        </summary>
+      <fieldset className="min-w-0 border-t border-slate-200 pb-2 pt-4">
         <legend className="sr-only">Bahşiş (isteğe bağlı)</legend>
-        <h2 className="mb-3 font-semibold" aria-hidden="true">Bahşiş (isteğe bağlı)</h2>
         <div className="grid grid-cols-5 gap-2">
           {TIP_AMOUNTS.map(value => <label key={value} className="min-w-0 cursor-pointer">
             <input type="radio" name="tip" value={value} checked={props.tip === value} onChange={() => props.onTipChange(value)} className="peer sr-only" />
@@ -152,6 +164,7 @@ export default function PaymentForm(props: Props) {
         </div>
         <p className="mt-3 text-sm text-slate-600">Bahşiş: {formatTRY(props.tip)}. Seçimini değiştirebilirsin.</p>
       </fieldset>
+      </details>
     </fieldset>
 
     {processing && <div className="rounded-xl bg-pink-50 p-4">

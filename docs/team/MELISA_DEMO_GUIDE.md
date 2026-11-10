@@ -35,7 +35,7 @@ Bu numaralar ödeme sağlayıcısına ait test kartları değildir. Kart adı, 1
 1. Yemek'te Mercimek Çorbası'nı 2 adet ekle; güncel katalogda ürün toplamı 190 TL.
 2. Sepetten devam et. Boş zorunlu alanla devam edip alan mesajını ve ilk hatalı alana odağı göster.
 3. Hazır Ev adresini seç, not ekle. Gerekirse sepete dönüp adedi değiştirerek adres/notun korunduğunu göster.
-4. Ödeme adımında dört yöntemi göster: online kart, nakit, kapıda kredi kartı, yemek kartları. Sunumun bu akışında nakit ve 30 TL bahşiş seç.
+4. Ödeme adımında dört yöntemi göster: online kart, nakit, kapıda kredi kartı, yemek kartları. Sunumun bu akışında nakit seç; “Kurye bahşişi (isteğe bağlı)” alanını açıp 30 TL seç.
 5. Özette 220 TL'yi doğrula ve siparişi tamamla. Yemek ücretleri mevcut katalogdan gelir; ayrıca teslimat/poşet ücreti uydurulmadı.
 6. Onay numarası, ürün/adet, tutar, teslimat adresi/not ve yöntemi göster. Küçük paket/tik animasyonu açılışta bir kez oynar; hareketi azalt tercihinde statiktir. Ekran “Siparişin alındı” durumunda kalır; tasarımını anlatırken kendiliğinden değişmez.
 
@@ -44,7 +44,7 @@ Bu numaralar ödeme sağlayıcısına ait test kartları değildir. Kart adı, 1
 1. Alışverişe dön. İki sepetin ayrılığını göstermek için Yemek'te bir Tavuklu Pilav bırak.
 2. Market'te Sütaş Süzme Peynir 190,90 TL ve Ekmek 15 TL ekle. Ürün toplamı 205,90 TL, teslimat 29,99 TL; minimum 150 TL aşılmış olur.
 3. Checkout'ta kurgu adresi kullan. Yemeksepeti Market'te online kart, nakit ve kapıda kart seçeneklerini göster. Bu hata senaryosu için online kartı seç.
-4. Hata kartını, `12/30`, `000` ve 50 TL bahşişi kullan. Toplam 285,89 TL.
+4. Hata kartını, `12/30`, `000` ve açılır bahşiş alanından 50 TL'yi kullan. Toplam 285,89 TL.
 5. İlk denemede hatayı ve korunan bilgileri göster. Aynı açık formda tekrar dene; sipariş oluşur.
 6. Alışverişe dön: Market sepeti boş, Yemek sepetindeki ürün yerinde olmalı. Profil → Önceki siparişlerim → Sipariş takibini aç üzerinden son kaydı yeniden açabilirsin.
 
@@ -52,11 +52,12 @@ Fiyatlar ekip tarafından değiştirilirse ezberlenen tutar yerine canlı özeti
 
 ## Ek ödeme UX kontrolleri
 
-- Özetin tahmini teslimat aralığını, toplamı ve aynı karttaki onay düğmesini göster. Dörtten fazla ürün şart değildir; dört çeşit ile ek ürünlerin düğmenin altından açıldığını gösterebilirsin.
+- Özette tahmini teslimatı, adresi, seçili ödeme yöntemini ve tüm ücretleri göster. Son düğme toplamı da yazar; üçüncü adım “Sipariş sonucu”dur. Dört çeşit sepetle ilk üç ürünün ardından kalan ürünün toplamdan önce açıldığını gösterebilirsin.
+- Online kart formu boşken “Siparişi tamamla”ya bas: sipariş oluşmaz, alan mesajları görünür ve ilk hatalı alan odaklanır. Verileri düzeltip yeniden devam et. Düğmenin etkin olması kartın doğrulandığı anlamına gelmez.
 - Yemeksepeti Market, BİM ve CarrefourSA senaryolarının üçünde de online kart, nakit ve kapıda temassız kart görünür. Nakit/kapıda kart online kart bilgisi istemez. Bu ortak demo kapsamıdır; gerçek mağazaların ödeme politikası veya sağlayıcı anlaşması olarak anlatma.
 - Yemek kartını seçince iki kurgu restoran için tanımlanan sağlayıcı adlarını göster; bunlar örnek senaryo verisidir, gerçek anlaşma/entegrasyon değildir.
 - Online kartta “Güvenlik kodu nerede?” yardımını aç. Kart şifresi ile CVV'nin farklı olduğunu açıkla. Kayıt kutusunun isteğe bağlı olduğunu göster.
-- Yeni ödeme düzeni ve animasyon React kodunda günceldir; Figma/ZIP'deki eski ödeme kareleri bu son düzenle henüz eşitlenmedi.
+- Yeni ödeme düzeni ve animasyon React kodunda günceldir. 10 Kasım aktarım girişiminde Figma Starter MCP sınırı dolduğu için Figma/ZIP bu son düzenle eşitlenemedi; yeni düzeni çalışan koddan göster.
 
 ## 3. Sipariş sonucu ve durum sunumu
 

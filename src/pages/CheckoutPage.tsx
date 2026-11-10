@@ -17,7 +17,7 @@ import {
 } from "../features/checkout/checkoutModel";
 import {
   CARD_FIELDS, EMPTY_CARD, cardFixture, createPaymentRunner, forgetFixture,
-  formatCardNumber, formatExpiry, normalizePaymentMethod, readSavedFixture, saveFixture, validateCard,
+  formatCardNumber, formatExpiry, normalizePaymentMethod, paymentMethodLabel, readSavedFixture, saveFixture, validateCard,
   type CardErrors, type CardValues, type PaymentStatus, type SavedCardPreference,
 } from "../features/checkout/paymentModel";
 
@@ -62,9 +62,6 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
   const addressValid = Object.keys(validateAddress(draft)).length === 0;
   const payment = params.get("step") === "payment" && addressValid;
   const processing = status === "processing";
-  const cardValidation = validateCard(card, new Date(), selectedSaved);
-  const firstCardError = CARD_FIELDS.find(field => cardValidation[field]);
-  const cardValid = method !== "card-demo" || !firstCardError;
   const cartSignature = JSON.stringify(lines.map(({ product, quantity }) => [product.id, product.storeId, product.price, quantity]));
 
   useEffect(() => { saveCheckoutDraft(checkoutStorage(), service, regionId, draft); }, [draft, service, regionId]);
@@ -203,16 +200,15 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
 
   const nextHint = !payment ? "Sonraki adımda ödeme yöntemini seçeceksin."
     : processing ? "İşlem sürüyor. Tekrar tıklamana gerek yok."
-    : !cardValid && firstCardError ? `Devam etmek için: ${cardValidation[firstCardError]}`
-    : method === "card-demo" ? "Onayladığında siparişin oluşturulur."
+    : method === "card-demo" ? "Bu adımı tamamladığında siparişin oluşturulur."
     : "Ödemeyi siparişini teslim alırken yapacaksın.";
   const submitLabel = !payment ? "Ödemeye geç" : processing
     ? method === "card-demo" ? "Ödeme işleniyor…" : "Sipariş oluşturuluyor…"
-    : status === "failed" ? "Tekrar dene" : "Siparişi tamamla";
+    : `${status === "failed" ? "Tekrar dene" : "Siparişi tamamla"} · ${formatTRY(totals.total)}`;
 
   const submitAction = <div className="mt-4 space-y-3">
     {!totals.canContinue && <p id="checkout-minimum" role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">Minimum sepet tutarı {formatTRY(totals.minimum)}. Devam etmek için {formatTRY(totals.remaining)} tutarında ürün ekle. Teslimat ücreti ve bahşiş minimum tutara dahil değildir.</p>}
-    <button ref={submitRef} id="checkout-submit" type="submit" form={payment ? "checkout-payment-form" : "checkout-address-form"} disabled={!totals.canContinue || processing || (payment && !cardValid)} aria-describedby={!totals.canContinue ? "checkout-minimum" : "checkout-next-hint"} className="btn-primary w-full">{submitLabel}</button>
+    <button ref={submitRef} id="checkout-submit" type="submit" form={payment ? "checkout-payment-form" : "checkout-address-form"} disabled={!totals.canContinue || processing} aria-describedby={!totals.canContinue ? "checkout-minimum" : "checkout-next-hint"} className="btn-primary w-full">{submitLabel}</button>
     <p id="checkout-next-hint" className="text-sm leading-5 text-slate-600" aria-live="polite">{nextHint}</p>
     {announcement && <p role="alert" className="text-sm font-medium text-red-800">{announcement}</p>}
   </div>;
@@ -250,16 +246,16 @@ function CheckoutFlow({ service, regionId, regionLabel }: { service: Service; re
         onCancel={cancelPayment} onSubmit={submitOrder}
       /> : <AddressForm values={draft} errors={errors} regionLabel={regionLabel} onChange={change} onBlur={field => setErrors(current => ({ ...current, [field]: validateAddress(draft)[field] }))} onUseSaved={() => { setDraft(current => ({ ...current, ...SAVED_ADDRESS })); setErrors({}); setAnnouncement(""); }} onRegionChange={openAddress} onSubmit={continueToPayment} />}
       <aside aria-label="Sipariş özeti ve devam işlemi" className={"space-y-4 " + (payment ? "lg:sticky lg:top-24" : "")}>
-        <OrderSummary lines={lines} service={service} totals={totals} showTip={payment} disabled={processing} compact={payment} deliveryEstimate={deliveryEstimate}>
+        <OrderSummary lines={lines} service={service} totals={totals} showTip={payment} disabled={processing} compact={payment} deliveryEstimate={deliveryEstimate} review={payment && <section aria-labelledby="selected-address-title" className="mb-4 border-t border-slate-200 pt-2 text-sm">
+          <div className="flex items-center justify-between gap-3"><h3 id="selected-address-title" className="font-semibold">Teslimat adresi</h3>
+            <button type="button" onClick={goAddress} disabled={processing} className="min-h-11 rounded-lg px-2 font-semibold text-brand underline underline-offset-4" aria-label="Teslimat adresini düzenle">Düzenle</button>
+          </div>
+          <p className="break-words leading-5">{draft.name}<br />{draft.address}<br />{regionLabel}</p>
+          {draft.note && <p className="mt-2 break-words leading-5 text-slate-600">Teslimat notu: {draft.note}</p>}
+          <div className="mt-3 flex items-start justify-between gap-4"><h3 className="font-semibold">Ödeme</h3><p className="text-right text-slate-700">{paymentMethodLabel(method, service)}</p></div>
+        </section>}>
           {payment && submitAction}
         </OrderSummary>
-        {payment && <section aria-labelledby="selected-address-title" className="rounded-2xl border border-slate-300 bg-white p-4">
-          <div className="flex items-center justify-between gap-3"><h2 id="selected-address-title" className="font-semibold">Teslimat adresi</h2>
-            <button type="button" onClick={goAddress} disabled={processing} className="min-h-11 rounded-lg px-2 text-sm font-semibold text-brand underline underline-offset-4" aria-label="Teslimat adresini düzenle">Düzenle</button>
-          </div>
-          <p className="text-sm leading-6">{draft.name}<br />{draft.address}<br />{regionLabel}</p>
-          {draft.note && <p className="mt-3 text-sm text-slate-600">Teslimat notu: {draft.note}</p>}
-        </section>}
         {!payment && submitAction}
       </aside>
     </div>

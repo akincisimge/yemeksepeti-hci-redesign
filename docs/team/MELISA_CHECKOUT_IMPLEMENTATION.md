@@ -17,6 +17,28 @@ Son güncelleme: 10 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-ch
 
 Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başlangıç kodundaki hatalar orijinal Yemeksepeti'ne atfedilmez.
 
+## Ödeme sayfasının bütün olarak yeniden değerlendirilmesi — 10 Kasım 2026
+
+Bu bölüm güncel düzeni tanımlar; aşağıdaki 9 Kasım ve ilk ödeme uygulaması kayıtları tarihseldir. Önceki iki sütunlu kart formu ve geçersiz girişte pasif devam düğmesi bu düzenle değiştirildi.
+
+| Güncel karar | Ders / kural karşılığı |
+| --- | --- |
+| Üç Market yöntemi başta görünür; seçili yöntemin ayrıntıları hemen altında aynı grup içindedir. | K1/K7; Lec5 s.8–9, yakınlık ve gruplama |
+| Kart sahibi ve numara tam satır; tarih ve CVV aynı satırdadır. Kalıcı etiketler, zorunlu alan açıklaması ve özgün marka görselleri korunur. | K5/K8; Lec5 s.15, doğal okuma ve giriş sırası |
+| Ürünler, adres, seçilen ödeme yöntemi, ücretler ve toplam son düğmeden önce aynı özettedir. İlk üç çeşit görünür; kalan ürünler toplamdan önce açılır. | K8; Lec6 s.27, siparişi tamamlamadan gözden geçirme |
+| Son düğme “Siparişi tamamla · [toplam]”; üçüncü adım “Sipariş sonucu” olarak adlandırılır. | K3/K4; beklenen sonucun açıklığı |
+| Boş veya hatalı kartla düğmeye basılabilir; alan mesajları gösterilir ve ilk hatalı alana odaklanılır. Doğrulama geçmeden işlem/sipariş başlamaz. | K5; Lec6 s.23, hatadan toparlanma |
+| Bahşiş başlangıçta kapalı, isteğe bağlı bir açılır alandır; seçilmiş tutar kapalı başlıkta da görünür. Kart kaydı seçili gelmez. | K7; Lec4 s.3 ve Lec5 s.11, görsel hiyerarşi |
+| Adrese dönünce açık formdaki bilgiler korunur; maskeli kayıtlı kart kısayolu ve işlem iptali sürer. | K2/K6; kısayollar ve geri alınabilirlik |
+
+Kaynaklar, kullanıcı tarafından paylaşılan Lec4-InteractiondesignII, Lec5-InteractiondesignIIIPrototyping ve Lec6-DesignRules slaytlarıdır. Dersin K2 tanımı sık kullananlara kısayoldur. Düzenin daha hızlı veya daha başarılı olduğu henüz katılımcıyla ölçülmedi.
+
+**Doğrulama:** `npm run build` ve `node --test tests/*.test.mjs` geçti (53/53). Masaüstü tarayıcıda boş kartla dört hata ve kart sahibine odak; diğer alanlar düzeltilince yalnız CVV hatası ve CVV'ye odak; adrese gidip gelince alanların ve 30 TL bahşişin korunması doğrulandı. Nakit/kapıda kartta online alanlar gizlendi ve özet yöntemi değişti. Online'a dönüşte bilgiler korundu; CarrefourSA için 278,00 + 39,99 + 30,00 = 347,99 TL sipariş başarıyla oluştu. Dört çeşit Y-Market sepetinde ilk üçü görünür, dördüncü Enter ile açılır; toplam 385,69 TL kaldı. 1363px masaüstünde yatay taşma görülmedi. Yeni otomatik test eklenmedi; değişen etkileşimler doğrudan tarayıcıda sınandı.
+
+Bu sonuçlar teknik kontroldür; katılımcı testi, mobil veya ekran okuyucu testi değildir.
+
+**Figma durumu:** `03 · Sonra — Melisa` sayfası belirlendi, ancak sonraki okuma ve kütüphane çağrıları Starter planındaki MCP kullanım sınırı nedeniyle engellendi. Bu revizyonda Figma'ya hiçbir değişiklik yazılmadı; mevcut Figma/ZIP yeni kodla eşitlenmiş değildir. Yeniden erişildiğinde yalnız ilgili ödeme ekranları güncellenecek; “Önce” sayfası korunacak.
+
 ## Kart markası logoları — 10 Kasım 2026
 
 Ortak `PaymentForm` içindeki “VISA · Mastercard · Troy” metni, markaların kendi kaynaklarından alınan üç özgün görselle değiştirildi. Yemek ve Market aynı bileşeni kullanır. Logolar “Kart bilgileri” başlığının sağında, oranları ve renkleri korunarak hizalanır; bağlantı veya düğme değildir. `alt` metinleri Visa, Mastercard ve Troy olarak korunur. Amaç, özgün ödeme ekranındaki tanıdık görsel ipuçlarını korumaktır (K1/K8); ölçülmüş bir kullanılabilirlik kazanımı iddia edilmez.
@@ -126,7 +148,7 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 
 ## Ödeme bölümünün davranışı ve sunum verileri
 
-- `PaymentForm.tsx` kart sahibi, numara, AA/YY ve gizlenmiş CVV alanlarını; yöntem ve bahşiş seçimlerini içerir. Etiketler ve alan hataları erişilebilir ad/açıklamalarla bağlıdır. Geçersiz formda devam düğmesi pasif olur ve nedeni yanında yazılır.
+- `PaymentForm.tsx` kart sahibi, numara, AA/YY ve gizlenmiş CVV alanlarını; yöntem ve isteğe bağlı açılır bahşiş seçimini içerir. Etiketler ve alan hataları erişilebilir ad/açıklamalarla bağlıdır. Geçersiz formda gönderim girişimi alan hatalarını gösterir ve ilk hatalı alana odaklanır; sipariş oluşturmaz. Devam düğmesi yalnız minimum sepet engelinde veya işlem sürerken pasiftir.
 - `paymentModel.ts` kart sahibi, 16 haneli numara, geçerli tarih ve 3–4 haneli CVV biçimini kontrol eder. İki numaralık izin listesi kaldırıldı; uygun biçimdeki kurgu bilgilerle yerel işlem başarılı olur. Gerçek kart/banka veya Luhn doğrulaması yapılmaz. `0000 0000 0000 0000` başarılı olur. `0000 0000 0000 0002` aynı açık checkout'taki ilk tamamlanmış denemede hata verir, tekrar denemede başarılı olur. İptal edilen deneme bu senaryoyu tüketmez. Sunum için ad: Deniz Yılmaz, tarih: `12/30`, CVV: `000`. Bunlar banka test kartı değildir; gerçek kart/banka/ödeme servisi kullanılmaz.
 - Yemek yöntemleri: online kart, nakit, kapıda kredi kartı, yemek kartları. Yemeksepeti Market, BİM ve CarrefourSA senaryoları online kart, nakit ve kapıda temassız kart sunar. Teslimatta ödeme seçimlerinde online kart alanları aranmaz.
 - Bahşiş seçenekleri 0/30/50/75/100 TL'dir. Toplama eklenir; teslimat ücreti gibi minimum ürün tutarını tamamlamaz. “Şimdi değil” toplamı geri alır.
@@ -143,7 +165,7 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 | K2 Kısayollar | Kurgu kayıtlı kartı tek tıkla kullanma; CVV yeniden istenir |
 | K3 Geri bildirim | İşleniyor, başarısızlık ve iptal mesajları; anlık toplam |
 | K4 Kapanış | Başarıda sipariş numarası, tutar, adres ve yöntem içeren sonuç ekranına geçiş |
-| K5 Hata yönetimi | Alan doğrulaması, açıklamalı pasif düğme, çift gönderim kilidi, tekrar deneme |
+| K5 Hata yönetimi | Alan doğrulaması ve ilk hatalı alana odak, minimum sepet açıklaması, çift gönderim kilidi, tekrar deneme |
 | K6 Geri dönüş | Ödeme öncesi adres/sepet düzenleme, bahşiş kaldırma, bekleyen işlemi iptal |
 | K7 Kullanıcı kontrolü | Ödeme tercihi, isteğe bağlı kayıt/bahşiş, kayıt kaldırma |
 | K8 Hafıza yükü | Seçili yöntem, teslimat adresi ve ücretlerin aynı ekranda görünmesi |

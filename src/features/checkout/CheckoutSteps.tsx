@@ -1,7 +1,7 @@
 export default function CheckoutSteps({ payment = false, complete = false, onAddress, disabled = false }: { payment?: boolean; complete?: boolean; onAddress?: () => void; disabled?: boolean }) {
   return <nav aria-label="Sipariş adımları">
     <ol className="flex max-w-[600px] items-center gap-8">
-      {["Adres", "Ödeme", "Onay"].map((label, index) => {
+      {["Adres", "Ödeme", "Sipariş sonucu"].map((label, index) => {
         const current = index === (complete ? 2 : payment ? 1 : 0);
         const completed = complete ? index < 2 : payment && index === 0;
         const content = <><span aria-hidden="true" className={"flex h-8 w-8 shrink-0 items-center justify-center rounded-full border font-semibold " + (current || completed ? "border-brand bg-brand text-white" : "border-slate-300 bg-white text-slate-600")}>{completed ? "✓" : index + 1}</span><span>{label}</span></>;
