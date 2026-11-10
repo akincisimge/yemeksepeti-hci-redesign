@@ -29,7 +29,7 @@ function createInitialMessage(): ChatMessage {
   return {
     id: "welcome",
     sender: "assistant",
-    text: "Merhaba! Bu, HCI projesi için hazırlanmış otomatik canlı yardım demosudur. Sipariş takibi, adres seçimi, kuponlar veya demo hesabınla ilgili destek almak istediğin konuyu seçebilirsin.",
+    text: "Merhaba! Siparişin, teslimat adresin, kuponların veya hesabınla ilgili nasıl yardımcı olabilirim?",
     time: currentTimeLabel(),
   };
 }
@@ -82,7 +82,7 @@ export default function LiveSupportChat({
       {
         id: `restart-${Date.now()}`,
         sender: "assistant",
-        text: "Yeni demo görüşmesi başlatıldı. Hangi konuda yardımcı olabilirim?",
+        text: "Yeni görüşme başlatıldı. Hangi konuda yardımcı olabilirim?",
         time: currentTimeLabel(),
       },
     ]);
@@ -113,9 +113,7 @@ export default function LiveSupportChat({
         </button>
       );
     }
-    const destination =
-      action.to ??
-      (action.actionType === "open-coupons" ? "/food" : "/");
+    const destination = action.to ?? (action.actionType === "open-coupons" ? "/food" : "/");
     return (
       <Link
         to={destination}
@@ -130,15 +128,15 @@ export default function LiveSupportChat({
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="rounded-xl border border-slate-200 bg-[#FFF1F6] p-4">
-        <p className="font-semibold text-slate-900">Canlı yardım simülasyonu (otomatik demo)</p>
+        <p className="font-semibold text-slate-900">Yemeksepeti Yardım Asistanı</p>
         <p className="mt-1 text-sm text-slate-700">
-          Sorulara anında örnek yanıtlar üretilir. Gerçek bir müşteri temsilcisiyle bağlantı kurulmaz.
+          Sipariş durumu, teslimat bölgesi ve kampanyalar hakkında hızlı yanıt al.
         </p>
       </div>
 
       <div
         role="log"
-        aria-label="Demo sohbet mesajları"
+        aria-label="Destek sohbet mesajları"
         aria-live="polite"
         aria-relevant="additions"
         className={
@@ -152,7 +150,7 @@ export default function LiveSupportChat({
             className={"flex flex-col " + (message.sender === "visitor" ? "items-end" : "items-start")}
           >
             <span className="mb-1 text-xs font-medium text-slate-600">
-              {message.sender === "visitor" ? "Sen" : "Demo Asistan"} · {message.time}
+              {message.sender === "visitor" ? "Sen" : "Destek Asistanı"} · {message.time}
             </span>
             <div
               className={
@@ -173,10 +171,10 @@ export default function LiveSupportChat({
       {finished ? (
         <div className="space-y-4 rounded-2xl border border-[#166534] bg-white p-4">
           <p role="status" className="font-semibold text-[#166534]">
-            Demo görüşmesi sonlandırıldı.
+            Görüşme sonlandırıldı.
           </p>
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-800">Bu demo destek deneyimi yardımcı oldu mu?</p>
+            <p className="text-sm font-medium text-slate-800">Bu destek görüşmesi yardımcı oldu mu?</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -205,12 +203,12 @@ export default function LiveSupportChat({
             </div>
             {rating && (
               <p role="status" className="text-xs font-medium text-slate-600">
-                Geri bildirimin bu oturumda kaydedildi. Teşekkürler!
+                Geri bildirimin için teşekkürler.
               </p>
             )}
           </div>
           <button type="button" className="btn-primary w-full" onClick={restartChat}>
-            Yeni demo görüşmesi başlat
+            Yeni görüşme başlat
           </button>
         </div>
       ) : (
@@ -237,7 +235,7 @@ export default function LiveSupportChat({
 
           <form onSubmit={handleSubmit} className="flex items-end gap-2">
             <label className="min-w-0 flex-1">
-              <span className="mb-2 block text-sm font-semibold text-slate-900">Mesajın (demo)</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-900">Mesajın</span>
               <input
                 className="field min-h-12"
                 value={input}

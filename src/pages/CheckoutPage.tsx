@@ -71,7 +71,7 @@ export default function CheckoutPage() {
       nextFieldErrors.name = "Ad soyad en az 2 karakter olmalı.";
     }
     if (address.trim().length < 10) {
-      nextFieldErrors.address = "En az 10 karakterlik örnek teslimat adresi ayrıntısı gir.";
+      nextFieldErrors.address = "En az 10 karakterlik teslimat adresi ayrıntısı gir.";
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -83,7 +83,7 @@ export default function CheckoutPage() {
     setFieldErrors({});
     setError("");
 
-    const orderId = "DEMO-" + Date.now().toString().slice(-7);
+    const orderId = "YS-" + Date.now().toString().slice(-7);
 
     const order: DemoOrder = {
       orderId,
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
         </h1>
 
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Gerçek adres veya kart bilgisi kullanma. Sipariş yalnızca bu tarayıcıda simüle edilir.
+          Teslimat bilgilerini ve ödeme yöntemini seçerek siparişini tamamla.
         </p>
 
         {deliveryRegion && (
@@ -169,7 +169,7 @@ export default function CheckoutPage() {
                 }}
                 className="min-h-11 rounded-xl border border-brand bg-[#FFF1F6] px-3 py-2 text-xs font-semibold text-brand-dark hover:bg-white"
               >
-                Demo hesabımdan doldur ({account.name.split(" ")[0]})
+                Hesap bilgilerimle doldur ({account.name.split(" ")[0]})
               </button>
             )}
           </div>
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
               aria-required="true"
               aria-invalid={Boolean(fieldErrors.name)}
               aria-describedby={fieldErrors.name ? "checkout-name-error" : undefined}
-              placeholder="Örnek Kullanıcı"
+              placeholder="Ayşe Yılmaz"
             />
             {fieldErrors.name && (
               <span id="checkout-name-error" role="alert" className="mt-1.5 block text-sm font-semibold text-[#991B1B]">
@@ -201,7 +201,7 @@ export default function CheckoutPage() {
 
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-slate-800">
-              Demo adres ayrıntısı (sokak, bina, daire) *
+              Teslimat adresi (sokak, bina, daire) *
             </span>
             <textarea
               className="field"
@@ -226,7 +226,7 @@ export default function CheckoutPage() {
 
           <fieldset className="space-y-3">
             <legend className="mb-3 font-semibold text-slate-900">
-              Demo ödeme yöntemi
+              Ödeme yöntemi
             </legend>
 
             <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border border-slate-300 p-3 text-sm hover:border-[#D90049]">
@@ -238,8 +238,8 @@ export default function CheckoutPage() {
                 className="accent-[#D90049]"
               />
               <span>
-                <strong className="block text-slate-900">Teslimatta ödeme</strong>
-                <span className="text-slate-600">Simülasyon</span>
+                <strong className="block text-slate-900">Kapıda ödeme</strong>
+                <span className="text-slate-600">Teslimat sırasında nakit veya kart</span>
               </span>
             </label>
 
@@ -252,8 +252,8 @@ export default function CheckoutPage() {
                 className="accent-[#D90049]"
               />
               <span>
-                <strong className="block text-slate-900">Kartla ödeme</strong>
-                <span className="text-slate-600">Simülasyon, kart bilgisi istenmez</span>
+                <strong className="block text-slate-900">Online kart ile ödeme</strong>
+                <span className="text-slate-600">Hızlı onay — kart bilgisi istenmez</span>
               </span>
             </label>
           </fieldset>
@@ -269,7 +269,7 @@ export default function CheckoutPage() {
             className="min-h-12 w-full rounded-xl bg-[#D90049] px-5 py-4 font-bold text-white transition hover:bg-[#B6003C] disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={!lines.length || !canCheckout}
           >
-            Demo siparişi tamamla
+            Siparişi tamamla
           </button>
 
           {!lines.length && (

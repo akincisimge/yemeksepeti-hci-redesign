@@ -86,9 +86,6 @@ export default function MarketProductPage() {
           <Link to="/cart/market" className="mt-3 flex min-h-11 items-center justify-center rounded-xl border border-slate-300 font-semibold text-brand">
             Sepeti görüntüle
           </Link>
-          <p className="mt-5 text-sm text-slate-600">
-            Ürün, fiyat ve beslenme bilgileri HCI prototipi için örnektir. Gerçek sipariş oluşturulmaz.
-          </p>
         </article>
         <aside className="sticky top-40 hidden lg:block"><MarketBasket onNotice={setNotice} /></aside>
       </div>

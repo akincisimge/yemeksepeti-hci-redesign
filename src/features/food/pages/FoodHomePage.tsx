@@ -139,14 +139,11 @@ export default function FoodHomePage() {
             Konumu değiştir
           </button>
         </div>
-        <p className="mt-4 text-sm text-slate-600">
-          HCI prototipi · Restoran kapsamı, menüler, fiyatlar ve teslimat süreleri örnek veridir.
-        </p>
       </header>
       {availableRestaurants.length === 0 ? (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
           <h2 className="text-xl font-bold text-[#0F172A]">Bu konumda henüz hizmet veren restoran bulunmuyor</h2>
-          <p className="mt-3 text-slate-600">Başka bir teslimat konumu seçerek örnek restoranları keşfedebilirsin.</p>
+          <p className="mt-3 text-slate-600">Başka bir teslimat konumu seçerek restoranları keşfedebilirsin.</p>
           <button type="button" className="btn-primary mt-5" onClick={openAddress}>Konumu değiştir</button>
         </section>
       ) : (

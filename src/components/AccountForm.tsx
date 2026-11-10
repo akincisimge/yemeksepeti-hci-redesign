@@ -33,7 +33,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
     setPhone(SAMPLE_DEMO_ACCOUNT.phone);
     setDeliveryNote(SAMPLE_DEMO_ACCOUNT.deliveryNote ?? "");
     setErrors({});
-    setStatus("Örnek demo bilgileri alanlara dolduruldu. Kaydetmek için aşağıdaki düğmeye bas.");
+    setStatus("Bilgiler alanlara dolduruldu. Kaydetmek için aşağıdaki düğmeye bas.");
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -47,7 +47,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
 
     setErrors({});
     const saved = saveAccount({ name, email, phone, deliveryNote });
-    setStatus(`Demo hesap kaydedildi: ${saved.name}. Sipariş tamamlamada hızlıca kullanabilirsin.`);
+    setStatus(`Profilin kaydedildi: ${saved.name}. Sipariş tamamlamada bilgilerini tek tıkla kullanabilirsin.`);
     onSaved?.();
   }
 
@@ -58,22 +58,21 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
     setPhone("");
     setDeliveryNote("");
     setErrors({});
-    setStatus("Demo hesap kaydı temizlendi. Misafir kullanıcı olarak devam edebilirsin.");
+    setStatus("Hesap oturumu kapatıldı. Misafir kullanıcı olarak devam edebilirsin.");
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-      <div className="space-y-3 rounded-2xl bg-[#FFF1F6] p-4 text-sm text-slate-800">
-        <p className="font-semibold text-slate-900">Örnek Demo Hesap Oluşturma</p>
-        <p className="leading-6 text-slate-700">
-          Gerçek e-posta, şifre veya telefon numarası girmeyin. Bilgiler yalnızca bu tarayıcıdaki eğitim simülasyonunda saklanır ve sunucuya gönderilmez.
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#FFF1F6] p-4 text-sm text-slate-800">
+        <p className="min-w-0 flex-1 leading-6 text-slate-700">
+          Ad, e-posta ve telefon bilgilerin yalnızca bu tarayıcıda saklanır.
         </p>
         <button
           type="button"
           onClick={fillSample}
-          className="min-h-11 rounded-xl border border-brand bg-white px-4 py-2 text-sm font-semibold text-brand-dark hover:bg-pink-50"
+          className="min-h-11 shrink-0 rounded-xl border border-brand bg-white px-4 py-2 text-sm font-semibold text-brand-dark hover:bg-pink-50"
         >
-          Örnek demo bilgilerini doldur
+          Hazır bilgiyle doldur
         </button>
       </div>
 
@@ -87,7 +86,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
             setName(e.target.value);
             if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
           }}
-          placeholder="Örnek Kullanıcı"
+          placeholder="Ayşe Yılmaz"
           autoComplete="off"
           required
           aria-required="true"
@@ -102,7 +101,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-slate-900">Örnek e-posta *</span>
+        <span className="mb-2 block text-sm font-semibold text-slate-900">E-posta *</span>
         <input
           className="field min-h-12"
           type="email"
@@ -126,7 +125,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-slate-900">Örnek telefon numarası *</span>
+        <span className="mb-2 block text-sm font-semibold text-slate-900">Telefon numarası *</span>
         <input
           className="field min-h-12"
           type="tel"
@@ -171,7 +170,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
 
       <div className="flex flex-col gap-3">
         <button type="submit" className="btn-primary w-full">
-          {account ? "Demo profilini güncelle" : "Demo hesabı oluştur"}
+          {account ? "Profilimi güncelle" : "Hesap oluştur"}
         </button>
         {account && (
           <button
@@ -179,7 +178,7 @@ export default function AccountForm({ onSaved, autofocus = false }: AccountFormP
             onClick={handleReset}
             className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-[#991B1B] hover:border-red-400 hover:bg-red-50"
           >
-            Demo hesaptan çık ve kaydı temizle
+            Çıkış yap ve bilgileri temizle
           </button>
         )}
       </div>

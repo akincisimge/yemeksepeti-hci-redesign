@@ -286,8 +286,8 @@ export default function MarketCartPage() {
             Alışverişe devam et
           </button>
 
-          <div className="mt-5 rounded-xl bg-slate-50 p-3 text-center text-xs font-medium text-slate-700">
-            Eğitim prototipi · Gerçek ödeme alınmaz.
+          <div className="mt-5 rounded-xl bg-green-50 p-3 text-center text-xs font-medium text-[#166534]">
+            ✓ Güvenli alışveriş deneyimi
           </div>
         </aside>
       </div>

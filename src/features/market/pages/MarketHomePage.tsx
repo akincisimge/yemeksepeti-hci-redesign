@@ -35,9 +35,6 @@ export default function MarketHomePage() {
             Konumu değiştir
           </button>
         </div>
-        <p className="mt-4 text-sm text-slate-600">
-          HCI prototipi · Mağaza kapsamı, ürün çeşitleri, fiyatlar ve teslimat bilgileri örnektir.
-        </p>
       </header>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-[#0F172A]">Konumundaki marketler</h2>
@@ -77,9 +74,9 @@ export default function MarketHomePage() {
         </div>
       ) : (
         <section className="space-y-4 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <h3 className="text-xl font-bold text-[#0F172A]">Bu konumda henüz demo market kapsamı bulunmuyor</h3>
+          <h3 className="text-xl font-bold text-[#0F172A]">Bu konumda henüz hizmet veren market bulunmuyor</h3>
           <p className="mx-auto max-w-xl text-slate-600">
-            Market demo kapsamı şu anda Muğla (Kötekli, Orhaniye, Bodrum Çarşı) bölgelerinde aktiftir.
+            Market hizmeti şu anda Muğla (Kötekli, Orhaniye, Bodrum Çarşı) bölgelerinde aktiftir.
             Mevcut konumun ve yemek sepetin korunur; dilersen başka bir teslimat bölgesi seçebilir veya YEMEK restoranlarına geçebilirsin.
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-2">

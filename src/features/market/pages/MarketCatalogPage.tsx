@@ -84,7 +84,6 @@ export default function MarketCatalogPage() {
       <div className="flex items-center gap-4">{store.logo && <img src={store.logo} alt="" className="h-16 w-16 rounded-xl object-contain" />}<div><p className="text-sm font-semibold text-brand">Mahallendeki market</p><h1 className="mt-1 text-3xl font-bold">{store.name}</h1></div></div>
       <p className="mt-4 text-sm text-slate-600">{delivery && locationLabel(delivery)}</p>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm"><span>Teslimat: {store.deliveryTime}</span><span>Teslimat ücreti: {formatTRY(store.deliveryFee ?? 0)}</span><span>Minimum sepet: {formatTRY(store.minBasket ?? 0)}</span></div>
-      <p className="mt-4 text-sm text-slate-600">HCI prototipi · Katalog, fiyatlar, beslenme etiketleri ve teslimat bilgileri örnek veridir.</p>
     </header>
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-5">

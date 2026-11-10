@@ -14,8 +14,8 @@ export type AccountValidationErrors = {
 const STORAGE_KEY = "hci-yemeksepeti-demo-account-v1";
 
 export const SAMPLE_DEMO_ACCOUNT: DemoAccount = {
-  name: "Ayşe Yılmaz (Demo)",
-  email: "ayse.demo@example.com",
+  name: "Ayşe Yılmaz",
+  email: "ayse.yilmaz@example.com",
   phone: "0500 123 45 67",
   deliveryNote: "Zile basmayın, kapıya bırakabilirsiniz.",
 };
@@ -26,7 +26,7 @@ export function validateDemoAccount(input: DemoAccount): AccountValidationErrors
     errors.name = "Ad soyad en az 2 karakter olmalı.";
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) {
-    errors.email = "Geçerli bir örnek e-posta adresi gir.";
+    errors.email = "Geçerli bir e-posta adresi gir.";
   }
   if (input.phone.replace(/\D/g, "").length < 10) {
     errors.phone = "Telefon numarası en az 10 rakam içermeli.";

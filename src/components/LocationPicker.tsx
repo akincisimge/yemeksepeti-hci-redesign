@@ -99,7 +99,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
         <p className="font-semibold text-brand">Teslimat konumun</p>
         <h2 className="mt-2 text-2xl font-bold text-slate-900">Önce nereye getirelim?</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          81 il arasından ilini ara ve seç. Örnek teslimat bölgeleri olan illerde ilçe ve mahalle seçerek devam edebilirsin.
+          81 il arasından ilini ara ve seç; ardından ilçe ve mahalle seçerek bölgedeki işletmeleri gör.
         </p>
         {delivery && (
           <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -189,10 +189,10 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
 
       {unsupported && (
         <div role="status" className="space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
-          <p className="font-bold text-amber-950">{city} için henüz demo teslimat kapsamı tanımlanmadı.</p>
+          <p className="font-bold text-amber-950">{city} için henüz teslimat bölgesi tanımlanmadı.</p>
           <p>
-            Bu öğrenci prototipinde ilçe ve mahalle verileri tüm illeri kapsamaz. Mevcut teslimat konumun ve sepetlerin korunuyor;
-            örnek işletmeleri görmek için aşağıdaki demo illerinden birini seçebilirsin.
+            Şu anda yalnızca Muğla ve Adana’daki seçili bölgelere hizmet veriliyor. Mevcut teslimat konumun ve sepetlerin korunuyor;
+            işletmeleri görmek için aşağıdaki illerden birini seçebilirsin.
           </p>
           <div className="flex flex-wrap gap-2">
             <button
@@ -224,18 +224,15 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
 
       {coverage?.supported && !coverage.hasMarket && (
         <div role="status" className="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-800">
-          <p className="font-semibold text-slate-900">{city} demo bölgesi bilgisi</p>
+          <p className="font-semibold text-slate-900">{city} bölgesi bilgisi</p>
           <p className="mt-1">
-            Bu örnek bölgede yalnızca <strong>YEMEK</strong> restoranları aktiftir; <strong>MARKET</strong> teslimatı henüz demo kapsamı dışındadır.
+            Bu bölgede şu anda yalnızca <strong>YEMEK</strong> restoranları hizmet veriyor; <strong>MARKET</strong> teslimatı henüz açık değil.
           </p>
         </div>
       )}
 
       <label className="block">
-        <span className="mb-2 flex items-center justify-between gap-2 font-semibold text-slate-900">
-          <span>İlçe</span>
-          <span className="text-xs font-normal text-slate-600">Demo örnek bölgeler</span>
-        </span>
+        <span className="mb-2 block font-semibold text-slate-900">İlçe</span>
         <select
           required
           disabled={!city || unsupported}
@@ -243,7 +240,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
           value={district}
           onChange={(event) => changeDistrict(event.target.value)}
         >
-          <option value="">{unsupported ? "Bu il için demo ilçe kaydı yok" : "İlçe seç"}</option>
+          <option value="">{unsupported ? "Bu il için kayıtlı ilçe bulunmuyor" : "İlçe seç"}</option>
           {districtOptions.map((name) => (
             <option key={name} value={name}>
               {name}
@@ -253,10 +250,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
       </label>
 
       <label className="block">
-        <span className="mb-2 flex items-center justify-between gap-2 font-semibold text-slate-900">
-          <span>Mahalle</span>
-          <span className="text-xs font-normal text-slate-600">Demo örnek bölgeler</span>
-        </span>
+        <span className="mb-2 block font-semibold text-slate-900">Mahalle</span>
         <select
           required
           disabled={!district || unsupported}
@@ -268,7 +262,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
             setPendingPlan(null);
           }}
         >
-          <option value="">{unsupported ? "Bu il için demo mahalle kaydı yok" : "Mahalle seç"}</option>
+          <option value="">{unsupported ? "Bu il için kayıtlı mahalle bulunmuyor" : "Mahalle seç"}</option>
           {neighborhoodOptions.map((location) => (
             <option key={location.id} value={location.id}>
               {location.neighborhood}
@@ -350,8 +344,8 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
           {notice}
         </p>
       )}
-      <p className="text-sm leading-5 text-slate-600">
-        81 il listesi tüm Türkiye illerini gösterir; ilçe ve mahalle seçenekleri yalnızca prototipteki örnek demo bölgeleriyle sınırlıdır.
+      <p className="text-xs leading-5 text-slate-600">
+        81 il listesi Türkiye’nin tüm illerini içerir; ilçe ve mahalle kapsamı seçili teslimat bölgeleriyle sınırlıdır.
       </p>
     </form>
   );
