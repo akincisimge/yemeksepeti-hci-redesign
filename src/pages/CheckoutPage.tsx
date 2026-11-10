@@ -5,12 +5,16 @@ import { useCart } from "../state/CartContext";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
 import { saveDemoOrder, type DemoOrder } from "../state/demoOrder";
 import { marketStores } from "../features/market/data/marketData";
+import { calculateFoodCouponDiscount, foodRestaurants } from "../features/food/data/foodData";
+import FoodCouponSelector from "../features/food/components/FoodCouponSelector";
+import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
 export default function CheckoutPage() {
   const { service: segment } = useParams();
   const service: Service = segment === "market" ? "market" : "food";
 
   const { carts, total, clear } = useCart();
+  const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -27,17 +31,24 @@ export default function CheckoutPage() {
           (s) => s.id === lines[0].product.storeId
         )
       : undefined;
+  const foodRestaurant =
+    service === "food" && lines.length > 0
+      ? foodRestaurants.find((restaurant) => restaurant.id === lines[0].product.storeId)
+      : undefined;
 
   const deliveryFee = service === "market"
     ? store?.deliveryFee ?? 0
-    : 0;
+    : foodRestaurant?.deliveryFee ?? 0;
 
   const minBasket = service === "market"
     ? store?.minBasket ?? 0
-    : 0;
+    : foodRestaurant?.minBasket ?? 0;
 
+  const couponDiscount = service === "food"
+    ? calculateFoodCouponDiscount(activeFoodCoupon, lines).discount
+    : 0;
   const canCheckout = amount >= minBasket;
-  const grandTotal = amount + deliveryFee;
+  const grandTotal = amount - couponDiscount + deliveryFee;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -74,6 +85,7 @@ export default function CheckoutPage() {
 
     saveDemoOrder(order);
     clear(service);
+    if (service === "food") setActiveFoodCoupon(null);
     navigate("/success", { state: order, replace: true });
   };
 
@@ -272,17 +284,23 @@ export default function CheckoutPage() {
           </ul>
 
           <div className="mt-5 space-y-3 border-t border-slate-200 pt-4 text-sm">
+            {service === "food" && <FoodCouponSelector lines={lines} />}
             <div className="flex justify-between text-slate-500">
               <span>Ürün toplamı</span>
               <span>{formatTRY(amount)}</span>
             </div>
 
-            {service === "market" && (
-              <div className="flex justify-between text-slate-500">
-                <span>Teslimat ücreti</span>
-                <span>{formatTRY(deliveryFee)}</span>
+            {service === "food" && couponDiscount > 0 && activeFoodCoupon && (
+              <div className="flex justify-between font-semibold text-emerald-700">
+                <span>Kupon indirimi ({activeFoodCoupon.code})</span>
+                <span>−{formatTRY(couponDiscount)}</span>
               </div>
             )}
+
+            <div className="flex justify-between text-slate-500">
+              <span>Teslimat ücreti</span>
+              <span>{service === "food" && deliveryFee === 0 ? "Ücretsiz" : formatTRY(deliveryFee)}</span>
+            </div>
 
             <div className="flex justify-between pt-2 text-base font-extrabold text-slate-900">
               <span>Genel toplam</span>
@@ -300,4 +318,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-

@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import CampaignCarousel from "../components/CampaignCarousel";
 import RestaurantCard from "../components/RestaurantCard";
 import RestaurantFilters, { type QuickFilters } from "../components/RestaurantFilters";
+import FoodMobileBasketBar from "../components/FoodMobileBasketBar";
 import {
   cuisineOptions,
-  foodCampaigns,
   foodRestaurants,
-  type FoodCampaign,
+  getFoodDeliveryStartMinutes,
+  hasFoodDiscount,
+  isFoodFastDelivery,
   type FoodSort,
 } from "../data/foodData";
 import { useCart } from "../../../state/CartContext";
@@ -16,6 +18,13 @@ const initialQuickFilters: QuickFilters = {
   freeDelivery: false,
   fastDelivery: false,
   discount: false,
+};
+
+const activeFilterChipClass = "min-h-11 rounded-full border border-[#D90049] bg-[#FFF0F5] px-3 py-2 text-sm font-semibold text-[#D90049] hover:bg-[#FFE3ED]";
+const sortLabels: Record<FoodSort, string> = {
+  recommended: "Önerilen",
+  delivery: "Teslimat Süresi",
+  rating: "Restoran Puanı",
 };
 
 type BudgetOption = "all" | "economic" | "mid" | "wide";
@@ -33,11 +42,21 @@ export default function FoodHomePage() {
   const [minimumRating, setMinimumRating] = useState(0);
   const [sort, setSort] = useState<FoodSort>("recommended");
   const [quickFilters, setQuickFilters] = useState(initialQuickFilters);
-  const [campaign, setCampaign] = useState<FoodCampaign | "">("");
   const [maxMinBasket, setMaxMinBasket] = useState(450);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOption | "custom">("all");
   const { count } = useCart();
   const normalizedSearch = search.trim().toLocaleLowerCase("tr");
+  const quickFilterCounts: Record<keyof QuickFilters, number> = {
+    freeDelivery: foodRestaurants.filter((restaurant) => restaurant.deliveryFee === 0).length,
+    fastDelivery: foodRestaurants.filter(isFoodFastDelivery).length,
+    discount: foodRestaurants.filter(hasFoodDiscount).length,
+  };
+  const ratingCounts: Record<number, number> = {
+    0: foodRestaurants.length,
+    4: foodRestaurants.filter((restaurant) => restaurant.rating >= 4).length,
+    4.5: foodRestaurants.filter((restaurant) => restaurant.rating >= 4.5).length,
+    4.8: foodRestaurants.filter((restaurant) => restaurant.rating >= 4.8).length,
+  };
 
   const filteredRestaurants = useMemo(() => {
     const filtered = foodRestaurants.filter((restaurant) => {
@@ -48,28 +67,27 @@ export default function FoodHomePage() {
         (!cuisine || restaurant.cuisine === cuisine) &&
         restaurant.rating >= minimumRating &&
         (!quickFilters.freeDelivery || restaurant.deliveryFee === 0) &&
-        (!quickFilters.fastDelivery || restaurant.deliveryMinutes <= 30) &&
-        (!quickFilters.discount || Boolean(restaurant.discount)) &&
-        restaurant.minBasket <= maxMinBasket &&
-        (!campaign || restaurant.campaigns.includes(campaign));
+        (!quickFilters.fastDelivery || isFoodFastDelivery(restaurant)) &&
+        (!quickFilters.discount || hasFoodDiscount(restaurant)) &&
+        restaurant.minBasket <= maxMinBasket;
     });
 
     return filtered.sort((first, second) => {
-      if (sort === "delivery") return first.deliveryMinutes - second.deliveryMinutes;
+      if (sort === "delivery") return getFoodDeliveryStartMinutes(first) - getFoodDeliveryStartMinutes(second);
       if (sort === "rating") return second.rating - first.rating;
       return 0;
     });
-  }, [campaign, cuisine, maxMinBasket, minimumRating, normalizedSearch, quickFilters, sort]);
+  }, [cuisine, maxMinBasket, minimumRating, normalizedSearch, quickFilters, sort]);
 
   const hasActiveFilters = Boolean(
     search.trim() ||
     cuisine ||
     minimumRating ||
-    campaign ||
     quickFilters.freeDelivery ||
     quickFilters.fastDelivery ||
     quickFilters.discount ||
-    budgetChoice !== "all"
+    budgetChoice !== "all" ||
+    sort !== "recommended"
   );
 
   const clearFilters = () => {
@@ -77,7 +95,6 @@ export default function FoodHomePage() {
     setCuisine("");
     setMinimumRating(0);
     setQuickFilters(initialQuickFilters);
-    setCampaign("");
     setMaxMinBasket(450);
     setBudgetChoice("all");
     setSort("recommended");
@@ -88,7 +105,7 @@ export default function FoodHomePage() {
   };
 
   return (
-    <div className="space-y-7 pt-6">
+    <div className="space-y-7 pb-24 pt-6 lg:pb-0">
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="space-y-3">
           <form
@@ -203,14 +220,13 @@ export default function FoodHomePage() {
 
       <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <div className="space-y-4">
-          <CampaignCarousel
-            activeCampaign={campaign}
-            onSelectCampaign={(selected) => setCampaign(campaign === selected ? "" : selected)}
-          />
+          <CampaignCarousel />
           <RestaurantFilters
             minimumRating={minimumRating}
             sort={sort}
             quickFilters={quickFilters}
+            quickFilterCounts={quickFilterCounts}
+            ratingCounts={ratingCounts}
             hasActiveFilters={hasActiveFilters}
             onMinimumRatingChange={setMinimumRating}
             onSortChange={setSort}
@@ -231,14 +247,14 @@ export default function FoodHomePage() {
               {hasActiveFilters && (
                 <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Seçili filtreler">
                   <span className="text-sm font-semibold text-[#0F172A]">Seçili:</span>
-                  {search.trim() && <button type="button" onClick={() => setSearch("")} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Arama: {search.trim()} <span aria-hidden="true">×</span></button>}
-                  {cuisine && <button type="button" onClick={() => setCuisine("")} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">{cuisine} <span aria-hidden="true">×</span></button>}
-                  {minimumRating > 0 && <button type="button" onClick={() => setMinimumRating(0)} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">★ {minimumRating.toFixed(1)} ve üzeri <span aria-hidden="true">×</span></button>}
-                  {quickFilters.freeDelivery && <button type="button" onClick={() => updateQuickFilter("freeDelivery", false)} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Ücretsiz teslimat <span aria-hidden="true">×</span></button>}
-                  {quickFilters.fastDelivery && <button type="button" onClick={() => updateQuickFilter("fastDelivery", false)} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Hızlı teslimat <span aria-hidden="true">×</span></button>}
-                  {quickFilters.discount && <button type="button" onClick={() => updateQuickFilter("discount", false)} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">İndirimli restoranlar <span aria-hidden="true">×</span></button>}
-                  {campaign && <button type="button" onClick={() => setCampaign("")} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">{foodCampaigns.find((item) => item.id === campaign)?.title} <span aria-hidden="true">×</span></button>}
-                  {budgetChoice !== "all" && <button type="button" onClick={() => { setBudgetChoice("all"); setMaxMinBasket(450); }} className="min-h-11 rounded-full border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">Bütçe: {budgetChoice === "custom" ? `≤ ${maxMinBasket} TL` : budgetOptions.find((option) => option.id === budgetChoice)?.label} <span aria-hidden="true">×</span></button>}
+                  {search.trim() && <button type="button" onClick={() => setSearch("")} className={activeFilterChipClass}>Arama: {search.trim()} <span aria-hidden="true">×</span></button>}
+                  {cuisine && <button type="button" onClick={() => setCuisine("")} className={activeFilterChipClass}>{cuisine} <span aria-hidden="true">×</span></button>}
+                  {budgetChoice !== "all" && <button type="button" onClick={() => { setBudgetChoice("all"); setMaxMinBasket(450); }} className={activeFilterChipClass}>Bütçe: {budgetChoice === "custom" ? `≤ ${maxMinBasket} TL` : budgetOptions.find((option) => option.id === budgetChoice)?.label} <span aria-hidden="true">×</span></button>}
+                  {sort !== "recommended" && <button type="button" onClick={() => setSort("recommended")} className={activeFilterChipClass}>Sıralama: {sortLabels[sort]} <span aria-hidden="true">×</span></button>}
+                  {minimumRating > 0 && <button type="button" onClick={() => setMinimumRating(0)} className={activeFilterChipClass}>★ {minimumRating.toFixed(1)} ve üzeri <span aria-hidden="true">×</span></button>}
+                  {quickFilters.freeDelivery && <button type="button" onClick={() => updateQuickFilter("freeDelivery", false)} className={activeFilterChipClass}>Ücretsiz teslimat <span aria-hidden="true">×</span></button>}
+                  {quickFilters.fastDelivery && <button type="button" onClick={() => updateQuickFilter("fastDelivery", false)} className={activeFilterChipClass}>Hızlı teslimat <span aria-hidden="true">×</span></button>}
+                  {quickFilters.discount && <button type="button" onClick={() => updateQuickFilter("discount", false)} className={activeFilterChipClass}>İndirimli restoranlar <span aria-hidden="true">×</span></button>}
                   <button type="button" onClick={clearFilters} className="min-h-11 rounded-xl px-3 py-2 text-sm font-semibold text-[#D90049] underline underline-offset-2 hover:text-[#B6003C]">Filtreleri Temizle</button>
                 </div>
               )}
@@ -264,6 +280,7 @@ export default function FoodHomePage() {
           </section>
         </div>
       </div>
+      <FoodMobileBasketBar />
     </div>
   );
 }

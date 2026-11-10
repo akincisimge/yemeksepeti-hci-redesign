@@ -1,13 +1,18 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY } from "../../../types/domain";
-import { foodRestaurants } from "../data/foodData";
+import { calculateFoodCouponDiscount, foodRestaurants } from "../data/foodData";
+import FoodCustomizationDetails from "./FoodCustomizationDetails";
+import FoodCouponSelector from "./FoodCouponSelector";
+import { useFoodCoupon } from "../state/FoodCouponContext";
 
 export default function FoodBasket({ onNotice }: { onNotice?: (message: string) => void }) {
   const { carts, change, total } = useCart();
+  const { activeFoodCoupon } = useFoodCoupon();
   const lines = carts.food;
   const restaurant = foodRestaurants.find((item) => item.id === lines[0]?.product.storeId);
   const subtotal = total("food");
+  const couponDiscount = calculateFoodCouponDiscount(activeFoodCoupon, lines).discount;
   const deliveryFee = restaurant?.deliveryFee ?? 0;
   const remaining = Math.max(0, (restaurant?.minBasket ?? 0) - subtotal);
   const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
@@ -37,6 +42,7 @@ export default function FoodBasket({ onNotice }: { onNotice?: (message: string) 
             {lines.map(({ product, quantity }) => (
               <li key={product.id} className="border-b border-[#E2E8F0] pb-4">
                 <h3 className="font-semibold text-[#0F172A]">{product.name}</h3>
+                <FoodCustomizationDetails product={product} />
                 <p className="mt-1 text-sm text-[#475569]">{formatTRY(product.price)} / adet</p>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -71,6 +77,9 @@ export default function FoodBasket({ onNotice }: { onNotice?: (message: string) 
               </li>
             ))}
           </ul>
+          <div className="mt-4">
+            <FoodCouponSelector lines={lines} />
+          </div>
           <dl className="mt-4 space-y-3 text-sm text-[#0F172A]">
             <div className="flex justify-between gap-3">
               <dt>Ürün toplamı</dt>
@@ -80,9 +89,15 @@ export default function FoodBasket({ onNotice }: { onNotice?: (message: string) 
               <dt>Teslimat ücreti</dt>
               <dd>{deliveryFee === 0 ? "Ücretsiz" : formatTRY(deliveryFee)}</dd>
             </div>
+            {couponDiscount > 0 && activeFoodCoupon && (
+              <div className="flex justify-between gap-3 font-semibold text-emerald-700">
+                <dt>Kupon indirimi ({activeFoodCoupon.code})</dt>
+                <dd>−{formatTRY(couponDiscount)}</dd>
+              </div>
+            )}
             <div className="flex justify-between gap-3 border-t border-[#CBD5E1] pt-3 text-base font-bold">
               <dt>Genel toplam</dt>
-              <dd>{formatTRY(subtotal + deliveryFee)}</dd>
+              <dd>{formatTRY(subtotal + deliveryFee - couponDiscount)}</dd>
             </div>
           </dl>
           {remaining > 0 && (
