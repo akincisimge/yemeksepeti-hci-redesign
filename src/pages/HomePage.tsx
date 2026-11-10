@@ -1,6 +1,8 @@
 import { Link, useOutletContext } from "react-router-dom";
 import type { LayoutContext } from "../components/Layout";
+import { createCustomLocation } from "../data/delivery";
 import { useAccount } from "../state/AccountContext";
+import { useDelivery } from "../state/DeliveryContext";
 import {
   DEMO_TRACKING_STEPS,
   saveDemoOrder,
@@ -54,10 +56,29 @@ const choices = [
   },
 ];
 
+const STARTER_LOCATIONS = [
+  { label: "İstanbul", id: createCustomLocation("İstanbul", "Merkez", "Merkez Mahallesi")?.id ?? "" },
+  { label: "Ankara", id: createCustomLocation("Ankara", "Merkez", "Merkez Mahallesi")?.id ?? "" },
+  { label: "İzmir", id: createCustomLocation("İzmir", "Merkez", "Merkez Mahallesi")?.id ?? "" },
+  { label: "Muğla · Kötekli", id: "kotekli" },
+  { label: "Muğla · Bodrum", id: "bodrum-merkez" },
+].filter((item) => Boolean(item.id));
+
 export default function HomePage() {
   const { address, openAddress } = useOutletContext<LayoutContext>();
+  const { previewLocationChange, selectLocation } = useDelivery();
   const { account } = useAccount();
   const activeOrder = useDemoOrder();
+
+  function pickStarterLocation(targetId: string) {
+    const plan = previewLocationChange(targetId);
+    if (!plan) return;
+    if (plan.affected.length > 0) {
+      openAddress();
+      return;
+    }
+    selectLocation(targetId, { confirmed: true });
+  }
 
   function advanceOrderStage() {
     if (!activeOrder) return;
@@ -75,32 +96,87 @@ export default function HomePage() {
           {account ? `Merhaba ${account.name.split(" ")[0]}, bugün ne sipariş etmek istersin?` : "Bugün ne sipariş etmek istersin?"}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-base leading-6 text-slate-600">
-          Adresini seç, ister sıcak yemek ister günlük market ihtiyaçlarını kapına getirelim.
+          Teslimat adresini seç, ister sıcak yemek ister market ihtiyaçlarını kapına getirelim.
         </p>
 
-        <div className="mx-auto mt-6 flex max-w-xl flex-col gap-3 rounded-2xl border border-slate-300 bg-white p-3 text-left shadow-sm sm:flex-row sm:items-center sm:justify-between sm:pl-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF1F6] text-brand" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-                <circle cx="12" cy="10" r="2.5" />
-              </svg>
-            </span>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-600">Teslimat adresin</p>
-              <p className="truncate font-semibold text-slate-900" aria-live="polite">
-                {address ?? "Henüz teslimat adresi seçilmedi"}
-              </p>
-            </div>
-          </div>
+        <div className="mx-auto mt-6 max-w-2xl space-y-3">
           <button
             type="button"
             data-address-trigger="home"
             onClick={openAddress}
-            className="btn-primary shrink-0 px-5 py-2.5 text-sm"
+            aria-label={address ? `Teslimat adresi: ${address}. Değiştirmek için tıklayın` : "Teslimat adresi seçmek için tıklayın"}
+            className="group flex w-full flex-col items-stretch justify-between gap-4 rounded-3xl border-2 border-slate-200 bg-white p-4 text-left shadow-md transition hover:border-brand hover:shadow-lg sm:flex-row sm:items-center sm:p-5"
           >
-            {address ? "Değiştir" : "Adres seç"}
+            <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+              <span
+                className={
+                  address
+                    ? "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"
+                    : "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF1F6] text-brand"
+                }
+                aria-hidden="true"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                {address ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                      ✓ Teslimat adresin hazır
+                    </span>
+                    <p className="mt-1 break-words text-lg font-bold leading-snug text-slate-900 sm:text-xl" aria-live="polite">
+                      {address}
+                    </p>
+                    <p className="mt-0.5 text-xs font-medium text-slate-600">
+                      Başka bir adrese göndermek için buraya dokunabilirsin.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-block rounded-full bg-[#FFF1F6] px-2.5 py-0.5 text-xs font-bold text-brand-dark">
+                      1. Adım · Teslimat Adresi
+                    </span>
+                    <p className="mt-1 text-lg font-bold leading-snug text-slate-900 sm:text-xl" aria-live="polite">
+                      Nereye getirelim?
+                    </p>
+                    <p className="mt-0.5 text-xs font-medium text-slate-600 sm:text-sm">
+                      Şehir, ilçe ve mahalle seçmek için buraya dokun.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <span
+              aria-hidden="true"
+              className={
+                address
+                  ? "inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl border-2 border-brand/25 bg-[#FFF1F6] px-5 py-2.5 text-sm font-bold text-brand-dark transition group-hover:border-brand group-hover:bg-brand group-hover:text-white"
+                  : "inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-brand px-6 py-2.5 text-sm font-bold text-white shadow-sm transition group-hover:bg-brand-dark"
+              }
+            >
+              {address ? "Adresi Değiştir ▾" : "Adres Seç →"}
+            </span>
           </button>
+
+          {!address && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1" aria-label="Hızlı adres seçimi">
+              <span className="text-xs font-semibold text-slate-600">Hızlı seç:</span>
+              {STARTER_LOCATIONS.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => pickStarterLocation(item.id)}
+                  className="min-h-10 rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-800 shadow-xs transition hover:border-brand hover:bg-[#FFF1F6] hover:text-brand-dark sm:text-sm"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
