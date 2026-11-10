@@ -1,4 +1,5 @@
 
+
 import type { Product, Store } from "../../../types/domain";
 
 export const marketStores: Store[] = [
@@ -38,28 +39,28 @@ export const marketStores: Store[] = [
 ];
 
 const originalProducts: Product[] = [
-  // Yemeksepeti Market
+  // YEMEKSEPETİ MARKET
   {
     id: "m1",
     name: "Sütaş Süzme Peynir",
     description: "500 g",
     price: 190.90,
-    category: "Süt ve Kahvaltılık",
+    category: "Süt Ürünleri ve Kahvaltılık",
     storeId: "ymarket-1",
     storeName: "Yemeksepeti Market",
     service: "market",
-    image:"/logos/peynir3.png",
+    image: "/logos/peynir3.png",
   },
   {
     id: "m2",
     name: "Yummy Yumurta 15'li",
     description: "L Yumurta 63-72 g",
     price: 79.9,
-    category: "Süt ve Kahvaltılık",
+    category: "Süt Ürünleri ve Kahvaltılık",
     storeId: "ymarket-1",
     storeName: "Yemeksepeti Market",
     service: "market",
-    image:"/logos/yumurta3.png",
+    image: "/logos/yumurta3.png",
   },
   {
     id: "m3",
@@ -70,7 +71,7 @@ const originalProducts: Product[] = [
     storeId: "ymarket-1",
     storeName: "Yemeksepeti Market",
     service: "market",
-    image:"/logos/ekmek.png",
+    image: "/logos/ekmek.png",
   },
   {
     id: "m4",
@@ -83,26 +84,80 @@ const originalProducts: Product[] = [
     service: "market",
     image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500",
   },
-  
-
-  // CarrefourSA
   {
-  id: "c1",
-  name: "CarrefourSA Olgunlaştırılmış Beyaz Peynir 350 g",
-  description: "Olgunlaştırılmış beyaz peynir",
-  price: 195.50,
-  category: "Süt ve Kahvaltılık",
-  storeId: "carrefour-1",
-  storeName: "CarrefourSA",
-  service: "market",
-  image: "/logos/carrefour-peynir.png",
-},
+    id: "m6",
+    name: "Sütaş Yoğurt 1 kg",
+    description: "1 kg",
+    price: 79.9,
+    category: "Süt Ürünleri ve Kahvaltılık",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image: "/product/sütaşyoğurt.png",
+  },
+  {
+    id: "m7",
+    name: "Barilla Burgu Makarna 500 g",
+    description: "500 g",
+    price: 39.9,
+    category: "Temel Gıda",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image: "/product/barillamakarna.png",
+  },
+  {
+    id: "m8",
+    name: "Torku Banada Fındık Kreması",
+    description: "400 g",
+    price: 89.9,
+    category: "Atıştırmalık",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image: "/product/torkubanada.png",
+  },
+  {
+    id: "m9",
+    name: "Coca-Cola 1 L",
+    description: "1 L",
+    price: 49.9,
+    category: "İçecek",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image: "/product/cocacola.png",
+  },
+  {
+    id: "m10",
+    name: "Domestos Çamaşır Suyu 750 ml",
+    description: "750 ml",
+    price: 59.9,
+    category: "Temizlik",
+    storeId: "ymarket-1",
+    storeName: "Yemeksepeti Market",
+    service: "market",
+    image: "/product/domestos.png",
+  },
+
+  // CARREFOURSA - MEVCUT ÜRÜNLER
+  {
+    id: "c1",
+    name: "CarrefourSA Olgunlaştırılmış Beyaz Peynir 350 g",
+    description: "Olgunlaştırılmış beyaz peynir",
+    price: 195.50,
+    category: "Süt Ürünleri ve Kahvaltılık",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image: "/logos/carrefour-peynir.png",
+  },
   {
     id: "c2",
     name: "CarrefourSA Yumurta 10'lu",
     description: "M boy yumurta",
     price: 82.5,
-    category: "Süt ve Kahvaltılık",
+    category: "Süt Ürünleri ve Kahvaltılık",
     storeId: "carrefour-1",
     storeName: "CarrefourSA",
     service: "market",
@@ -117,21 +172,69 @@ const originalProducts: Product[] = [
     storeId: "carrefour-1",
     storeName: "CarrefourSA",
     service: "market",
-    image:"/logos/ekmek.png" ,
+    image: "/logos/ekmek.png",
   },
 
-  // BİM
+  // CARREFOURSA - YENİ ÜRÜNLER
   {
-  id: "b1",
-  name: "Dost Beyaz Peynir 500 g",
-  description: "Klasik beyaz peynir",
-  price: 125,
-  category: "Süt ve Kahvaltılık",
-  storeId: "bim-1",
-  storeName: "BİM",
-  service: "market",
-  image: "/logos/peynir.png",
-},
+    id: "c4",
+    name: "Roka",
+    description: "1 adet",
+    price: 36.90,
+    category: "Meyve ve Sebze",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image: "/product/carrefour-roka.png",
+  },
+  {
+    id: "c5",
+    name: "Solo Ultra Tuvalet Kağıdı 40'lı",
+    description: "40 adet",
+    price: 299.95,
+    category: "Temizlik",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image: "/product/carrefour-tuvalet-kagidi.png",
+  },
+ 
+  {
+    id: "c7",
+    name: "Söke Un 5 kg",
+    description: "5 kg",
+    price: 219.95,
+    category: "Temel Gıda",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image: "/product/carrefour-soke-un.png",
+  },
+  {
+    id: "c8",
+    name: "Nar",
+    description: "1 kg",
+    price: 69.95,
+    category: "Meyve ve Sebze",
+    storeId: "carrefour-1",
+    storeName: "CarrefourSA",
+    service: "market",
+    image: "/product/carrefour-nar.png",
+  },
+
+
+  // BİM - MEVCUT ÜRÜNLER
+  {
+    id: "b1",
+    name: "Dost Beyaz Peynir 500 g",
+    description: "Klasik beyaz peynir",
+    price: 125,
+    category: "Süt Ürünleri ve Kahvaltılık",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/logos/peynir.png",
+  },
   {
     id: "b2",
     name: "BİM Ekmek",
@@ -148,58 +251,142 @@ const originalProducts: Product[] = [
     name: "Yumurta 15'li",
     description: "15 adet yumurta",
     price: 89.9,
-    category: "Süt ve Kahvaltılık",
+    category: "Süt Ürünleri ve Kahvaltılık",
     storeId: "bim-1",
     storeName: "BİM",
     service: "market",
     image: "/logos/yumurta.png",
   },
+
+  // BİM - YENİ ÜRÜNLER
+  {
+    id: "b4",
+    name: "Bol Bol Mayonez 870 g",
+    description: "870 g",
+    price: 98,
+    category: "Sos",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-mayonez.png",
+  },
+  {
+    id: "b5",
+    name: "Daphné Vanilyalı Krem Şanti 150 g",
+    description: "150 g",
+    price: 29.5,
+    category: "Atıştırmalık",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-kremsanti.png",
+  },
+  {
+    id: "b6",
+    name: "Saban Nohut 1000 g",
+    description: "1 kg",
+    price: 56,
+    category: "Temel Gıda",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-nohut.png",
+  },
+  {
+    id: "b7",
+    name: "Ekmecik Kıymalı Mantı 350 g",
+    description: "350 g",
+    price: 59,
+    category: "Temel Gıda",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-manti.png",
+  },
+  {
+    id: "b8",
+    name: "Saban Kırmızı Mercimek 1000 g",
+    description: "1 kg",
+    price: 44.5,
+    category: "Temel Gıda",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-mercimek.png",
+  },
+  {
+    id: "b9",
+    name: "Saban Köftelik Bulgur 1000 g",
+    description: "1 kg",
+    price: 32,
+    category: "Temel Gıda",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-bulgur.png",
+  },
+  {
+    id: "b10",
+    name: "Pasta Veneta Burgu Makarna 500 g",
+    description: "500 g",
+    price: 21.5,
+    category: "Temel Gıda",
+    storeId: "bim-1",
+    storeName: "BİM",
+    service: "market",
+    image: "/product/bim-makarna.png",
+  },
 ];
 
+export const marketProducts: Product[] = originalProducts.map(product => {
+  const packs: Record<
+    string,
+    {
+      amount: number;
+      unitBasis: "kg" | "L" | "adet";
+      unitLabel: string;
+      brand: string;
+    }
+  > = {
+    m1: { amount: 0.5, unitBasis: "kg", unitLabel: "500 g", brand: "Sütaş" },
+    m2: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Yummy" },
+    m3: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
+    m4: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Bahçeden" },
+    m6: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Sütaş" },
+    m7: { amount: 0.5, unitBasis: "kg", unitLabel: "500 g", brand: "Barilla" },
+    m8: { amount: 0.4, unitBasis: "kg", unitLabel: "400 g", brand: "Torku" },
+    m9: { amount: 1, unitBasis: "L", unitLabel: "1 L", brand: "Coca-Cola" },
+    m10: { amount: 0.75, unitBasis: "L", unitLabel: "750 ml", brand: "Domestos" },
 
+    c1: { amount: 0.35, unitBasis: "kg", unitLabel: "350 g", brand: "CarrefourSA" },
+    c2: { amount: 10, unitBasis: "adet", unitLabel: "10 adet", brand: "CarrefourSA" },
+    c3: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
+    c4: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "CarrefourSA" },
+    c5: { amount: 40, unitBasis: "adet", unitLabel: "40 adet", brand: "Solo" },
+    c6: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Banvit" },
+    c7: { amount: 5, unitBasis: "kg", unitLabel: "5 kg", brand: "Söke" },
+    c8: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "CarrefourSA" },
+    c9: { amount: 4, unitBasis: "L", unitLabel: "4 L", brand: "Komili" },
 
+    b1: { amount: 0.5, unitBasis: "kg", unitLabel: "500 g", brand: "Dost" },
+    b2: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
+    b3: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Günlük" },
+    b4: { amount: 0.87, unitBasis: "kg", unitLabel: "870 g", brand: "Bol Bol" },
+    b5: { amount: 0.15, unitBasis: "kg", unitLabel: "150 g", brand: "Daphné" },
+    b6: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Saban" },
+    b7: { amount: 0.35, unitBasis: "kg", unitLabel: "350 g", brand: "Ekmecik" },
+    b8: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Saban" },
+    b9: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Saban" },
+    b10: { amount: 0.5, unitBasis: "kg", unitLabel: "500 g", brand: "Pasta Veneta" },
+  };
 
+  const pack = packs[product.id];
 
-// Prices, assortment and dietary labels are fictional HCI test data.
-const samples = [
-  { name: "Tam Yağlı Süt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 45, unitLabel: "1 L", unitBasis: "L" as const, amount: 1, tags: [] },
-  { name: "Laktozsuz Süt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 55, unitLabel: "1 L", unitBasis: "L" as const, amount: 1, tags: ["Laktozsuz"] },
-  { name: "Laktozsuz Süt", brand: "Doğa", category: "Süt ve Kahvaltılık", price: 32, unitLabel: "500 ml", unitBasis: "L" as const, amount: .5, tags: ["Laktozsuz"] },
-  { name: "Yoğurt", brand: "Günlük", category: "Süt ve Kahvaltılık", price: 80, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
-  { name: "Tam Buğday Ekmeği", brand: "Fırından", category: "Fırın", price: 35, unitLabel: "400 g", unitBasis: "kg" as const, amount: .4, tags: [] },
-  { name: "Elma", brand: "Bahçeden", category: "Meyve ve Sebze", price: 60, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
-  { name: "Domates", brand: "Bahçeden", category: "Meyve ve Sebze", price: 45, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
-  { name: "Burgu Makarna", brand: "Sofra", category: "Temel Gıda", price: 30, unitLabel: "500 g", unitBasis: "kg" as const, amount: .5, tags: [] },
-  { name: "Glutensiz Makarna", brand: "Doğa", category: "Temel Gıda", price: 85, unitLabel: "400 g", unitBasis: "kg" as const, amount: .4, tags: ["Glutensiz"] },
-  { name: "Pirinç", brand: "Sofra", category: "Temel Gıda", price: 90, unitLabel: "1 kg", unitBasis: "kg" as const, amount: 1, tags: [] },
-  { name: "Maden Suyu", brand: "Kaynak", category: "İçecek", price: 48, unitLabel: "6 × 200 ml", unitBasis: "L" as const, amount: 1.2, tags: [] },
-  { name: "İçme Suyu", brand: "Kaynak", category: "İçecek", price: 25, unitLabel: "1,5 L", unitBasis: "L" as const, amount: 1.5, tags: [] },
-  { name: "Bulaşık Deterjanı", brand: "Temiz", category: "Temizlik", price: 65, unitLabel: "750 ml", unitBasis: "L" as const, amount: .75, tags: [] },
-  { name: "Kağıt Havlu", brand: "Temiz", category: "Temizlik", price: 95, unitLabel: "6 rulo", unitBasis: "adet" as const, amount: 6, tags: [] },
-];
-export const marketProducts: Product[] = [
-  ...originalProducts.map(product => {
-    const packs: Record<string, { amount: number; unitBasis: "kg" | "L" | "adet"; unitLabel: string; brand: string }> = {
-      m1: { amount: .5, unitBasis: "kg", unitLabel: "500 g", brand: "Sütaş" },
-      m2: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Yummy" },
-      m3: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
-      m4: { amount: 1, unitBasis: "kg", unitLabel: "1 kg", brand: "Bahçeden" },
-      c1: { amount: .35, unitBasis: "kg", unitLabel: "350 g", brand: "CarrefourSA" },
-      c2: { amount: 10, unitBasis: "adet", unitLabel: "10 adet", brand: "CarrefourSA" },
-      c3: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
-      b1: { amount: .5, unitBasis: "kg", unitLabel: "500 g", brand: "Dost" },
-      b2: { amount: 1, unitBasis: "adet", unitLabel: "1 adet", brand: "Fırından" },
-      b3: { amount: 15, unitBasis: "adet", unitLabel: "15 adet", brand: "Günlük" },
-    };
-    const pack = packs[product.id];
-    return { ...product, brand: pack.brand, unitLabel: pack.unitLabel, unitBasis: pack.unitBasis, unitPrice: product.price / pack.amount };
-  }),
-  ...marketStores.flatMap((store, storeIndex) => samples.map((sample, index) => {
-    const price = Math.round(sample.price * (1 + storeIndex * .06) * 100) / 100;
-    return {
-      id: `${store.id}-demo-${index}`, storeId: store.id, storeName: store.name, service: "market" as const,
-      name: sample.name, description: sample.unitLabel, brand: sample.brand, category: sample.category,
-      price, unitLabel: sample.unitLabel, unitBasis: sample.unitBasis, unitPrice: price / sample.amount, tags: sample.tags,
-    };
-  })),
-];
+  return {
+    ...product,
+    brand: pack.brand,
+    unitLabel: pack.unitLabel,
+    unitBasis: pack.unitBasis,
+    unitPrice: product.price / pack.amount,
+  };
+});
