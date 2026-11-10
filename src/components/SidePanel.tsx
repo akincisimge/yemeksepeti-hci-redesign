@@ -346,6 +346,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
                   <dl className="space-y-3 rounded-xl border border-slate-300 bg-white p-4">
                     <div><dt className="text-sm text-slate-600">Sipariş numarası</dt><dd className="font-bold">{lastOrder.orderId}</dd></div>
                     <div><dt className="text-sm text-slate-600">Hizmet</dt><dd className="font-semibold">{lastOrder.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
+                    {lastOrder.locationLabel && <div><dt className="text-sm text-slate-600">Teslimat bölgesi</dt><dd className="font-semibold">{lastOrder.locationLabel}</dd></div>}
                   </dl>
                   <Link to="/success" onClick={onClose} className="btn-primary w-full">Sipariş takibini aç</Link>
                 </>

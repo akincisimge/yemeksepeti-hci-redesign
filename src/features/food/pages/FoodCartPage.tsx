@@ -13,6 +13,8 @@ export default function FoodCartPage() {
   const restaurant = foodRestaurants.find((item) => item.id === lines[0]?.product.storeId);
   const subtotal = total("food");
   const deliveryFee = restaurant?.deliveryFee ?? 0;
+  const minBasket = restaurant?.minBasket ?? 0;
+  const remaining = Math.max(0, minBasket - subtotal);
   const couponDiscount = calculateFoodCouponDiscount(activeFoodCoupon, lines).discount;
 
   return (
@@ -58,20 +60,32 @@ export default function FoodCartPage() {
               <span>Ürün toplamı</span><strong>{formatTRY(subtotal)}</strong>
             </div>
             {couponDiscount > 0 && activeFoodCoupon && (
-              <div className="mt-3 flex items-center justify-between gap-4 text-sm font-semibold text-emerald-700">
+              <div className="mt-3 flex items-center justify-between gap-4 text-sm font-semibold text-emerald-800">
                 <span>Kupon indirimi ({activeFoodCoupon.code})</span><strong>−{formatTRY(couponDiscount)}</strong>
               </div>
             )}
             <div className="mt-3 flex items-center justify-between gap-4 text-sm text-[#0F172A]">
               <span>Teslimat ücreti</span><strong>{deliveryFee === 0 ? "Ücretsiz" : formatTRY(deliveryFee)}</strong>
             </div>
-            <div className="flex items-center justify-between gap-4 text-lg text-[#0F172A]">
+            <div className="mt-3 flex items-center justify-between gap-4 border-t border-slate-200 pt-3 text-lg font-bold text-[#0F172A]">
               <span>Genel toplam</span><strong>{formatTRY(subtotal + deliveryFee - couponDiscount)}</strong>
             </div>
             <p className="mt-2 text-sm leading-5 text-[#475569]">{restaurant?.name ?? "Restoran"} için teslimat ücreti ve kupon indirimi hesaba katıldı.</p>
-            <Link to="/checkout/food" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#D90049] px-5 py-3 text-center font-semibold text-white hover:bg-[#B6003C]">
-              Siparişi gözden geçir
-            </Link>
+            {remaining > 0 && (
+              <p role="status" className="mt-3 rounded-xl bg-amber-50 p-3 text-sm leading-5 text-[#92400E]">
+                Minimum sepet tutarı <strong>{formatTRY(minBasket)}</strong>. Devam etmek için{" "}
+                <strong>{formatTRY(remaining)}</strong> daha ürün eklemelisin.
+              </p>
+            )}
+            {remaining > 0 ? (
+              <button type="button" disabled className="mt-5 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-xl bg-slate-400 px-5 py-3 text-center font-semibold text-white">
+                Siparişi gözden geçir
+              </button>
+            ) : (
+              <Link to="/checkout/food" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#D90049] px-5 py-3 text-center font-semibold text-white hover:bg-[#B6003C]">
+                Siparişi gözden geçir
+              </Link>
+            )}
           </section>
         </>
       )}

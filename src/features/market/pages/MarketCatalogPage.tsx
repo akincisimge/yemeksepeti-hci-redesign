@@ -4,6 +4,7 @@ import { marketProducts, marketStores } from "../data/marketData";
 import { emptyFilters, filterProducts, type Filters, type Sort } from "../filterProducts";
 import MarketProductCard from "../components/MarketProductCard";
 import MarketBasket from "../components/MarketBasket";
+import StoreSwitchDialog from "../../../components/StoreSwitchDialog";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY, type Product } from "../../../types/domain";
 import { useDelivery } from "../../../state/DeliveryContext";
@@ -32,9 +33,10 @@ export default function MarketCatalogPage() {
     setParams(query, { replace: true, preventScrollReset: true });
   }
   const [notice, setNotice] = useState("");
+  const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const basketButton = useRef<HTMLButtonElement>(null);
-  useEffect(()=>{setNotice("");dialog.current?.close();},[storeId]);
+  useEffect(()=>{setNotice("");setPendingProduct(null);dialog.current?.close();},[storeId]);
   const store = marketStores.find(s=>s.id===storeId);
   const products = marketProducts.filter(p=>p.storeId===storeId);
   const categories = [...new Set(products.map(p=>p.category))];
@@ -45,8 +47,25 @@ export default function MarketCatalogPage() {
   function update<K extends keyof Filters>(key: K, value: Filters[K]) { setFilters(old=>({...old,[key]:value})); }
   function chooseCategory(category: string) {setFilters(old=>({...old,category,brand:"all",tag:"all",basis:"all",pack:"all",sort:old.sort==="unit"?"default":old.sort}));}
   function addProduct(product: Product) {
+    const activeMarketStoreId = carts.market[0]?.product.storeId;
+    if (activeMarketStoreId && activeMarketStoreId !== product.storeId) {
+      setPendingProduct(product);
+      setNotice("");
+      return;
+    }
     const quantity = carts.market.find(line=>line.product.id===product.id && line.product.storeId===product.storeId)?.quantity ?? 0;
     setNotice(add(product)==="added" ? `${product.name} sepete eklendi. Sepette ${quantity + 1} adet.` : "Mağaza değişikliği iptal edildi. Sepetin korundu.");
+  }
+  function confirmMarketSwitch() {
+    if (!pendingProduct) return;
+    const product = pendingProduct;
+    setPendingProduct(null);
+    add(product, { replace: true });
+    setNotice(`${product.name} yeni market sepetine eklendi.`);
+  }
+  function cancelMarketSwitch() {
+    setPendingProduct(null);
+    setNotice("Mağaza değişikliği iptal edildi. Mevcut sepetin korundu.");
   }
   const active = [
     filters.search && {label:`Arama: ${filters.search}`,clear:()=>update("search","")},
@@ -65,7 +84,7 @@ export default function MarketCatalogPage() {
       <div className="flex items-center gap-4">{store.logo && <img src={store.logo} alt="" className="h-16 w-16 rounded-xl object-contain" />}<div><p className="text-sm font-semibold text-brand">Mahallendeki market</p><h1 className="mt-1 text-3xl font-bold">{store.name}</h1></div></div>
       <p className="mt-4 text-sm text-slate-600">{delivery && locationLabel(delivery)}</p>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm"><span>Teslimat: {store.deliveryTime}</span><span>Teslimat ücreti: {formatTRY(store.deliveryFee ?? 0)}</span><span>Minimum sepet: {formatTRY(store.minBasket ?? 0)}</span></div>
-      <p className="mt-4 text-sm text-slate-500">HCI prototipi · Katalog, fiyatlar, beslenme etiketleri ve teslimat bilgileri örnek veridir.</p>
+      <p className="mt-4 text-sm text-slate-600">HCI prototipi · Katalog, fiyatlar, beslenme etiketleri ve teslimat bilgileri örnek veridir.</p>
     </header>
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-5">
@@ -89,5 +108,12 @@ export default function MarketCatalogPage() {
     </div>
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"><button ref={basketButton} className="btn-primary mx-auto flex w-full max-w-xl justify-between" onClick={()=>dialog.current?.showModal()} aria-haspopup="dialog"><span>Sepetim · {count("market")} ürün</span><span>{formatTRY(total("market")+(carts.market.length?(basketStore?.deliveryFee ?? 0):0))} →</span></button></div>
     <dialog ref={dialog} aria-label="Market sepetin" onClose={()=>basketButton.current?.focus()} onClick={e=>{if(e.target===e.currentTarget)dialog.current?.close();}} className="fixed inset-0 m-auto max-h-[85dvh] w-[calc(100%_-_24px)] max-w-md overflow-y-auto rounded-3xl bg-white p-4 backdrop:bg-slate-900/40"><button autoFocus className="mb-3 min-h-11 w-full rounded-xl border border-slate-300 font-semibold" onClick={()=>dialog.current?.close()}>Alışverişe dön · Kapat ×</button><MarketBasket onNotice={setNotice} /></dialog>
+    <StoreSwitchDialog
+      pendingProduct={pendingProduct}
+      currentStoreName={basketStore?.name ?? carts.market[0]?.product.storeName ?? ""}
+      serviceLabel="market"
+      onCancel={cancelMarketSwitch}
+      onConfirm={confirmMarketSwitch}
+    />
   </div>;
 }

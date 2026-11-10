@@ -9,6 +9,7 @@ export type DemoOrder = {
   method: PaymentMethod;
   stage: DemoOrderStage;
   createdAt: string;
+  locationLabel?: string;
 };
 
 const STORAGE_KEY = "hci-yemeksepeti-last-demo-order-v1";
@@ -26,6 +27,7 @@ export function readDemoOrder(): DemoOrder | null {
     if (order.method !== "cash-demo" && order.method !== "card-demo") return null;
     if (order.stage !== 0 && order.stage !== 1 && order.stage !== 2 && order.stage !== 3) return null;
     if (typeof order.createdAt !== "string" || !Number.isFinite(Date.parse(order.createdAt))) return null;
+    if (order.locationLabel !== undefined && typeof order.locationLabel !== "string") return null;
     return order as DemoOrder;
   } catch {
     return null;
@@ -35,5 +37,7 @@ export function readDemoOrder(): DemoOrder | null {
 export function saveDemoOrder(order: DemoOrder): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(order));
-  } catch { /* Browser storage can be unavailable; navigation state still works. */ }
+  } catch {
+    /* Browser storage can be unavailable; navigation state still works. */
+  }
 }

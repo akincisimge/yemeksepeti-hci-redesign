@@ -54,6 +54,7 @@ export default function SuccessPage() {
           <div><dt className="text-sm text-[#475569]">Bölüm</dt><dd className="mt-1 font-semibold">{order.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
           <div><dt className="text-sm text-[#475569]">Demo sipariş tutarı</dt><dd className="mt-1 font-semibold">{formatTRY(order.amount)}</dd></div>
           <div><dt className="text-sm text-[#475569]">Ödeme yöntemi</dt><dd className="mt-1 font-semibold">{order.method === "cash-demo" ? "Teslimatta ödeme (demo)" : "Kartla ödeme (demo)"}</dd></div>
+          {order.locationLabel && <div className="sm:col-span-2"><dt className="text-sm text-[#475569]">Demo teslimat bölgesi</dt><dd className="mt-1 font-semibold">{order.locationLabel}</dd></div>}
           <div className="sm:col-span-2"><dt className="text-sm text-[#475569]">Oluşturulma zamanı</dt><dd className="mt-1 font-semibold">{new Date(order.createdAt).toLocaleString("tr-TR")}</dd></div>
         </dl>
       </section>
