@@ -283,20 +283,70 @@ const foodImage = (id: string, width = 900) =>
 const productPhoto = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=80`;
 
+const ayranPhoto = `data:image/svg+xml,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+    <defs>
+      <linearGradient id="glass" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fff" stop-opacity=".9"/><stop offset=".45" stop-color="#dce8ee" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity=".72"/></linearGradient>
+      <linearGradient id="drink" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#fff" stop-opacity=".96"/><stop offset="1" stop-color="#e9f2f4"/></linearGradient>
+      <linearGradient id="background" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#edf6f5"/><stop offset="1" stop-color="#d8e8e4"/></linearGradient>
+      <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.8"><feGaussianBlur stdDeviation="13"/></filter>
+    </defs>
+    <rect width="600" height="600" fill="url(#background)"/>
+    <circle cx="470" cy="120" r="95" fill="#fff" opacity=".28"/>
+    <ellipse cx="300" cy="500" rx="150" ry="25" fill="#668582" opacity=".2" filter="url(#shadow)"/>
+    <path d="M183 150h234l-27 326a26 26 0 0 1-26 24H236a26 26 0 0 1-26-24z" fill="url(#glass)" stroke="#fff" stroke-width="10"/>
+    <path d="M197 226h206l-19 244a18 18 0 0 1-18 17H238a18 18 0 0 1-18-17z" fill="url(#drink)"/>
+    <ellipse cx="300" cy="226" rx="103" ry="19" fill="#fff" stroke="#edf4f5" stroke-width="5"/>
+    <path d="M201 222c18-42 43-58 73-43 19-28 47-27 63-5 24-19 48-5 62 47-48 18-145 18-198 1z" fill="#fff"/>
+    <g fill="#d4e4e6" opacity=".8"><circle cx="256" cy="195" r="7"/><circle cx="289" cy="182" r="6"/><circle cx="323" cy="190" r="8"/><circle cx="350" cy="204" r="5"/><circle cx="277" cy="213" r="4"/></g>
+    <path d="M218 255h8l-17 215a16 16 0 0 1-9-13z" fill="#fff" opacity=".72"/>
+    <rect x="258" y="326" width="84" height="7" rx="3.5" fill="#d8e6e8" opacity=".65"/>
+    <text x="300" y="373" text-anchor="middle" fill="#52706f" font-family="Arial,sans-serif" font-size="21" font-weight="700">YAYIK</text>
+    <text x="300" y="401" text-anchor="middle" fill="#52706f" font-family="Arial,sans-serif" font-size="23" font-weight="700">AYRAN</text>
+    <text x="300" y="430" text-anchor="middle" fill="#78908e" font-family="Arial,sans-serif" font-size="15">300 ml · köpüklü</text>
+    <path d="M165 520h270" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+  </svg>
+`)}`;
+
+const bottledWaterPhoto = `data:image/svg+xml,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+    <defs>
+      <linearGradient id="background" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#edf6fb"/><stop offset="1" stop-color="#d6e8f3"/></linearGradient>
+      <linearGradient id="bottle" x1="0" x2="1"><stop stop-color="#fff" stop-opacity=".65"/><stop offset=".22" stop-color="#d8eff9" stop-opacity=".48"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset=".78" stop-color="#c5e5f4" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity=".76"/></linearGradient>
+      <linearGradient id="water" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#bde8f7" stop-opacity=".35"/><stop offset="1" stop-color="#68b7dc" stop-opacity=".48"/></linearGradient>
+      <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.8"><feGaussianBlur stdDeviation="12"/></filter>
+    </defs>
+    <rect width="600" height="600" fill="url(#background)"/>
+    <circle cx="120" cy="115" r="76" fill="#fff" opacity=".35"/>
+    <ellipse cx="300" cy="518" rx="125" ry="22" fill="#527e97" opacity=".22" filter="url(#shadow)"/>
+    <path d="M269 95h62v46c0 20 12 30 30 45 26 24 40 51 40 91v197c0 24-18 42-42 42H241c-24 0-42-18-42-42V277c0-40 14-67 40-91 18-15 30-25 30-45z" fill="url(#bottle)" stroke="#fff" stroke-width="8"/>
+    <path d="M208 284c53 14 131 14 192 0v190c0 20-15 35-35 35h-122c-20 0-35-15-35-35z" fill="url(#water)"/>
+    <rect x="266" y="65" width="68" height="39" rx="8" fill="#1675bd"/>
+    <path d="M270 74h60M270 83h60M270 92h60" stroke="#77b8e3" stroke-width="4" opacity=".8"/>
+    <rect x="210" y="324" width="180" height="111" rx="13" fill="#fff" stroke="#74bce0" stroke-width="4"/>
+    <path d="M239 352c17-22 40-22 57 0-17 22-40 22-57 0zm29-14v28" fill="none" stroke="#3198c7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="318" y="354" text-anchor="middle" fill="#176a9b" font-family="Arial,sans-serif" font-size="16" font-weight="700">DOĞAL KAYNAK</text>
+    <text x="300" y="387" text-anchor="middle" fill="#176a9b" font-family="Arial,sans-serif" font-size="22" font-weight="700">SUYU</text>
+    <text x="300" y="416" text-anchor="middle" fill="#548da9" font-family="Arial,sans-serif" font-size="16">500 ml</text>
+    <path d="M226 301v172" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".72"/>
+    <path d="M176 530h248" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+  </svg>
+`)}`;
+
 const productPhotos = {
   cola: productPhoto("photo-1554866585-cd94860890b7"),
   colaZero: productPhoto("photo-1622483767028-3f66f32aef97"),
   fanta: productPhoto("photo-1624517452488-04869289c4ca"),
   sprite: productPhoto("photo-1625772299848-391b6a87d7b3"),
-  ayran: productPhoto("photo-1563636619-e9143da7973b"),
-  water: productPhoto("photo-1560023907-5f339617ea30"),
+  ayran: ayranPhoto,
+  water: bottledWaterPhoto,
   icedTea: productPhoto("photo-1556679343-c7306c1976bc"),
   burger: [
-    "photo-1568901346375-23c9450c58cd",
     "photo-1586190848861-99aa4a171e90",
     "photo-1606755962773-d324e0a13086",
     "photo-1553979459-d2229ba7433b",
     "photo-1550547660-d9450f859349",
+    "photo-1568901346375-23c9450c58cd",
   ],
   fries: ["photo-1573080496219-bb080dd4f877", "photo-1576107232684-1279f3908594"],
   snack: ["photo-1639024471283-03518883512d", "photo-1601050690597-df0568f70950", "photo-1555939594-58d7cb561ad1", "photo-1544025162-d76694265947"],
@@ -473,8 +523,8 @@ export const foodRestaurants: FoodRestaurant[] = [
     deliveryTime: "30-40 dk",
     deliveryFee: 18.99,
     minBasket: 220,
-    image: foodImage("photo-1561651823-34feb02250e4"),
-    imageLabel: "Taze lavaşta yaprak döner",
+    image: foodImage("photo-1529006557810-274b9b2fc783"),
+    imageLabel: "Tereyağlı soslu porsiyon iskender",
     highlight: "Usta İşi",
     discount: "",
     campaigns: ["value-menu"],
@@ -509,8 +559,8 @@ export const foodRestaurants: FoodRestaurant[] = [
     deliveryTime: "15-25 dk",
     deliveryFee: 14.99,
     minBasket: 160,
-    image: foodImage("photo-1547592180-85f173990554"),
-    imageLabel: "Taze sebzelerle hazırlanmış ev yemeği",
+    image: foodImage("photo-1512621776951-a57141f2eefd"),
+    imageLabel: "Zeytinyağlı tabak ve taze yeşillikler",
     highlight: "Anne Eli",
     discount: "%10 indirim",
     campaigns: ["selected-menu"],
@@ -545,8 +595,8 @@ export const foodRestaurants: FoodRestaurant[] = [
     deliveryTime: "35-45 dk",
     deliveryFee: 24.99,
     minBasket: 280,
-    image: foodImage("photo-1544025162-d76694265947"),
-    imageLabel: "Közlenmiş sebzelerle ocakbaşı kebabı",
+    image: foodImage("photo-1555939594-58d7cb561ad1"),
+    imageLabel: "Ocak ateşinde pişmiş kebap ve köz sebzeler",
     highlight: "Köz Ateşi",
     discount: "%20 indirim",
     campaigns: ["value-menu"],
@@ -581,8 +631,8 @@ export const foodRestaurants: FoodRestaurant[] = [
     deliveryTime: "30-40 dk",
     deliveryFee: 21.99,
     minBasket: 210,
-    image: foodImage("photo-1626082927389-6cd097cdc6ec"),
-    imageLabel: "Kore usulü çıtır tavuk parçaları",
+    image: foodImage("photo-1532550907401-a500c9a57435"),
+    imageLabel: "Kore usulü baharatlı tavuk tabağı",
     highlight: "Kore Usulü",
     discount: "%15 indirim",
     campaigns: ["selected-menu"],

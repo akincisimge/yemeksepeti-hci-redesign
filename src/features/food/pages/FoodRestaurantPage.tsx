@@ -27,6 +27,7 @@ export default function FoodRestaurantPage() {
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const { add, carts, clear } = useCart();
   const [notice, setNotice] = useState("");
+  const [activeMenuSection, setActiveMenuSection] = useState("main");
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const [replacementProduct, setReplacementProduct] = useState<Product | null>(null);
   const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
@@ -46,6 +47,7 @@ export default function FoodRestaurantPage() {
 
   useEffect(() => {
     setReviews(foodReviews[restaurantId ?? ""] ?? []);
+    setActiveMenuSection("main");
     setReviewRating(0);
     setHoveredRating(0);
     setReviewText("");
@@ -102,7 +104,47 @@ export default function FoodRestaurantPage() {
   const menu = foodProducts
     .filter((product) => product.storeId === restaurant.id)
     .sort((first, second) => Number(campaignProductIds.has(second.id)) - Number(campaignProductIds.has(first.id)));
-  const categories = Array.from(new Set(menu.map((product) => product.category)));
+  const isDessertRestaurant = restaurant.cuisine === "Tatlı";
+  const mainSectionTitle = isDessertRestaurant
+    ? restaurant.id === "food-antep-baklava" ? "Baklava & Kadayıflar" : "Waffle & Özel Tatlılar"
+    : restaurant.cuisine === "Burger"
+      ? "Burger & Menüler"
+      : restaurant.cuisine === "Pizza"
+        ? "Pizzalar"
+        : restaurant.cuisine === "Döner" || restaurant.cuisine === "Kebap & Lahmacun"
+          ? "Döner & Kebaplar"
+          : "Ana Lezzetler";
+  const sideSectionTitle = isDessertRestaurant
+    ? "Dondurma & Ekstralar"
+    : restaurant.cuisine === "Burger"
+      ? "Çıtır Yan Lezzetler"
+      : restaurant.cuisine === "Pizza"
+        ? "Yan Lezzetler & Soslar"
+        : restaurant.cuisine === "Döner" || restaurant.cuisine === "Kebap & Lahmacun"
+          ? "Meze & Yan Lezzetler"
+          : "Yan Lezzetler & Çorba";
+  const menuSections = [
+    {
+      id: "campaign",
+      title: isDessertRestaurant ? "🔥 İndirimli Tatlı Menüleri" : "🔥 İndirimli Menüler",
+      products: menu.filter((product) => campaignProductIds.has(product.id)),
+    },
+    {
+      id: "main",
+      title: mainSectionTitle,
+      products: menu.filter((product) => !campaignProductIds.has(product.id) && product.category === "Ana Lezzetler"),
+    },
+    {
+      id: "sides",
+      title: sideSectionTitle,
+      products: menu.filter((product) => product.category === "Yan Lezzetler"),
+    },
+    {
+      id: "drinks",
+      title: "İçecekler",
+      products: menu.filter((product) => product.category.toLocaleLowerCase("tr").includes("içecek")),
+    },
+  ].filter((section) => section.products.length > 0);
   const customizationOptions = customizingProduct
     ? getFoodCustomizationOptions(customizingProduct, restaurant.cuisine)
     : null;
@@ -372,12 +414,38 @@ export default function FoodRestaurantPage() {
 
           <section aria-labelledby="menu-title" className="min-w-0">
             <h2 id="menu-title" className="text-2xl font-bold text-[#0F172A]">Menü</h2>
+            <nav aria-label="Menü bölümleri" className="sticky top-16 z-20 mt-3 -mx-1 overflow-x-auto bg-[#F8FAFC]/95 px-1 py-2.5 backdrop-blur">
+              <ul className="flex min-w-max gap-2">
+                {menuSections.map((section) => (
+                  <li key={section.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveMenuSection(section.id);
+                        document.getElementById(`section-${section.id}`)?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }}
+                      aria-current={activeMenuSection === section.id ? "location" : undefined}
+                      className={`min-h-10 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
+                        activeMenuSection === section.id
+                          ? "border-brand bg-brand text-white shadow-sm"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-brand hover:text-brand"
+                      }`}
+                    >
+                      {section.title} ({section.products.length})
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
             <p role="status" aria-live="polite" className="mt-3 min-h-6 font-semibold text-[#166534]">{notice}</p>
-            {categories.map((category) => (
-              <div key={category} className="mt-5">
-                <h3 className="mb-3 text-xl font-semibold text-[#0F172A]">{category}</h3>
+            {menuSections.map((section) => (
+              <div key={section.id} className="mt-5">
+                <h3 id={`section-${section.id}`} className="scroll-mt-28 mb-3 text-xl font-semibold text-[#0F172A]">{section.title}</h3>
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {menu.filter((product) => product.category === category).map((product) => (
+                  {section.products.map((product) => (
                     <li
                       key={product.id}
                       className={`flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-sm transition-all hover:shadow-md ${

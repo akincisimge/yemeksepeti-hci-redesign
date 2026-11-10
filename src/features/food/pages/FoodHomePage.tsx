@@ -28,12 +28,13 @@ const sortLabels: Record<FoodSort, string> = {
 };
 
 type BudgetOption = "all" | "economic" | "mid" | "wide";
+const maximumBudget = 1000;
 
 const budgetOptions: { id: BudgetOption; label: string; max: number }[] = [
-  { id: "all", label: "Tümü", max: 450 },
+  { id: "all", label: "Tümü", max: maximumBudget },
   { id: "economic", label: "₺ Ekonomik (Min. Sepet ≤ 150 TL)", max: 150 },
   { id: "mid", label: "₺₺ Orta Bütçe (Min. Sepet ≤ 200 TL)", max: 200 },
-  { id: "wide", label: "₺₺₺ Geniş Menü (Tüm Tutarlar)", max: 450 },
+  { id: "wide", label: "₺₺₺ Geniş Menü (Tüm Tutarlar)", max: maximumBudget },
 ];
 
 export default function FoodHomePage() {
@@ -42,7 +43,7 @@ export default function FoodHomePage() {
   const [minimumRating, setMinimumRating] = useState(0);
   const [sort, setSort] = useState<FoodSort>("recommended");
   const [quickFilters, setQuickFilters] = useState(initialQuickFilters);
-  const [maxMinBasket, setMaxMinBasket] = useState(450);
+  const [maxMinBasket, setMaxMinBasket] = useState(maximumBudget);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOption | "custom">("all");
   const { count } = useCart();
   const normalizedSearch = search.trim().toLocaleLowerCase("tr");
@@ -86,7 +87,7 @@ export default function FoodHomePage() {
     quickFilters.freeDelivery ||
     quickFilters.fastDelivery ||
     quickFilters.discount ||
-    budgetChoice !== "all" ||
+    maxMinBasket < maximumBudget ||
     sort !== "recommended"
   );
 
@@ -95,7 +96,7 @@ export default function FoodHomePage() {
     setCuisine("");
     setMinimumRating(0);
     setQuickFilters(initialQuickFilters);
-    setMaxMinBasket(450);
+    setMaxMinBasket(maximumBudget);
     setBudgetChoice("all");
     setSort("recommended");
   };
@@ -205,7 +206,7 @@ export default function FoodHomePage() {
           <input
             type="range"
             min="100"
-            max="450"
+            max={maximumBudget}
             step="10"
             value={maxMinBasket}
             onChange={(event) => {
@@ -214,7 +215,7 @@ export default function FoodHomePage() {
             }}
             className="h-6 w-full cursor-pointer accent-[#D90049]"
           />
-          <span className="flex justify-between text-xs text-[#475569]"><span>100 TL</span><span>450 TL</span></span>
+          <span className="flex justify-between text-xs text-[#475569]"><span>100 TL</span><span>{maximumBudget} TL</span></span>
         </label>
       </section>
 
@@ -249,7 +250,7 @@ export default function FoodHomePage() {
                   <span className="text-sm font-semibold text-[#0F172A]">Seçili:</span>
                   {search.trim() && <button type="button" onClick={() => setSearch("")} className={activeFilterChipClass}>Arama: {search.trim()} <span aria-hidden="true">×</span></button>}
                   {cuisine && <button type="button" onClick={() => setCuisine("")} className={activeFilterChipClass}>{cuisine} <span aria-hidden="true">×</span></button>}
-                  {budgetChoice !== "all" && <button type="button" onClick={() => { setBudgetChoice("all"); setMaxMinBasket(450); }} className={activeFilterChipClass}>Bütçe: {budgetChoice === "custom" ? `≤ ${maxMinBasket} TL` : budgetOptions.find((option) => option.id === budgetChoice)?.label} <span aria-hidden="true">×</span></button>}
+                  {maxMinBasket < maximumBudget && <button type="button" onClick={() => { setBudgetChoice("all"); setMaxMinBasket(maximumBudget); }} className={activeFilterChipClass}>Bütçe: {budgetChoice === "custom" ? `≤ ${maxMinBasket} TL` : budgetOptions.find((option) => option.id === budgetChoice)?.label} <span aria-hidden="true">×</span></button>}
                   {sort !== "recommended" && <button type="button" onClick={() => setSort("recommended")} className={activeFilterChipClass}>Sıralama: {sortLabels[sort]} <span aria-hidden="true">×</span></button>}
                   {minimumRating > 0 && <button type="button" onClick={() => setMinimumRating(0)} className={activeFilterChipClass}>★ {minimumRating.toFixed(1)} ve üzeri <span aria-hidden="true">×</span></button>}
                   {quickFilters.freeDelivery && <button type="button" onClick={() => updateQuickFilter("freeDelivery", false)} className={activeFilterChipClass}>Ücretsiz teslimat <span aria-hidden="true">×</span></button>}
