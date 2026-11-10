@@ -19,7 +19,7 @@ type PanelProps = {
 
 const TOPICS = [
   { name: "Siparişimi takip etmek istiyorum", answer: "Demo sipariş tamamlandıktan sonra takip ekranında dört örnek aşamayı izleyebilirsin. Son siparişine Profil → Önceki siparişlerim bölümünden de dönebilirsin." },
-  { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Ana sayfadaki Adres seç butonundan örnek teslimat konumunu değiştirebilirsin. Siparişi tamamlarken ayrıntılı demo adresini ayrıca düzenleyebilirsin." },
+  { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Üst çubuktaki teslimat konumuna veya ana sayfadaki Konumu değiştir butonuna bas. İlk kez konum belirliyorsan Adres seç butonunu kullan. İl, ilçe ve mahalleyi seçip onayla." },
   { name: "Kuponumla ilgili yardım istiyorum", answer: "Bu öğrenci prototipinde gerçek kupon kullanımı yok. Kuponlarım alanında örnek kupon durumları gösteriliyor." },
   { name: "Siparişimi iptal veya iade etmek istiyorum", answer: "Bu uygulama gerçek sipariş oluşturmadığı için para çekme, iptal veya iade işlemi yapılmaz." },
   { name: "Başka bir konuda yardım istiyorum", answer: "Bu bir otomatik demo sohbetidir. Gerçek müşteri temsilcisine mesaj gönderilmez. Yardım seçeneklerini inceleyebilir veya yeni konu seçebilirsin." }
@@ -142,7 +142,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
 
   return (
     <div className="fixed inset-0 z-50">
-      <button type="button" aria-label="Paneli kapat" onClick={onClose} className="absolute inset-0 h-full w-full cursor-default bg-slate-900/40" />
+      <button type="button" tabIndex={-1} aria-label="Paneli kapat" onClick={onClose} className="absolute inset-0 h-full w-full cursor-default bg-slate-900/40" />
       <aside ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="panel-title" className="absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl sm:max-w-[440px]">
         <header className="flex min-h-[76px] shrink-0 items-center gap-3 border-b border-slate-200 px-4 sm:px-6">
           {subpage && <button type="button" onClick={() => onNavigate("profile")} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 hover:bg-slate-50" aria-label="Profil menüsüne dön">←</button>}
@@ -160,7 +160,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
             </div>
             <PanelRow label="Kayıtlı adreslerim" detail={address ?? "Henüz adres seçilmedi"} onClick={() => onNavigate("address")} />
             <PanelRow label="Önceki siparişlerim" detail="Demo sipariş geçmişi" onClick={() => onNavigate("orders")} />
-            <PanelRow label="Tanımlı kuponlarım" detail="Kupon durumlarını incele" onClick={() => onNavigate("coupons")} />
+            <PanelRow label="Kuponlarım" detail="Kupon durumlarını incele" onClick={() => onNavigate("coupons")} />
             <PanelRow label="Yardım / Canlı destek" detail="Otomatik örnek destek sohbeti" onClick={() => onNavigate("help")} />
             <div className="border-t border-slate-200 pt-4">
               <p className="mb-3 text-sm font-semibold text-slate-700">Sepetlerim</p>
