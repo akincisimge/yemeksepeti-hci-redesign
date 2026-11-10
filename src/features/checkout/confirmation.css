@@ -1,0 +1,22 @@
+.checkout-confirmation-check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .checkout-confirmation-mark {
+    animation: checkout-confirmation-enter 360ms ease-out both;
+  }
+  .checkout-confirmation-check {
+    animation: checkout-confirmation-draw 420ms 80ms ease-out both;
+  }
+}
+
+@keyframes checkout-confirmation-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes checkout-confirmation-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}

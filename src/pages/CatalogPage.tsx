@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { products, stores } from "../data/catalog";
 import { useDelivery } from "../state/DeliveryContext";
 import { useCart } from "../state/CartContext";
@@ -7,7 +7,8 @@ import { formatTRY, type Service } from "../types/domain";
 
 export default function CatalogPage({ service }: { service: Service }) {
   const { available } = useDelivery();
-  const [storeId, setStoreId] = useState(service === "food" ? "f-1" : "m-1");
+  const [params] = useSearchParams();
+  const [storeId, setStoreId] = useState(params.get("store") ?? (service === "food" ? "f-1" : "m-1"));
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tümü");
   const [notice, setNotice] = useState("");

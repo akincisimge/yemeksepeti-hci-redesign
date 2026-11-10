@@ -1,31 +1,36 @@
-# Melisa — Ortak sipariş süreci (3 ekran) + kullanılabilirlik testleri
+# Melisa — Ortak sipariş süreci
 
-## Mevcut Yemeksepeti'nde gözlenen / düzeltilecek riskler
-- "Sepeti Onayla" sonrasında "Unutmuş olabilirsiniz" öneri penceresi açılıyor; "Şimdilik atla" olumlu bir kullanıcı kontrolü (K7). Önerileri siparişe zorunlu adım yapma.
-- Adres formunda birden fazla alan, ödeme ekranında radyo seçenekleri ve isteğe bağlı bahşiş bulunuyor (K5/K8).
-- "Siparişi Tamamla" butonu görüntüde pasif; **neden pasif olduğu görüntüden kanıtlanamıyor**. K3/K5 kapsamında form hatalarını açık göster.
-- Mevcut başarı ekranı gönderilmedi. K4 açısından mevcut sisteme kusur atfetme; bizim demoda açık başarı ekranı tasarla.
+## Güncel kapsam
 
-## Üç ekran, ne yapmalısın?
-1. **Teslimat adresi + sipariş özeti** — örnek isim/adres, zorunlu alanlar, düzeltilebilir hata, seçili ürünler ve ara toplam; adrese geri dönme.
-2. **Ödeme simülasyonu** — seçenekler "Teslimatta ödeme (Demo)" ve "Kartla ödeme (Demo)" (kart verisi girilmez), toplam ücret ve son kullanıcı onayı. Bahşiş varsa isteğe bağlı ve başlangıçta 0.
-3. **Sipariş onayı** — açık başarı durumu, demo sipariş numarası, hangi hizmetin seçildiği, tutar ve "Gerçek sipariş değildir" mesajı.
+9 Kasım 2026: yalnız masaüstü; Yemek ve Market için ortak adres, ödeme ve sipariş sonucu akışı. Mobil tasarım kapsam dışı. Kişisel [Figma dosyası](https://www.figma.com/design/i6MQxPs8Ne0n8KucRnZlXk) kullanılır. Ürün ekranlarına demo/HCI etiketi eklenmez; gerçek sipariş ve ödeme olmadığı sunumda ve proje belgelerinde açıklanır. Bu tercih, önceki görev metnindeki mobil ve ekran içi demo etiketi talebini bu çalışma için günceller.
 
-## Figma kuralları
-- "05 – Melisa" sayfasında üç ekran Desktop 1440px + Mobile 390px; Tablet 768px kontrolü.
-- Ortak FormInput, RadioGroup, Button, OrderSummary, Error/Success components; fiyat ve ürün özeti aynı bilgi düzeninde.
-- Formun error state'i ve pasif buton nedeni tasarlanır; kullanıcı geri dönüp bilgiyi düzeltebilir.
-- Gerçek kişisel veri, gerçek kart numarası, CVV veya ödeme API'si isteme/ekleme.
+## Referans ve iddiaların sınırı
 
-## Kod/sınırlar
-- Başlangıç src/pages/CheckoutPage.tsx, src/pages/SuccessPage.tsx; her servis için "/checkout/food" ve "/checkout/market" aynı checkout'u kullanır.
-- Demo sipariş tamamlanınca uygun servis sepeti temizlenir, başarı sayfası görünür.
-- Yeni alanlar domain.ts ve CartContext değişikliği gerektiriyorsa diğer geliştiricilerle planla.
+- Orijinal site değerlendirmesi ekran kayıtlarına dayanır. Adres, ödeme, sipariş onayı ve kurye durumu kayıtları artık mevcuttur; önceki “başarı ekranı gönderilmedi” notu güncel değildir.
+- Orijinal sitede sipariş özeti, düzenleme ve başarı geri bildirimi zaten vardır. Bunların yokluğu iddia edilmez.
+- Başlangıç React kodundaki genel form hatası ve geri dönüşte adresin sıfırlanması, orijinal Yemeksepeti hakkında bulgu değildir.
+- Yeni düzenin daha anlaşılır olacağı bir hipotezdir; gerçek katılımcı testi henüz yapılmamıştır.
 
-## Test ve kabul
-- Food ve Market sepetinden checkout tamamlanabilir, diğer servisin sepeti bozulmaz.
-- Eksik adres hatası görünür; son toplam sipariş boyunca ekrandadır.
-- Başarı ekranı ve demo numarası anlaşılır (K4), kullanıcı geri dönebilir.
-- [TEST_PLAN.md](../TEST_PLAN.md) senaryolarıyla görev başarısı/süre/hata sayısı kaydedilir.
-- En az 5 gönüllüyle başlangıç testi önerisi; sonuçların genellenmesi iddia edilmez.
-- İlgili issue: https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/5
+## Uygulama sırası
+
+1. **Tamamlanan ilk bölüm:** `/checkout/food` ve `/checkout/market` için ortak adres ve sipariş özeti. Kayıtlı kurgu adres kısayolu, alan hataları, geri dönüşte bilgi koruma, sepetteki ürün/toplam bilgisi ve minimum tutar açıklaması.
+2. **Tamamlanan ikinci bölüm:** Kart alanları ve alan doğrulaması; Yemek için dört yöntem; Yemeksepeti Market, BİM ve CarrefourSA için online kart/nakit/kapıda temassız kart; bahşiş, kurgu kayıtlı kart kısayolu, işleniyor/iptal/başarısızlık/tekrar deneme durumları. Yalnız dummy verilerle yerel ödeme simülasyonu çalışır.
+3. **Tamamlanan üçüncü bölüm:** Onaylı tasarıma göre sipariş sonucu, ürün/ücret/adres/yöntem özeti, yardım bölümü ve dört aşamalı sipariş durumu. Sunumda aktif durum “Sipariş alındı” olarak sabittir; diğer aşamalar sonraki adımları gösterir. Zamanlayıcı kaldırıldı; canlı kurye, GPS, gerçek ödeme veya restoran bağlantısı kurulmaz.
+4. **Hazırlanan teslim belgeleri:** [Sunum rehberi](MELISA_DEMO_GUIDE.md), [katılımcı test protokolü ve boş kayıt tablosu](MELISA_USABILITY_TEST.md). Teknik doğrulama tamamlandı; gerçek katılımcı çalışması henüz yapılmadı. Ana dala birleştirme ekip/Simge koordinasyonundadır.
+
+## Veri ve ortak çalışma
+
+- Yemek ve Market sepetleri ayrıdır. Tamamlanan sipariş yalnız ilgili sepeti temizler.
+- Adres taslağı aynı sekmenin `sessionStorage` alanında servis ve bölgeye göre ayrılır; yalnız kurgu test verileri kullanılır. Girilen kart alanları sadece açık formun belleğinde tutulur. Tam kart numarası/CVV saklama alanına yazılmaz; kayıtlı kart kısayolu yalnız son dört haneyi ve yerel başarı/tekrar deneme senaryosunun kimliğini saklar. İki kurgu numarayla sınırlama kaldırıldı; biçimi doğru örnek bilgilerle akış ilerler.
+- Kötekli için hazır Ev adresi kurgudur; başka bölgeye sessizce taşınmaz.
+- `CartContext` ve `DeliveryContext` değiştirilmedi. `domain.ts` içindeki `PaymentMethod` mevcut değerleri koruyarak `door-card-demo` ve `meal-card-demo` ile genişletildi; ortak yöntem etiketleri eklendi. Bu ortak sözleşme değişikliği PR açıklamasında belirtilir.
+- Ortak `Layout.tsx` değişikliği checkout ve `/success` görünümüyle sınırlıdır; PR açıklamasında ve uygulama raporunda belirtilir. Sonuç ekranı, kayıtlı siparişin adresini güncel alışveriş konumundan bağımsız gösterir.
+- Sipariş modeli, tamamlanma anındaki ürün/adet/fiyat, adres/not, bölge, teslimat ücreti, bahşiş ve yöntemin bağımsız kopyasını saklar. Sonradan sepet/konum değişimi tamamlanan siparişi değiştirmez. Aynı sekmede yalnız son sipariş tutulur; çoklu sipariş geçmişi yapılmadı.
+
+## HCI ve doğrulama
+
+Dersin kullandığı Shneiderman sürümünde K2 **deneyimli kullanıcıya kısayol** anlamındadır. Klavye ve kontrast ayrıca kontrol edilir. [Uygulama raporu](MELISA_CHECKOUT_IMPLEMENTATION.md) tamamlanan davranışları, teknik kontrolleri ve Figma farklarını kaydeder. Bu dalda derleme ve **58/58 otomatik test** geçti; iki servis masaüstünde uçtan uca kontrol edildi. [TEST_PLAN.md](../TEST_PLAN.md) gerçek katılımcı çalışması içindir; otomatik testler kullanılabilirlik testi sonucu sayılmaz.
+
+İlgili görev: [Issue #5](https://github.com/akincisimge/yemeksepeti-hci-redesign/issues/5).
+
+Son UX düzeltmesi: kompakt ödeme alanları, toplamla birlikte onay düğmesi, teslimat tahmini, açık yemek kartı kapsamı, CVV yardımı ve bir kez oynayan onay animasyonu eklendi. Aktif sipariş durumu ilerlemez. Yeni satıcı kimlikleri ödeme modeliyle eşleştirilmelidir. Figma/ZIP bu kod düzeltmesinde değiştirilmedi.
