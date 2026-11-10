@@ -8,7 +8,14 @@ import {
 } from "../data/delivery";
 import { useDelivery } from "../state/DeliveryContext";
 
-export default function LocationPicker({ onDone }: { onDone?: () => void }) {
+const QUICK_CITIES = ["İstanbul", "Ankara", "İzmir", "Muğla", "Adana", "Antalya"] as const;
+
+type LocationPickerProps = {
+  onDone?: () => void;
+  variant?: "modal" | "page";
+};
+
+export default function LocationPicker({ onDone, variant = "page" }: LocationPickerProps) {
   const { delivery, previewLocationChange, selectLocation } = useDelivery();
   const [city, setCity] = useState<string>(delivery?.city ?? "");
   const [district, setDistrict] = useState<string>(delivery?.district ?? "");
@@ -33,6 +40,17 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
     : createCustomLocation(city, district, neighborhood)?.id ?? "";
   const canSubmit = Boolean(city && resolvedTargetId);
 
+  const selectedPresetLocation = hasPresetLocations
+    ? locations.find((location) => location.id === id) ?? null
+    : null;
+  const targetPreviewLabel = hasPresetLocations
+    ? selectedPresetLocation
+      ? locationLabel(selectedPresetLocation)
+      : null
+    : city && district.trim() && neighborhood.trim()
+      ? `${neighborhood.trim()}, ${district.trim()}, ${city}`
+      : null;
+
   useEffect(() => {
     if (pendingPlan) {
       cancelButtonRef.current?.focus();
@@ -42,11 +60,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
   function changeCity(value: string) {
     setCity(value);
     const hasPresets = locations.some((location) => location.city === value);
-    if (!value) {
-      setDistrict("");
-      setNeighborhood("");
-      setId("");
-    } else if (hasPresets) {
+    if (!value || hasPresets) {
       setDistrict("");
       setNeighborhood("");
       setId("");
@@ -110,177 +124,247 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
     }
   }
 
+  const formClasses =
+    variant === "modal"
+      ? "space-y-5"
+      : "mx-auto max-w-xl space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8";
+
   return (
-    <form onSubmit={submit} className="mx-auto max-w-xl space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <div>
-        <p className="font-semibold text-brand">Teslimat konumun</p>
-        <h2 className="mt-2 text-2xl font-bold text-slate-900">Nereye getirelim?</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          81 il arasından ilini seç, ardından ilçe ve mahalle bilgilerini belirleyerek devam et.
-        </p>
-        {delivery && (
-          <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            Mevcut konum: <strong className="text-slate-900">{locationLabel(delivery)}</strong>
-          </p>
-        )}
-      </div>
+    <form onSubmit={submit} className={formClasses}>
+      {variant === "page" && (
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Teslimat Adresini Seç</h2>
+          <p className="mt-1.5 text-sm text-slate-600">Önce şehrini seç, ardından ilçe ve mahalleni belirle.</p>
+        </div>
+      )}
 
-      <fieldset className="min-w-0 space-y-3">
-        <legend className="mb-2 flex w-full items-center justify-between gap-2 font-semibold text-slate-900">
-          <span>İl</span>
-          <span className="rounded-full bg-[#FFF1F6] px-3 py-1 text-xs font-bold text-brand-dark">81 il</span>
-        </legend>
-
-        <div className="flex gap-2">
-          <label className="min-w-0 flex-1">
-            <span className="sr-only">İl adına göre ara</span>
-            <input
-              type="search"
-              data-autofocus
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="İl ara · ör. İstanbul, Ankara, Muğla"
-              autoComplete="off"
-              className="field min-h-12"
-              aria-describedby="city-results"
-            />
-          </label>
-          {trimmedQuery && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="min-h-12 shrink-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-brand hover:text-brand"
-            >
-              Temizle
-            </button>
+      <fieldset className="min-w-0 space-y-3.5 rounded-2xl border border-slate-200 bg-slate-50/75 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <legend className="flex items-center gap-2 text-base font-bold text-slate-900">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
+              1
+            </span>
+            <span>Şehir Seç</span>
+          </legend>
+          {city ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+              ✓ {city}
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-slate-600">81 il</span>
           )}
         </div>
 
-        {trimmedQuery && matchingCities.length > 0 && matchingCities.length <= 6 && (
-          <div className="flex flex-wrap gap-2" aria-label="Eşleşen il hızlı seçimleri">
-            {matchingCities.map((name) => (
+        <div className="flex flex-wrap gap-2" aria-label="Popüler şehirler">
+          {QUICK_CITIES.map((name) => {
+            const active = city === name;
+            return (
               <button
                 key={name}
                 type="button"
+                aria-pressed={active}
                 onClick={() => changeCity(name)}
-                aria-pressed={city === name}
                 className={
-                  city === name
-                    ? "min-h-11 rounded-xl border border-brand bg-[#FFF1F6] px-3 py-2 text-sm font-semibold text-brand-dark"
-                    : "min-h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-brand hover:text-brand"
+                  active
+                    ? "min-h-11 rounded-xl border-2 border-brand bg-[#FFF1F6] px-3.5 py-2 text-sm font-bold text-brand-dark shadow-xs"
+                    : "min-h-11 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand hover:bg-[#FFF1F6]"
                 }
               >
-                {name} seç
-              </button>
-            ))}
-          </div>
-        )}
-
-        <label className="block">
-          <span className="sr-only">İl seç</span>
-          <select
-            required
-            className="location-select"
-            value={city}
-            onChange={(event) => changeCity(event.target.value)}
-          >
-            <option value="">İl seç</option>
-            {city && !matchingCities.includes(city) && <option value={city}>{city} (seçili)</option>}
-            {matchingCities.map((name) => (
-              <option key={name} value={name}>
                 {name}
-              </option>
-            ))}
-          </select>
-        </label>
+              </button>
+            );
+          })}
+        </div>
 
-        <p id="city-results" role="status" className="text-xs leading-5 text-slate-600">
-          {trimmedQuery
-            ? matchingCities.length
-              ? `${matchingCities.length} il bulundu.`
-              : "Eşleşen il bulunamadı. Yazımı veya aramayı değiştir."
-            : "Türkiye’nin 81 ili alfabetik sırada listelenir."}
-        </p>
-      </fieldset>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block min-w-0">
+            <span className="mb-1.5 block text-xs font-semibold text-slate-700">Yazarak ara</span>
+            <div className="relative">
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+              </svg>
+              <input
+                type="search"
+                data-autofocus
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Ör. Bursa, Trabzon..."
+                autoComplete="off"
+                className={trimmedQuery ? "field pl-10 pr-16 text-sm" : "field pl-10 pr-3 text-sm"}
+                aria-describedby="city-results"
+              />
+              {trimmedQuery && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-brand"
+                >
+                  Temizle
+                </button>
+              )}
+            </div>
+          </label>
 
-      {hasPresetLocations || !city ? (
-        <>
-          <label className="block">
-            <span className="mb-2 block font-semibold text-slate-900">İlçe</span>
+          <label className="block min-w-0">
+            <span className="mb-1.5 block text-xs font-semibold text-slate-700">Veya tüm illerden seç</span>
             <select
               required
-              disabled={!city}
-              className="location-select"
-              value={district}
-              onChange={(event) => changeDistrict(event.target.value)}
+              className="location-select text-sm"
+              value={city}
+              onChange={(event) => changeCity(event.target.value)}
             >
-              <option value="">İlçe seç</option>
-              {districtOptions.map((name) => (
+              <option value="">İl seçin (A–Z)</option>
+              {city && !matchingCities.includes(city) && <option value={city}>{city}</option>}
+              {matchingCities.map((name) => (
                 <option key={name} value={name}>
                   {name}
                 </option>
               ))}
             </select>
           </label>
+        </div>
 
-          <label className="block">
-            <span className="mb-2 block font-semibold text-slate-900">Mahalle</span>
-            <select
-              required
-              disabled={!district}
-              className="location-select"
-              value={id}
-              onChange={(event) => {
-                setId(event.target.value);
-                setNotice("");
-                setPendingPlan(null);
-              }}
-            >
-              <option value="">Mahalle seç</option>
-              {neighborhoodOptions.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.neighborhood}
-                </option>
-              ))}
-            </select>
-          </label>
-        </>
-      ) : (
-        <>
-          <label className="block">
-            <span className="mb-2 block font-semibold text-slate-900">İlçe</span>
-            <input
-              type="text"
-              required
-              className="field min-h-12"
-              value={district}
-              onChange={(event) => {
-                setDistrict(event.target.value);
-                setNotice("");
-                setPendingPlan(null);
-              }}
-              placeholder="İlçe adı gir · ör. Kadıköy"
-            />
-          </label>
+        {trimmedQuery && (
+          <div className="space-y-2">
+            {matchingCities.length > 0 && matchingCities.length <= 6 && (
+              <div className="flex flex-wrap gap-2" aria-label="Eşleşen il hızlı seçimleri">
+                {matchingCities.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => changeCity(name)}
+                    aria-pressed={city === name}
+                    className={
+                      city === name
+                        ? "min-h-11 rounded-xl border-2 border-brand bg-[#FFF1F6] px-3.5 py-2 text-sm font-bold text-brand-dark"
+                        : "min-h-11 rounded-xl border border-brand/40 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 hover:border-brand hover:bg-[#FFF1F6]"
+                    }
+                  >
+                    {name} seç
+                  </button>
+                ))}
+              </div>
+            )}
+            <p id="city-results" role="status" className="text-xs font-medium text-slate-700">
+              {matchingCities.length
+                ? `${matchingCities.length} il bulundu.`
+                : "Bu isimde il bulunamadı. Yazımı kontrol edip tekrar deneyin."}
+            </p>
+          </div>
+        )}
+        {!trimmedQuery && <span id="city-results" className="sr-only">81 il listeleniyor.</span>}
+      </fieldset>
 
-          <label className="block">
-            <span className="mb-2 block font-semibold text-slate-900">Mahalle</span>
-            <input
-              type="text"
-              required
-              className="field min-h-12"
-              value={neighborhood}
-              onChange={(event) => {
-                setNeighborhood(event.target.value);
-                setNotice("");
-                setPendingPlan(null);
-              }}
-              placeholder="Mahalle adı gir · ör. Caferağa"
-            />
-          </label>
-        </>
-      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {hasPresetLocations || !city ? (
+          <>
+            <label className="block">
+              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+                  2
+                </span>
+                <span>İlçe</span>
+              </span>
+              <select
+                required
+                disabled={!city}
+                className="location-select"
+                value={district}
+                onChange={(event) => changeDistrict(event.target.value)}
+              >
+                <option value="">{city ? "İlçe seçin" : "Önce şehir seçin"}</option>
+                {districtOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+                  3
+                </span>
+                <span>Mahalle</span>
+              </span>
+              <select
+                required
+                disabled={!district}
+                className="location-select"
+                value={id}
+                onChange={(event) => {
+                  setId(event.target.value);
+                  setNotice("");
+                  setPendingPlan(null);
+                }}
+              >
+                <option value="">{district ? "Mahalle seçin" : "Önce ilçe seçin"}</option>
+                {neighborhoodOptions.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.neighborhood}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        ) : (
+          <>
+            <label className="block">
+              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+                  2
+                </span>
+                <span>İlçe</span>
+              </span>
+              <input
+                type="text"
+                required
+                className="field font-medium"
+                value={district}
+                onChange={(event) => {
+                  setDistrict(event.target.value);
+                  setNotice("");
+                  setPendingPlan(null);
+                }}
+                placeholder="ör. Kadıköy"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+                  3
+                </span>
+                <span>Mahalle</span>
+              </span>
+              <input
+                type="text"
+                required
+                className="field font-medium"
+                value={neighborhood}
+                onChange={(event) => {
+                  setNeighborhood(event.target.value);
+                  setNotice("");
+                  setPendingPlan(null);
+                }}
+                placeholder="ör. Caferağa"
+              />
+            </label>
+          </>
+        )}
+      </div>
 
       {pendingPlan && (
         <section
@@ -342,14 +426,31 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
       )}
 
       {!pendingPlan && (
-        <button ref={submitButtonRef} disabled={!canSubmit} className="btn-primary w-full" type="submit">
-          {delivery ? "Teslimat konumunu güncelle" : "Bu adrese teslimat yapan işletmeleri göster"}
-        </button>
+        <div className="space-y-3 pt-1">
+          {targetPreviewLabel && (
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white" aria-hidden="true">
+                ✓
+              </span>
+              <p className="min-w-0 leading-snug">
+                <span className="block text-xs font-medium text-emerald-800">Seçilen teslimat adresi</span>
+                <strong className="text-base font-bold text-slate-900">{targetPreviewLabel}</strong>
+              </p>
+            </div>
+          )}
+
+          <button ref={submitButtonRef} disabled={!canSubmit} className="btn-primary min-h-13 w-full text-base" type="submit">
+            {delivery ? "Bu Adresi Kaydet" : "Adresi Onayla ve Devam Et"}
+          </button>
+
+          {!canSubmit && (
+            <p className="text-center text-sm font-medium text-slate-600">
+              Devam etmek için yukarıdan il, ilçe ve mahalle seçin.
+            </p>
+          )}
+        </div>
       )}
 
-      {!canSubmit && (
-        <p className="text-sm text-slate-600">Devam etmek için il, ilçe ve mahalle seç.</p>
-      )}
       {notice && (
         <p role="status" aria-live="polite" className="rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm font-medium text-slate-800">
           {notice}

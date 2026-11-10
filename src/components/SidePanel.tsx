@@ -88,32 +88,41 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
   }, [onClose, view]);
 
   const title: Record<Exclude<PanelView, null>, string> = {
-    address: "Teslimat konumu",
+    address: "Teslimat Adresini Seç",
     profile: "Profil ve hesabım",
     account: account ? "Profil bilgilerim" : "Hesap oluştur",
     orders: "Siparişlerim",
     coupons: "Kuponlarım",
   };
+  const isCenteredModal = view === "address";
   const subpage = account !== null && view !== "profile" && view !== "address";
   const lastOrder = useDemoOrder();
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className={isCenteredModal ? "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6" : "fixed inset-0 z-50"}>
       <button
         type="button"
         tabIndex={-1}
         aria-hidden="true"
         onClick={onClose}
-        className="absolute inset-0 h-full w-full cursor-default bg-slate-900/40"
+        className={
+          isCenteredModal
+            ? "absolute inset-0 h-full w-full cursor-default bg-slate-900/50 backdrop-blur-[2px]"
+            : "absolute inset-0 h-full w-full cursor-default bg-slate-900/40"
+        }
       />
-      <aside
+      <section
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="panel-title"
-        className="absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl sm:max-w-[440px]"
+        className={
+          isCenteredModal
+            ? "relative flex max-h-[92dvh] w-full max-w-[580px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+            : "absolute inset-y-0 right-0 flex w-full flex-col bg-white shadow-2xl sm:max-w-[440px]"
+        }
       >
-        <header className="flex min-h-[76px] shrink-0 items-center gap-3 border-b border-slate-200 px-4 sm:px-6">
+        <header className="flex min-h-[76px] shrink-0 items-center gap-3 border-b border-slate-200 px-5 sm:px-6">
           {subpage && (
             <button
               data-back
@@ -125,19 +134,32 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
               ←
             </button>
           )}
-          <h2 id="panel-title" className="min-w-0 flex-1 text-xl font-bold text-slate-900">{title[view]}</h2>
+          {isCenteredModal && (
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FFF1F6] text-brand" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <h2 id="panel-title" className="text-xl font-bold text-slate-900">{title[view]}</h2>
+            {isCenteredModal && (
+              <p className="mt-0.5 text-sm text-slate-600">Önce şehrini seç, ardından ilçe ve mahalleni belirle.</p>
+            )}
+          </div>
           <button
             data-close
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 text-xl text-slate-700 hover:bg-slate-50"
-            aria-label="Paneli kapat"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl text-slate-700 transition hover:border-brand hover:bg-[#FFF1F6] hover:text-brand"
+            aria-label="Pencereyi kapat"
           >
             ×
           </button>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-          {view === "address" && <LocationPicker onDone={onClose} />}
+        <div className={isCenteredModal ? "min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6" : "min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6"}>
+          {view === "address" && <LocationPicker variant="modal" onDone={onClose} />}
           {view === "profile" && (
             <div className="space-y-3">
               <div className="mb-5 rounded-2xl bg-[#FFF1F6] p-5">
@@ -245,7 +267,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
             </div>
           )}
         </div>
-      </aside>
+      </section>
     </div>
   );
 }
