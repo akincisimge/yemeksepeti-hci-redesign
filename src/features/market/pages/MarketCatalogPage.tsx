@@ -13,11 +13,14 @@ import { locationLabel } from "../../../data/delivery";
 const CATEGORY_ICONS: Record<string, string> = {
   all: "🛒",
   "Süt ve Kahvaltılık": "🥛",
+  "Süt Ürünleri ve Kahvaltılık": "🥛",
   Fırın: "🥖",
   "Meyve ve Sebze": "🍎",
   "Temel Gıda": "🍝",
+  Atıştırmalık: "🍪",
   İçecek: "💧",
   Temizlik: "🧼",
+  Sos: "🥫",
 };
 
 export default function MarketCatalogPage() {
@@ -47,22 +50,6 @@ export default function MarketCatalogPage() {
     setParams(query, { replace: true, preventScrollReset: true });
   }
 
-  const hasAdvancedActive = Boolean(
-    filters.brand !== "all" ||
-      filters.maxPrice !== "" ||
-      filters.tag !== "all" ||
-      filters.pack !== "all" ||
-      filters.basis !== "all",
-  );
-  const advancedCount = [
-    filters.brand !== "all",
-    filters.maxPrice !== "",
-    filters.tag !== "all",
-    filters.pack !== "all",
-    filters.basis !== "all",
-  ].filter(Boolean).length;
-
-  const [showAdvanced, setShowAdvanced] = useState(hasAdvancedActive);
   const [notice, setNotice] = useState("");
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -77,11 +64,6 @@ export default function MarketCatalogPage() {
   const store = marketStores.find((s) => s.id === storeId);
   const products = marketProducts.filter((p) => p.storeId === storeId);
   const categories = [...new Set(products.map((p) => p.category))];
-  const categoryProducts = products.filter((p) => filters.category === "all" || p.category === filters.category);
-  const brands = [...new Set(categoryProducts.map((p) => p.brand).filter((b): b is string => !!b))];
-  const tags = [...new Set(categoryProducts.flatMap((p) => p.tags ?? []))];
-  const packs = [...new Set(categoryProducts.map((p) => p.unitLabel).filter(Boolean))];
-  const unitBases = [...new Set(categoryProducts.map((p) => p.unitBasis).filter(Boolean))];
   const filtered = filterProducts(products, filters);
 
   function update<K extends keyof Filters>(key: K, value: Filters[K]) {
@@ -213,41 +195,19 @@ export default function MarketCatalogPage() {
                 )}
               </label>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <label className="min-w-[165px] flex-1 sm:flex-initial">
-                  <span className="sr-only">Sıralama</span>
-                  <select
-                    className="location-select py-2.5 text-sm"
-                    value={filters.sort}
-                    onChange={(e) => update("sort", e.target.value as Sort)}
-                  >
-                    <option value="default">Sırala: Önerilen</option>
-                    <option value="price-asc">En Ucuz Önce</option>
-                    <option value="price-desc">En Pahalı Önce</option>
-                    <option value="name">İsim: A–Z</option>
-                    {filters.basis !== "all" && <option value="unit">Birim Fiyatı En Ucuz</option>}
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  aria-expanded={showAdvanced}
-                  onClick={() => setShowAdvanced((prev) => !prev)}
-                  className={
-                    showAdvanced || advancedCount > 0
-                      ? "inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border-2 border-brand bg-[#FFF1F6] px-3.5 py-2 text-sm font-bold text-brand-dark"
-                      : "inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
-                  }
+              <label className="min-w-[175px] shrink-0">
+                <span className="sr-only">Sıralama</span>
+                <select
+                  className="location-select py-2.5 text-sm"
+                  value={filters.sort}
+                  onChange={(e) => update("sort", e.target.value as Sort)}
                 >
-                  <span>Filtreler</span>
-                  {advancedCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white">
-                      {advancedCount}
-                    </span>
-                  )}
-                  <span aria-hidden="true" className="text-xs">{showAdvanced ? "▲" : "▾"}</span>
-                </button>
-              </div>
+                  <option value="default">Sırala: Önerilen</option>
+                  <option value="price-asc">En Ucuz Önce</option>
+                  <option value="price-desc">En Pahalı Önce</option>
+                  <option value="name">İsim: A–Z</option>
+                </select>
+              </label>
             </div>
 
             <nav aria-label="Kategoriler" className="flex flex-wrap gap-2">
@@ -275,78 +235,6 @@ export default function MarketCatalogPage() {
                 );
               })}
             </nav>
-
-            {showAdvanced && (
-              <div className="grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-slate-700">Marka</span>
-                  <select className="field py-2 text-sm" value={filters.brand} onChange={(e) => update("brand", e.target.value)}>
-                    <option value="all">Tüm markalar</option>
-                    {brands.map((b) => (
-                      <option key={b}>{b}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-slate-700">En fazla fiyat (TL)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    className="field py-2 text-sm"
-                    placeholder="Sınır yok"
-                    value={filters.maxPrice}
-                    onChange={(e) => update("maxPrice", e.target.value === "" ? "" : String(Math.max(0, Number(e.target.value))))}
-                  />
-                </label>
-
-                {tags.length > 0 && (
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-slate-700">Beslenme tercihi</span>
-                    <select className="field py-2 text-sm" value={filters.tag} onChange={(e) => update("tag", e.target.value)}>
-                      <option value="all">Tüm seçenekler</option>
-                      {tags.map((t) => (
-                        <option key={t}>{t}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-slate-700">Paket miktarı</span>
-                  <select className="field py-2 text-sm" value={filters.pack} onChange={(e) => update("pack", e.target.value)}>
-                    <option value="all">Tüm paketler</option>
-                    {packs.map((pack) => (
-                      <option key={pack}>{pack}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-1 block text-xs font-semibold text-slate-700">Birim karşılaştır</span>
-                  <select
-                    className="field py-2 text-sm"
-                    value={filters.basis}
-                    onChange={(e) =>
-                      setFilters((old) => ({
-                        ...old,
-                        basis: e.target.value,
-                        sort: e.target.value === "all" && old.sort === "unit" ? "default" : old.sort,
-                      }))
-                    }
-                  >
-                    <option value="all">Tüm birimler</option>
-                    {unitBases.map((b) => (
-                      <option key={b} value={b}>
-                        {b} başına fiyat
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            )}
 
             {activeChips.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2.5" aria-label="Seçili filtreler">
