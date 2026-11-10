@@ -14,7 +14,7 @@ export type LayoutContext = {
 
 export default function Layout() {
   const { count, carts } = useCart();
-  const { delivery, available } = useDelivery();
+  const { delivery, available, statusMessage, clearStatusMessage } = useDelivery();
   const address = delivery ? locationLabel(delivery) : null;
   const location = useLocation();
   const [panel, setPanel] = useState<PanelView>(null);
@@ -67,6 +67,22 @@ export default function Layout() {
         </nav>}
       </header>
       <main id="main-content" className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+        {statusMessage && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-950"
+          >
+            <p>{statusMessage}</p>
+            <button
+              type="button"
+              onClick={clearStatusMessage}
+              className="min-h-11 rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:border-emerald-500"
+            >
+              Tamam
+            </button>
+          </div>
+        )}
         {!delivery ? <LocationPicker /> : blocked ? <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-8">
           <h1 className="text-2xl font-bold">Bu mağaza konumuna teslimat yapmıyor</h1>
           <p>Seçili konum: {address}. Uygun işletmeleri seçebilir veya konumunu değiştirebilirsin.</p>

@@ -1,35 +1,98 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-import { deliversTo, locations, type DeliveryLocation } from "../data/delivery";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import {
+  analyzeLocationChange,
+  deliversTo,
+  formatLocationChangeMessage,
+  locationLabel,
+  locations,
+  type DeliveryLocation,
+  type LocationChangePlan,
+} from "../data/delivery";
 import { useCart } from "./CartContext";
-import type { Service } from "../types/domain";
+
 const KEY = "hci-delivery-location-v1";
-function initial() {
-  try { return locations.find(item => item.id === localStorage.getItem(KEY)) ?? null; }
-  catch { return null; }
+
+function initial(): DeliveryLocation | null {
+  try {
+    return locations.find((item) => item.id === localStorage.getItem(KEY)) ?? null;
+  } catch {
+    return null;
+  }
 }
-const Context = createContext<{
+
+type SelectLocationOptions = {
+  confirmed?: boolean;
+};
+
+type DeliveryContextValue = {
   delivery: DeliveryLocation | null;
-  selectLocation: (id: string) => boolean;
+  selectLocation: (id: string, options?: SelectLocationOptions) => boolean;
+  previewLocationChange: (id: string) => LocationChangePlan | null;
   available: (storeId: string) => boolean;
-} | null>(null);
+  statusMessage: string | null;
+  clearStatusMessage: () => void;
+};
+
+const Context = createContext<DeliveryContextValue | null>(null);
+
 export function DeliveryProvider({ children }: { children: ReactNode }) {
   const [delivery, setDelivery] = useState<DeliveryLocation | null>(initial);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const { carts, clearServices } = useCart();
-  function selectLocation(id: string) {
-    const next = locations.find(item => item.id === id);
-    if (!next) return false;
-    const affected = (["food", "market"] as Service[]).filter(service =>
-      carts[service].some(line => !deliversTo(line.product.storeId, id)));
-    if (affected.length && !window.confirm(
-      `${affected.map(s => s === "food" ? "Yemek" : "Market").join(" ve ")} sepetindeki mağaza yeni konuma teslimat yapmıyor. İlgili sepetler temizlenerek konum değiştirilsin mi?`
-    )) return false;
-    clearServices(affected);
-    setDelivery(next);
-    try { localStorage.setItem(KEY, next.id); } catch { /* storage optional */ }
-    return true;
-  }
-  return <Context.Provider value={{ delivery, selectLocation, available: id => deliversTo(id, delivery?.id) }}>{children}</Context.Provider>;
+
+  const previewLocationChange = useCallback(
+    (id: string) => analyzeLocationChange(carts, id),
+    [carts],
+  );
+
+  const selectLocation = useCallback(
+    (id: string, options?: SelectLocationOptions) => {
+      const plan = analyzeLocationChange(carts, id);
+      if (!plan) return false;
+
+      if (delivery?.id === plan.target.id && plan.affected.length === 0) {
+        setStatusMessage(`Teslimat konumun zaten ${locationLabel(plan.target)} olarak ayarlı.`);
+        return true;
+      }
+
+      if (plan.affected.length > 0 && !options?.confirmed) {
+        return false;
+      }
+
+      if (plan.affected.length > 0) {
+        clearServices(plan.affected.map((item) => item.service));
+      }
+
+      setDelivery(plan.target);
+      setStatusMessage(formatLocationChangeMessage(plan));
+      try {
+        localStorage.setItem(KEY, plan.target.id);
+      } catch {
+        /* storage optional */
+      }
+      return true;
+    },
+    [carts, clearServices, delivery?.id],
+  );
+
+  const clearStatusMessage = useCallback(() => setStatusMessage(null), []);
+
+  return (
+    <Context.Provider
+      value={{
+        delivery,
+        selectLocation,
+        previewLocationChange,
+        available: (id) => deliversTo(id, delivery?.id),
+        statusMessage,
+        clearStatusMessage,
+      }}
+    >
+      {children}
+    </Context.Provider>
+  );
 }
+
 export function useDelivery() {
   const value = useContext(Context);
   if (!value) throw new Error("DeliveryProvider gerekli");

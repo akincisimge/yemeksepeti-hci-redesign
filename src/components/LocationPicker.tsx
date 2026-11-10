@@ -1,22 +1,38 @@
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { filterProvinces } from "../data/provinces";
-import { locations } from "../data/delivery";
+import {
+  getProvinceDemoCoverage,
+  locationLabel,
+  locations,
+  type LocationChangePlan,
+} from "../data/delivery";
 import { useDelivery } from "../state/DeliveryContext";
 
 export default function LocationPicker({ onDone }: { onDone?: () => void }) {
-  const { delivery, selectLocation } = useDelivery();
+  const { delivery, previewLocationChange, selectLocation } = useDelivery();
   const [city, setCity] = useState<string>(delivery?.city ?? "");
   const [district, setDistrict] = useState<string>(delivery?.district ?? "");
   const [id, setId] = useState<string>(delivery?.id ?? "");
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
+  const [pendingPlan, setPendingPlan] = useState<LocationChangePlan | null>(null);
+
+  const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const matchingCities = filterProvinces(query);
   const cityLocations = locations.filter((location) => location.city === city);
   const districtOptions = [...new Set(cityLocations.map((location) => location.district))];
   const neighborhoodOptions = cityLocations.filter((location) => location.district === district);
+  const coverage = city ? getProvinceDemoCoverage(city) : null;
   const unsupported = Boolean(city) && cityLocations.length === 0;
   const trimmedQuery = query.trim();
+
+  useEffect(() => {
+    if (pendingPlan) {
+      cancelButtonRef.current?.focus();
+    }
+  }, [pendingPlan]);
 
   function changeCity(value: string) {
     setCity(value);
@@ -24,12 +40,14 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
     setId("");
     setNotice("");
     setQuery("");
+    setPendingPlan(null);
   }
 
   function changeDistrict(value: string) {
     setDistrict(value);
     setId("");
     setNotice("");
+    setPendingPlan(null);
   }
 
   function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -43,11 +61,35 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!id || unsupported) return;
-    if (selectLocation(id)) {
+
+    const plan = previewLocationChange(id);
+    if (!plan) return;
+
+    if (plan.affected.length > 0) {
+      setPendingPlan(plan);
+      setNotice("");
+      return;
+    }
+
+    if (selectLocation(id, { confirmed: true })) {
       setNotice("");
       onDone?.();
-    } else {
-      setNotice("Konum değiştirilmedi. Mevcut adresin ve sepetlerin korundu.");
+    }
+  }
+
+  function cancelPendingChange() {
+    setPendingPlan(null);
+    const preservedLocation = delivery ? `${locationLabel(delivery)} adresi ve ` : "";
+    setNotice(`Konum değişikliği iptal edildi. Mevcut ${preservedLocation}sepetlerin korundu.`);
+    window.requestAnimationFrame(() => submitButtonRef.current?.focus());
+  }
+
+  function confirmPendingChange() {
+    if (!pendingPlan) return;
+    if (selectLocation(pendingPlan.target.id, { confirmed: true })) {
+      setPendingPlan(null);
+      setNotice("");
+      onDone?.();
     }
   }
 
@@ -59,6 +101,11 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
         <p className="mt-2 text-sm leading-6 text-slate-600">
           81 il arasından ilini ara ve seç. Örnek teslimat bölgeleri olan illerde ilçe ve mahalle seçerek devam edebilirsin.
         </p>
+        {delivery && (
+          <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            Şu anki teslimat konumun: <strong className="text-slate-900">{locationLabel(delivery)}</strong>
+          </p>
+        )}
       </div>
 
       <fieldset className="min-w-0 space-y-3">
@@ -162,7 +209,25 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
             >
               Adana seç (Yalnız Yemek)
             </button>
+            {delivery && onDone && (
+              <button
+                type="button"
+                onClick={onDone}
+                className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 hover:border-brand"
+              >
+                Mevcut konumu koru
+              </button>
+            )}
           </div>
+        </div>
+      )}
+
+      {coverage?.supported && !coverage.hasMarket && (
+        <div role="status" className="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-800">
+          <p className="font-semibold text-slate-900">{city} demo bölgesi bilgisi</p>
+          <p className="mt-1">
+            Bu örnek bölgede yalnızca <strong>YEMEK</strong> restoranları aktiftir; <strong>MARKET</strong> teslimatı henüz demo kapsamı dışındadır.
+          </p>
         </div>
       )}
 
@@ -200,6 +265,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
           onChange={(event) => {
             setId(event.target.value);
             setNotice("");
+            setPendingPlan(null);
           }}
         >
           <option value="">{unsupported ? "Bu il için demo mahalle kaydı yok" : "Mahalle seç"}</option>
@@ -211,15 +277,76 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
         </select>
       </label>
 
-      <button disabled={!id || unsupported} className="btn-primary w-full" type="submit">
-        Bu adrese teslimat yapan işletmeleri göster
-      </button>
+      {pendingPlan && (
+        <section
+          role="alertdialog"
+          aria-labelledby="location-cart-confirm-title"
+          aria-describedby="location-cart-confirm-desc"
+          className="space-y-4 rounded-2xl border-2 border-[#D90049] bg-[#FFF1F6] p-4 text-sm leading-6 text-slate-900"
+        >
+          <div>
+            <h3 id="location-cart-confirm-title" className="text-base font-bold text-slate-900">
+              Adres değişikliği sepetini etkileyecek
+            </h3>
+            <p id="location-cart-confirm-desc" className="mt-1 text-slate-800">
+              Yeni hedef konum: <strong>{locationLabel(pendingPlan.target)}</strong>. Onaylarsan aşağıda belirtilen uyumsuz sepet temizlenecek.
+            </p>
+          </div>
+
+          <ul className="space-y-2">
+            {pendingPlan.affected.map((item) => (
+              <li key={item.service} className="rounded-xl border border-rose-200 bg-white p-3 text-slate-800">
+                <strong className="text-brand-dark">
+                  {item.serviceLabel} sepeti temizlenecek ({item.storeName} · {item.itemCount} ürün)
+                </strong>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  {item.storeName}, seçtiğin {locationLabel(pendingPlan.target)} konumuna teslimat yapmıyor.
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          {pendingPlan.preserved.length > 0 && (
+            <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium leading-5 text-emerald-900">
+              Korunacak sepet:{" "}
+              {pendingPlan.preserved
+                .map((item) => `${item.serviceLabel} (${item.storeName} · ${item.itemCount} ürün)`)
+                .join(" ve ")}
+              .
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <button
+              ref={cancelButtonRef}
+              type="button"
+              onClick={cancelPendingChange}
+              className="min-h-11 flex-1 rounded-xl border border-slate-400 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand"
+            >
+              Vazgeç — Adresi ve sepeti koru
+            </button>
+            <button
+              type="button"
+              onClick={confirmPendingChange}
+              className="btn-primary flex-1"
+            >
+              Onayla ve konumu değiştir
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!pendingPlan && (
+        <button ref={submitButtonRef} disabled={!id || unsupported} className="btn-primary w-full" type="submit">
+          {delivery ? "Teslimat konumunu güncelle" : "Bu adrese teslimat yapan işletmeleri göster"}
+        </button>
+      )}
 
       {!id && !unsupported && (
         <p className="text-sm text-slate-600">Devam etmek için il, ilçe ve mahalle seç.</p>
       )}
       {notice && (
-        <p role="status" className="text-sm font-medium text-slate-800">
+        <p role="status" aria-live="polite" className="rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm font-medium text-slate-800">
           {notice}
         </p>
       )}
