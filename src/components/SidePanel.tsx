@@ -1,20 +1,19 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
+import AccountForm from "./AccountForm";
+import { useAccount } from "../state/AccountContext";
 import { readDemoOrder } from "../state/demoOrder";
 import { foodCoupons } from "../features/food/data/foodData";
 import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
 export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | "help" | null;
-export type DemoAccount = { name: string; email: string; phone: string };
 
 type PanelProps = {
   view: Exclude<PanelView, null>;
   onClose: () => void;
   onNavigate: (view: Exclude<PanelView, null>) => void;
   address: string | null;
-  account: DemoAccount | null;
-  onSaveAccount: (account: DemoAccount) => void;
   foodCount: number;
   marketCount: number;
 };
@@ -42,82 +41,6 @@ function PanelRow({ label, detail, onClick }: { label: string; detail?: string; 
       </span>
       <span className="text-xl text-brand" aria-hidden="true">›</span>
     </button>
-  );
-}
-
-function AccountView({ account, onSaveAccount, onNavigate }: Pick<PanelProps, "account" | "onSaveAccount" | "onNavigate">) {
-  const [name, setName] = useState(account?.name ?? "");
-  const [email, setEmail] = useState(account?.email ?? "");
-  const [phone, setPhone] = useState(account?.phone ?? "");
-  const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
-
-  function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const nextErrors: { name?: string; email?: string; phone?: string } = {};
-    if (name.trim().length < 2) nextErrors.name = "Ad soyad en az 2 karakter olmalı.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) nextErrors.email = "Geçerli bir örnek e-posta adresi gir.";
-    if (phone.replace(/\D/g, "").length < 10) nextErrors.phone = "Telefon numarası en az 10 rakam içermeli.";
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
-    setErrors({});
-    onSaveAccount({ name: name.trim(), email: email.trim(), phone: phone.trim() });
-    onNavigate("profile");
-  }
-
-  return (
-    <form onSubmit={save} className="space-y-5" noValidate>
-      <p className="rounded-xl bg-[#FFF1F6] p-4 text-sm text-slate-700">
-        Örnek hesap oluşturma ekranı. Gerçek e-posta veya telefon bilgisi girmeyin. Bilgiler yalnızca bu sayfa açıkken tutulur; sunucuya gönderilmez.
-      </p>
-      <label className="block">
-        <span className="mb-2 block font-semibold">Ad soyad</span>
-        <input
-          className="field min-h-12"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Örnek Kullanıcı"
-          autoComplete="off"
-          required
-          aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? "account-name-error" : undefined}
-        />
-        {errors.name && <span id="account-name-error" role="alert" className="mt-1.5 block text-sm font-semibold text-[#991B1B]">{errors.name}</span>}
-      </label>
-      <label className="block">
-        <span className="mb-2 block font-semibold">E-posta</span>
-        <input
-          className="field min-h-12"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="ornek@example.com"
-          autoComplete="off"
-          required
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? "account-email-error" : undefined}
-        />
-        {errors.email && <span id="account-email-error" role="alert" className="mt-1.5 block text-sm font-semibold text-[#991B1B]">{errors.email}</span>}
-      </label>
-      <label className="block">
-        <span className="mb-2 block font-semibold">Telefon numarası</span>
-        <input
-          className="field min-h-12"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="0500 000 00 00"
-          autoComplete="off"
-          required
-          aria-invalid={Boolean(errors.phone)}
-          aria-describedby={errors.phone ? "account-phone-error" : undefined}
-        />
-        {errors.phone && <span id="account-phone-error" role="alert" className="mt-1.5 block text-sm font-semibold text-[#991B1B]">{errors.phone}</span>}
-      </label>
-      <button type="submit" className="btn-primary w-full">Demo profilini kaydet</button>
-    </form>
   );
 }
 
@@ -200,8 +123,9 @@ function HelpView() {
   );
 }
 
-export default function SidePanel({ view, onClose, onNavigate, address, account, onSaveAccount, foodCount, marketCount }: PanelProps) {
+export default function SidePanel({ view, onClose, onNavigate, address, foodCount, marketCount }: PanelProps) {
   const navigate = useNavigate();
+  const { account } = useAccount();
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const panelRef = useRef<HTMLElement | null>(null);
 
@@ -337,7 +261,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
               </div>
             </div>
           )}
-          {view === "account" && <AccountView account={account} onSaveAccount={onSaveAccount} onNavigate={onNavigate} />}
+          {view === "account" && <AccountForm onSaved={() => onNavigate("profile")} />}
           {view === "orders" && (
             <div className="space-y-4">
               {lastOrder ? (

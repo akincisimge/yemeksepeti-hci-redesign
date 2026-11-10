@@ -2,24 +2,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
+import { useAccount } from "../state/AccountContext";
 import { locationLabel } from "../data/delivery";
 import { foodRestaurants } from "../features/food/data/foodData";
 import { marketProducts } from "../features/market/data/marketData";
 import LocationPicker from "./LocationPicker";
-import SidePanel, { type DemoAccount, type PanelView } from "./SidePanel";
+import SidePanel, { type PanelView } from "./SidePanel";
 
 export type LayoutContext = {
   address: string | null;
   openAddress: () => void;
+  openPanel: (view: Exclude<PanelView, null>) => void;
 };
 
 export default function Layout() {
   const { count, carts } = useCart();
   const { delivery, available, statusMessage, clearStatusMessage } = useDelivery();
+  const { account } = useAccount();
   const address = delivery ? locationLabel(delivery) : null;
   const location = useLocation();
   const [panel, setPanel] = useState<PanelView>(null);
-  const [account, setAccount] = useState<DemoAccount | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const returnTriggerAttrRef = useRef<string | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
@@ -118,7 +120,7 @@ export default function Layout() {
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 21c0-4.5 3-7 8-7s8 2.5 8 7" />
                 </svg>
-                <span className="text-sm">Profil</span>
+                <span className="text-sm">{account ? account.name.split(" ")[0] : "Profil"}</span>
               </button>
             </nav>
           </div>
@@ -173,7 +175,7 @@ export default function Layout() {
               </div>
             </section>
           ) : (
-            <Outlet key={delivery?.id ?? "no-delivery"} context={{ address, openAddress: () => open("address") } satisfies LayoutContext} />
+            <Outlet key={delivery?.id ?? "no-delivery"} context={{ address, openAddress: () => open("address"), openPanel: open } satisfies LayoutContext} />
           )}
         </main>
 
@@ -188,8 +190,6 @@ export default function Layout() {
           onClose={close}
           onNavigate={navigatePanel}
           address={address}
-          account={account}
-          onSaveAccount={setAccount}
           foodCount={count("food")}
           marketCount={count("market")}
         />

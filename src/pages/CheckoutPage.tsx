@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
+import { useAccount } from "../state/AccountContext";
 import { locationLabel } from "../data/delivery";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
 import { saveDemoOrder, type DemoOrder } from "../state/demoOrder";
@@ -17,6 +18,7 @@ export default function CheckoutPage() {
 
   const { carts, total, clear } = useCart();
   const { delivery } = useDelivery();
+  const { account } = useAccount();
   const { openAddress } = useOutletContext<LayoutContext>();
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const navigate = useNavigate();
@@ -152,7 +154,22 @@ export default function CheckoutPage() {
           className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
           noValidate
         >
-          <h2 className="text-lg font-bold text-slate-900">Teslimat bilgileri</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-bold text-slate-900">Teslimat bilgileri</h2>
+            {account && (
+              <button
+                type="button"
+                onClick={() => {
+                  setName(account.name);
+                  if (!address.trim() && account.deliveryNote) setAddress(account.deliveryNote);
+                  setFieldErrors({});
+                }}
+                className="min-h-11 rounded-xl border border-brand bg-[#FFF1F6] px-3 py-2 text-xs font-semibold text-brand-dark hover:bg-white"
+              >
+                Demo hesabımdan doldur ({account.name.split(" ")[0]})
+              </button>
+            )}
+          </div>
 
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-slate-800">
