@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const SuccessPage = lazy(() => import("./pages/SuccessPage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
 const MarketHomePage = lazy(() => import("./features/market/pages/MarketHomePage"));
 const MarketCatalogPage = lazy(() => import("./features/market/pages/MarketCatalogPage"));
 const MarketProductPage = lazy(() => import("./features/market/pages/MarketProductPage"));
@@ -45,6 +46,7 @@ export default function App() {
 
           <Route path="checkout/:service" element={<CheckoutPage />} />
           <Route path="success" element={<SuccessPage />} />
+          <Route path="support" element={<SupportPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -2,6 +2,13 @@ import type { PaymentMethod, Service } from "../types/domain";
 
 export type DemoOrderStage = 0 | 1 | 2 | 3;
 
+export const DEMO_TRACKING_STEPS = [
+  { title: "Sipariş alındı", detail: "Demo siparişin oluşturuldu ve kaydedildi." },
+  { title: "Hazırlanıyor", detail: "Örnek hazırlık aşaması gösteriliyor." },
+  { title: "Yola çıktı", detail: "Örnek teslimat yolculuğu gösteriliyor." },
+  { title: "Teslim edildi", detail: "Demo sipariş süreci tamamlandı." },
+] as const;
+
 export type DemoOrder = {
   orderId: string;
   amount: number;

@@ -80,7 +80,7 @@ export default function Layout() {
         ? path.split("/")[2]
         : undefined;
   const checkoutService = path.startsWith("/checkout/") ? (path === "/checkout/market" ? "market" : "food") : null;
-  const requiresLocation = !delivery && !isHome && path !== "/success";
+  const requiresLocation = !delivery && !isHome && !["/success", "/track", "/account", "/support"].includes(path);
   const blocked =
     (routeStore && !available(routeStore)) ||
     (checkoutService && carts[checkoutService].some((line) => !available(line.product.storeId)));

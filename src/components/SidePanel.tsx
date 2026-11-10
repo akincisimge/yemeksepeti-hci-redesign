@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
+import LiveSupportChat from "./LiveSupportChat";
 import { useAccount } from "../state/AccountContext";
 import { readDemoOrder } from "../state/demoOrder";
 import { foodCoupons } from "../features/food/data/foodData";
@@ -18,16 +19,6 @@ type PanelProps = {
   marketCount: number;
 };
 
-const TOPICS = [
-  { name: "Siparişimi takip etmek istiyorum", answer: "Demo sipariş tamamlandıktan sonra takip ekranında dört örnek aşamayı izleyebilirsin. Son siparişine Profil → Önceki siparişlerim bölümünden de dönebilirsin." },
-  { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Üst çubuktaki veya ana sayfadaki Adres seç butonundan örnek teslimat konumunu değiştirebilirsin. Siparişi tamamlarken ayrıntılı demo adresini ayrıca düzenleyebilirsin." },
-  { name: "Kuponumla ilgili yardım istiyorum", answer: "Yemek kuponunu Profil → Kuponlarım alanından seçebilirsin. İndirim, uygun restoranın kampanyalı menüsünde ve minimum sepet koşulu sağlandığında sepette uygulanır." },
-  { name: "Siparişimi iptal veya iade etmek istiyorum", answer: "Bu uygulama gerçek sipariş oluşturmadığı için para çekme, iptal veya iade işlemi yapılmaz." },
-  { name: "Başka bir konuda yardım istiyorum", answer: "Bu bir otomatik demo sohbetidir. Gerçek müşteri temsilcisine mesaj gönderilmez. Yardım seçeneklerini inceleyebilir veya yeni konu seçebilirsin." },
-];
-
-type Message = { sender: "visitor" | "assistant"; text: string };
-
 function PanelRow({ label, detail, onClick }: { label: string; detail?: string; onClick: () => void }) {
   return (
     <button
@@ -41,85 +32,6 @@ function PanelRow({ label, detail, onClick }: { label: string; detail?: string; 
       </span>
       <span className="text-xl text-brand" aria-hidden="true">›</span>
     </button>
-  );
-}
-
-function HelpView() {
-  const [messages, setMessages] = useState<Message[]>([
-    { sender: "assistant", text: "Merhaba! Bu, HCI projesi için hazırlanmış otomatik canlı yardım demosudur. Hangi konuda destek istersin?" },
-  ]);
-  const [input, setInput] = useState("");
-  const [finished, setFinished] = useState(false);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [messages]);
-  function send(question: string, answer?: string) {
-    if (!question.trim() || finished) return;
-    setMessages((old) => [
-      ...old,
-      { sender: "visitor", text: question.trim() },
-      { sender: "assistant", text: answer ?? "Mesajın demo sohbete eklendi. Bu prototip gerçek temsilciye bağlanmaz. Aşağıdaki başlıklardan birini de seçebilirsin." },
-    ]);
-    setInput("");
-  }
-  return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="mb-4 rounded-xl border border-slate-200 bg-[#FFF1F6] p-4">
-        <p className="font-semibold text-slate-900">Canlı yardım simülasyonu</p>
-        <p className="mt-1 text-sm text-slate-700">Otomatik örnek yanıtlar. Gerçek bir temsilciyle görüşme yapılmaz.</p>
-      </div>
-      <div role="log" aria-label="Demo sohbet mesajları" aria-live="polite" aria-relevant="additions" className="min-h-40 flex-1 space-y-4 overflow-y-auto rounded-xl bg-slate-50 p-3">
-        {messages.map((message, i) => (
-          <div key={i} className={"flex " + (message.sender === "visitor" ? "justify-end" : "justify-start")}>
-            <p className={"max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-6 " + (message.sender === "visitor" ? "bg-brand text-white" : "border border-slate-200 bg-white text-slate-900")}>
-              {message.text}
-            </p>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
-      {finished ? (
-        <div className="mt-4 space-y-3 rounded-xl border border-[#166534] bg-white p-4">
-          <p role="status" className="font-semibold text-[#166534]">Demo görüşmesi tamamlandı.</p>
-          <button
-            type="button"
-            className="btn-primary w-full"
-            onClick={() => {
-              setMessages([{ sender: "assistant", text: "Yeni demo görüşmesi başladı. Nasıl yardımcı olabilirim?" }]);
-              setFinished(false);
-            }}
-          >
-            Yeni görüşme başlat
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="mt-4 space-y-2" aria-label="Sık kullanılan yardım başlıkları">
-            {TOPICS.map((topic) => (
-              <button
-                type="button"
-                key={topic.name}
-                onClick={() => send(topic.name, topic.answer)}
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-slate-800 hover:border-brand hover:bg-[#FFF1F6]"
-              >
-                {topic.name}
-              </button>
-            ))}
-          </div>
-          <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="mt-4 flex items-end gap-2">
-            <label className="min-w-0 flex-1">
-              <span className="mb-2 block text-sm font-semibold">Mesajın (demo)</span>
-              <input className="field min-h-12" value={input} onChange={(e) => setInput(e.target.value)} maxLength={240} placeholder="Bir soru yaz..." />
-            </label>
-            <button type="submit" disabled={!input.trim()} className="btn-primary min-h-12 shrink-0">Gönder</button>
-          </form>
-          <button type="button" onClick={() => setFinished(true)} className="mt-3 min-h-11 w-full text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-brand">
-            Görüşmeyi sonlandır
-          </button>
-        </>
-      )}
-    </div>
   );
 }
 
@@ -327,7 +239,23 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
               })}
             </div>
           )}
-          {view === "help" && <HelpView />}
+          {view === "help" && (
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <Link
+                to="/support"
+                onClick={onClose}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-brand-dark hover:border-brand hover:bg-[#FFF1F6]"
+              >
+                Canlı destek tam sayfasını aç →
+              </Link>
+              <LiveSupportChat
+                compact
+                onOpenAddress={() => onNavigate("address")}
+                onOpenCoupons={() => onNavigate("coupons")}
+                onNavigateAway={onClose}
+              />
+            </div>
+          )}
         </div>
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs text-slate-600 sm:px-6">
           Bağımsız HCI öğrenci projesi · Gerçek müşteri desteği değildir.
