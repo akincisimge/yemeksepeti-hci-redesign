@@ -63,6 +63,10 @@ export type ProvinceDemoCoverage = {
   hasMarket: boolean;
 };
 
+export function stripNeighborhoodSuffix(value: string): string {
+  return value.replace(/\s+Mah\.?$/i, "").trim();
+}
+
 export function createCustomLocation(city: string, district: string, neighborhood: string): DeliveryLocation | null {
   const cleanCity = city.trim();
   const cleanDistrict = district.trim();
@@ -70,6 +74,25 @@ export function createCustomLocation(city: string, district: string, neighborhoo
   if (!provinces.includes(cleanCity) || !cleanDistrict || !cleanNeighborhood) return null;
   const id = `${CUSTOM_PREFIX}${encodeURIComponent(cleanCity)}|${encodeURIComponent(cleanDistrict)}|${encodeURIComponent(cleanNeighborhood)}`;
   return { id, city: cleanCity, district: cleanDistrict, neighborhood: cleanNeighborhood };
+}
+
+/** Resolve a real city/district/neighborhood triple to either a preset demo zone ID or a custom 81-province ID. */
+export function resolveLocationIdForSelection(city: string, district: string, neighborhood: string): string | null {
+  const cleanCity = city.trim();
+  const cleanDistrict = district.trim();
+  const cleanNeighborhood = neighborhood.trim();
+  if (!cleanCity || !cleanDistrict || !cleanNeighborhood) return null;
+
+  const baseNeighborhood = stripNeighborhoodSuffix(cleanNeighborhood);
+  const preset = locations.find(
+    (item) =>
+      item.city === cleanCity &&
+      item.district === cleanDistrict &&
+      stripNeighborhoodSuffix(item.neighborhood) === baseNeighborhood,
+  );
+  if (preset) return preset.id;
+
+  return createCustomLocation(cleanCity, cleanDistrict, cleanNeighborhood)?.id ?? null;
 }
 
 export function resolveLocation(id: string | null | undefined): DeliveryLocation | null {

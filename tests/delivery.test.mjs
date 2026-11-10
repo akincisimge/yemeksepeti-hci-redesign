@@ -9,7 +9,13 @@ import {
   locationLabel,
   locations,
   resolveLocation,
+  resolveLocationIdForSelection,
 } from "../src/data/delivery.ts";
+import {
+  getDistrictsForCity,
+  getNeighborhoodsForDistrict,
+  loadTurkeyRegions,
+} from "../src/data/regions.ts";
 
 const sampleMarketProduct = {
   id: "m1",
@@ -110,4 +116,20 @@ test("custom locations across all 81 provinces resolve cleanly and enable active
   assert.equal(deliversTo("carrefour-1", custom.id), true);
   assert.equal(deliversTo("unknown-store", custom.id), false);
   assert.equal(createCustomLocation("NotAProvince", "Merkez", "Merkez"), null);
+});
+
+test("turkeyRegions dataset includes all 81 provinces with real districts and neighborhoods", async () => {
+  const regions = await loadTurkeyRegions();
+  assert.equal(Object.keys(regions).length, 81);
+  assert.equal(getDistrictsForCity(regions, "İstanbul").includes("Kadıköy"), true);
+  assert.equal(getNeighborhoodsForDistrict(regions, "İstanbul", "Kadıköy").includes("Caferağa Mah"), true);
+  assert.equal(getNeighborhoodsForDistrict(regions, "Muğla", "Menteşe").includes("Kötekli Mah"), true);
+
+  assert.equal(resolveLocationIdForSelection("Muğla", "Menteşe", "Kötekli Mah"), "kotekli");
+  assert.equal(resolveLocationIdForSelection("Muğla", "Bodrum", "Çarşı Mah"), "bodrum-merkez");
+  assert.equal(resolveLocationIdForSelection("Adana", "Seyhan", "Reşatbey Mah"), "adana-merkez");
+
+  const kadikoyId = resolveLocationIdForSelection("İstanbul", "Kadıköy", "Caferağa Mah");
+  assert.ok(kadikoyId);
+  assert.equal(locationLabel(resolveLocation(kadikoyId)), "Caferağa Mah, Kadıköy, İstanbul");
 });

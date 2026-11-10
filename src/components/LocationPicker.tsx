@@ -1,26 +1,52 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { filterProvinces } from "../data/provinces";
 import {
-  createCustomLocation,
   locationLabel,
-  locations,
+  resolveLocation,
+  resolveLocationIdForSelection,
+  stripNeighborhoodSuffix,
   type LocationChangePlan,
 } from "../data/delivery";
+import {
+  getCachedTurkeyRegions,
+  getDistrictsForCity,
+  getNeighborhoodsForDistrict,
+  loadTurkeyRegions,
+  type TurkeyRegionsMap,
+} from "../data/regions";
 import { useDelivery } from "../state/DeliveryContext";
-
-const QUICK_CITIES = ["İstanbul", "Ankara", "İzmir", "Muğla", "Adana", "Antalya"] as const;
 
 type LocationPickerProps = {
   onDone?: () => void;
   variant?: "modal" | "page";
 };
 
+function matchInitialNeighborhood(
+  regions: TurkeyRegionsMap | null,
+  city: string,
+  district: string,
+  currentNeighborhood: string,
+): string {
+  if (!regions || !city || !district || !currentNeighborhood) return currentNeighborhood;
+  const list = getNeighborhoodsForDistrict(regions, city, district);
+  if (list.includes(currentNeighborhood)) return currentNeighborhood;
+  const base = stripNeighborhoodSuffix(currentNeighborhood);
+  return list.find((item) => stripNeighborhoodSuffix(item) === base) ?? currentNeighborhood;
+}
+
 export default function LocationPicker({ onDone, variant = "page" }: LocationPickerProps) {
   const { delivery, previewLocationChange, selectLocation } = useDelivery();
+  const [regions, setRegions] = useState<TurkeyRegionsMap | null>(getCachedTurkeyRegions);
   const [city, setCity] = useState<string>(delivery?.city ?? "");
   const [district, setDistrict] = useState<string>(delivery?.district ?? "");
-  const [neighborhood, setNeighborhood] = useState<string>(delivery?.neighborhood ?? "");
-  const [id, setId] = useState<string>(delivery?.id ?? "");
+  const [neighborhood, setNeighborhood] = useState<string>(() =>
+    matchInitialNeighborhood(
+      getCachedTurkeyRegions(),
+      delivery?.city ?? "",
+      delivery?.district ?? "",
+      delivery?.neighborhood ?? "",
+    ),
+  );
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
   const [pendingPlan, setPendingPlan] = useState<LocationChangePlan | null>(null);
@@ -28,28 +54,40 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const submitButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const matchingCities = filterProvinces(query);
-  const cityLocations = locations.filter((location) => location.city === city);
-  const hasPresetLocations = cityLocations.length > 0;
-  const districtOptions = [...new Set(cityLocations.map((location) => location.district))];
-  const neighborhoodOptions = cityLocations.filter((location) => location.district === district);
+  useEffect(() => {
+    if (regions) return;
+    let active = true;
+    loadTurkeyRegions().then((loaded) => {
+      if (!active) return;
+      setRegions(loaded);
+      if (delivery?.city && delivery?.district && delivery?.neighborhood) {
+        setNeighborhood((prev) => matchInitialNeighborhood(loaded, delivery.city, delivery.district, prev));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [regions, delivery]);
+
+  const matchingCities = useMemo(() => filterProvinces(query), [query]);
+  const districtOptions = useMemo(() => getDistrictsForCity(regions, city), [regions, city]);
+  const neighborhoodOptions = useMemo(
+    () => getNeighborhoodsForDistrict(regions, city, district),
+    [regions, city, district],
+  );
   const trimmedQuery = query.trim();
 
-  const resolvedTargetId = hasPresetLocations
-    ? id
-    : createCustomLocation(city, district, neighborhood)?.id ?? "";
-  const canSubmit = Boolean(city && resolvedTargetId);
+  const resolvedTargetId = useMemo(
+    () => resolveLocationIdForSelection(city, district, neighborhood) ?? "",
+    [city, district, neighborhood],
+  );
+  const targetPreviewLabel = useMemo(() => {
+    if (!resolvedTargetId) return null;
+    const resolved = resolveLocation(resolvedTargetId);
+    return resolved ? locationLabel(resolved) : null;
+  }, [resolvedTargetId]);
 
-  const selectedPresetLocation = hasPresetLocations
-    ? locations.find((location) => location.id === id) ?? null
-    : null;
-  const targetPreviewLabel = hasPresetLocations
-    ? selectedPresetLocation
-      ? locationLabel(selectedPresetLocation)
-      : null
-    : city && district.trim() && neighborhood.trim()
-      ? `${neighborhood.trim()}, ${district.trim()}, ${city}`
-      : null;
+  const canSubmit = Boolean(city && district && neighborhood && resolvedTargetId);
 
   useEffect(() => {
     if (pendingPlan) {
@@ -59,16 +97,8 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
 
   function changeCity(value: string) {
     setCity(value);
-    const hasPresets = locations.some((location) => location.city === value);
-    if (!value || hasPresets) {
-      setDistrict("");
-      setNeighborhood("");
-      setId("");
-    } else {
-      setDistrict("Merkez");
-      setNeighborhood("Merkez Mahallesi");
-      setId("");
-    }
+    setDistrict("");
+    setNeighborhood("");
     setNotice("");
     setQuery("");
     setPendingPlan(null);
@@ -76,7 +106,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
 
   function changeDistrict(value: string) {
     setDistrict(value);
-    setId("");
+    setNeighborhood("");
     setNotice("");
     setPendingPlan(null);
   }
@@ -134,7 +164,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
       {variant === "page" && (
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Teslimat Adresini Seç</h2>
-          <p className="mt-1.5 text-sm text-slate-600">Önce şehrini seç, ardından ilçe ve mahalleni belirle.</p>
+          <p className="mt-1.5 text-sm text-slate-600">Önce şehrini seç, ardından gerçek ilçe ve mahalleni belirle.</p>
         </div>
       )}
 
@@ -153,27 +183,6 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
           ) : (
             <span className="text-xs font-medium text-slate-600">81 il</span>
           )}
-        </div>
-
-        <div className="flex flex-wrap gap-2" aria-label="Popüler şehirler">
-          {QUICK_CITIES.map((name) => {
-            const active = city === name;
-            return (
-              <button
-                key={name}
-                type="button"
-                aria-pressed={active}
-                onClick={() => changeCity(name)}
-                className={
-                  active
-                    ? "min-h-11 rounded-xl border-2 border-brand bg-[#FFF1F6] px-3.5 py-2 text-sm font-bold text-brand-dark shadow-xs"
-                    : "min-h-11 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand hover:bg-[#FFF1F6]"
-                }
-              >
-                {name}
-              </button>
-            );
-          })}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -199,7 +208,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Ör. Bursa, Trabzon..."
+                placeholder="Ör. İstanbul, Muğla..."
                 autoComplete="off"
                 className={trimmedQuery ? "field pl-10 pr-16 text-sm" : "field pl-10 pr-3 text-sm"}
                 aria-describedby="city-results"
@@ -217,7 +226,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
           </label>
 
           <label className="block min-w-0">
-            <span className="mb-1.5 block text-xs font-semibold text-slate-700">Veya tüm illerden seç</span>
+            <span className="mb-1.5 block text-xs font-semibold text-slate-700">Listeden seç</span>
             <select
               required
               className="location-select text-sm"
@@ -267,103 +276,69 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
       </fieldset>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {hasPresetLocations || !city ? (
-          <>
-            <label className="block">
-              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
-                  2
-                </span>
-                <span>İlçe</span>
+        <label className="block min-w-0">
+          <span className="mb-1.5 flex items-center justify-between gap-2 text-base font-bold text-slate-900">
+            <span className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+                2
               </span>
-              <select
-                required
-                disabled={!city}
-                className="location-select"
-                value={district}
-                onChange={(event) => changeDistrict(event.target.value)}
-              >
-                <option value="">{city ? "İlçe seçin" : "Önce şehir seçin"}</option>
-                {districtOptions.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <span>İlçe</span>
+            </span>
+            {city && districtOptions.length > 0 && (
+              <span className="text-xs font-medium text-slate-500">{districtOptions.length} ilçe</span>
+            )}
+          </span>
+          <select
+            required
+            disabled={!city || !regions}
+            className="location-select"
+            value={district}
+            onChange={(event) => changeDistrict(event.target.value)}
+          >
+            <option value="">
+              {!city ? "Önce şehir seçin" : !regions ? "İlçeler yükleniyor..." : "İlçe seçin"}
+            </option>
+            {districtOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
 
-            <label className="block">
-              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
-                  3
-                </span>
-                <span>Mahalle</span>
+        <label className="block min-w-0">
+          <span className="mb-1.5 flex items-center justify-between gap-2 text-base font-bold text-slate-900">
+            <span className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+                3
               </span>
-              <select
-                required
-                disabled={!district}
-                className="location-select"
-                value={id}
-                onChange={(event) => {
-                  setId(event.target.value);
-                  setNotice("");
-                  setPendingPlan(null);
-                }}
-              >
-                <option value="">{district ? "Mahalle seçin" : "Önce ilçe seçin"}</option>
-                {neighborhoodOptions.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.neighborhood}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
-        ) : (
-          <>
-            <label className="block">
-              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
-                  2
-                </span>
-                <span>İlçe</span>
-              </span>
-              <input
-                type="text"
-                required
-                className="field font-medium"
-                value={district}
-                onChange={(event) => {
-                  setDistrict(event.target.value);
-                  setNotice("");
-                  setPendingPlan(null);
-                }}
-                placeholder="ör. Kadıköy"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 flex items-center gap-2 text-base font-bold text-slate-900">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
-                  3
-                </span>
-                <span>Mahalle</span>
-              </span>
-              <input
-                type="text"
-                required
-                className="field font-medium"
-                value={neighborhood}
-                onChange={(event) => {
-                  setNeighborhood(event.target.value);
-                  setNotice("");
-                  setPendingPlan(null);
-                }}
-                placeholder="ör. Caferağa"
-              />
-            </label>
-          </>
-        )}
+              <span>Mahalle</span>
+            </span>
+            {district && neighborhoodOptions.length > 0 && (
+              <span className="text-xs font-medium text-slate-500">{neighborhoodOptions.length} mahalle</span>
+            )}
+          </span>
+          <select
+            required
+            disabled={!district || !regions}
+            className="location-select"
+            value={neighborhood}
+            onChange={(event) => {
+              setNeighborhood(event.target.value);
+              setNotice("");
+              setPendingPlan(null);
+            }}
+          >
+            <option value="">
+              {!district ? "Önce ilçe seçin" : !regions ? "Mahalleler yükleniyor..." : "Mahalle seçin"}
+            </option>
+            {neighborhoodOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {pendingPlan && (
@@ -445,7 +420,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
 
           {!canSubmit && (
             <p className="text-center text-sm font-medium text-slate-600">
-              Devam etmek için yukarıdan il, ilçe ve mahalle seçin.
+              Devam etmek için yukarıdan şehir, ilçe ve mahalle seçin.
             </p>
           )}
         </div>
