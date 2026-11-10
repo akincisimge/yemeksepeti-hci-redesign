@@ -1,35 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { formatTRY } from "../types/domain";
 import {
-  clearDemoOrder,
   DEMO_TRACKING_STEPS,
-  readDemoOrder,
-  saveDemoOrder,
+  getAutoOrderStage,
+  useDemoOrder,
   type DemoOrder,
-  type DemoOrderStage,
 } from "../state/demoOrder";
 
 export default function SuccessPage() {
   const location = useLocation();
   const navigationOrder = location.state as DemoOrder | null;
-  const [order, setOrder] = useState<DemoOrder | null>(() => {
-    const saved = readDemoOrder();
-    return saved ?? (navigationOrder?.orderId ? navigationOrder : null);
-  });
+  const storedOrder = useDemoOrder();
+  const [fallbackTick, setFallbackTick] = useState(0);
 
-  function moveStage(direction: -1 | 1) {
-    if (!order) return;
-    const stage = Math.max(0, Math.min(3, order.stage + direction)) as DemoOrderStage;
-    const next = { ...order, stage };
-    setOrder(next);
-    saveDemoOrder(next);
-  }
+  useEffect(() => {
+    if (storedOrder || !navigationOrder?.createdAt) return;
+    const timer = window.setInterval(() => setFallbackTick((t) => t + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [storedOrder, navigationOrder?.createdAt]);
 
-  function resetTracking() {
-    clearDemoOrder();
-    setOrder(null);
-  }
+  const fallbackOrder =
+    !storedOrder && navigationOrder?.orderId
+      ? {
+          ...navigationOrder,
+          stage: Math.max(
+            navigationOrder.stage,
+            getAutoOrderStage(navigationOrder.createdAt, Date.now() + fallbackTick * 0),
+          ) as DemoOrder["stage"],
+        }
+      : null;
+
+  const order = storedOrder ?? fallbackOrder;
 
   if (!order) {
     return (
@@ -41,7 +43,7 @@ export default function SuccessPage() {
           <p className="font-semibold text-brand">SİPARİŞ TAKİBİ</p>
           <h1 className="text-3xl font-bold text-[#0F172A]">Henüz aktif siparişin yok</h1>
           <p className="max-w-2xl text-base leading-6 text-slate-600">
-            Restoran veya marketlerden bir sipariş oluşturduktan sonra teslimat adımlarını buradan takip edebilirsin.
+            Restoran veya marketlerden bir sipariş oluşturduktan sonra teslimat adımlarını buradan canlı takip edebilirsin.
           </p>
 
           <div className="flex flex-wrap gap-3 pt-2">
@@ -79,7 +81,7 @@ export default function SuccessPage() {
           Siparişini takip et
         </h1>
         <p className="mt-3 text-base leading-6 text-[#475569]">
-          Sipariş numaran ve güncel teslimat durumun aşağıda yer alıyor.
+          Sipariş numaran ve güncel teslimat durumun otomatik olarak güncellenir.
         </p>
         <dl className="mt-6 grid gap-4 rounded-xl bg-[#F8FAFC] p-5 sm:grid-cols-2">
           <div>
@@ -151,7 +153,7 @@ export default function SuccessPage() {
           className="mt-5 h-3 w-full overflow-hidden rounded-full bg-slate-200"
         >
           <div
-            className="h-full rounded-full bg-[#D90049] transition-all duration-300"
+            className="h-full rounded-full bg-[#D90049] transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -196,26 +198,20 @@ export default function SuccessPage() {
           })}
         </ol>
 
-        <div className="mt-6 border-t border-[#CBD5E1] pt-6">
-          <h3 className="font-semibold text-[#0F172A]">Teslimat aşamasını güncelle</h3>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={() => moveStage(1)} disabled={completed} className="btn-primary flex-1">
-              {completed ? "Sipariş teslim edildi" : "Sonraki aşamaya geç →"}
-            </button>
-            <button
-              type="button"
-              onClick={() => moveStage(-1)}
-              disabled={order.stage === 0}
-              className="min-h-11 rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 font-semibold text-[#0F172A] transition hover:bg-[#F8FAFC] disabled:opacity-50"
-            >
-              Önceki aşamaya dön
-            </button>
-          </div>
-          {completed && (
-            <p className="mt-4 font-semibold text-[#166534]" role="status">
-              Siparişin başarıyla teslim edildi.
-            </p>
-          )}
+        <div
+          role="status"
+          className={
+            completed
+              ? "mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900"
+              : "mt-6 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-700"
+          }
+        >
+          {!completed && <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-brand" aria-hidden="true" />}
+          <span>
+            {completed
+              ? "✓ Siparişin başarıyla teslim edildi. Afiyet olsun!"
+              : "Sipariş durumun canlı olarak otomatik güncelleniyor."}
+          </span>
         </div>
       </section>
 
@@ -227,19 +223,6 @@ export default function SuccessPage() {
         >
           Yeni sipariş oluştur
         </Link>
-        <Link
-          to="/support"
-          className="inline-flex min-h-11 items-center rounded-xl border border-brand bg-[#FFF1F6] px-5 py-3 font-semibold text-brand-dark hover:bg-white"
-        >
-          Bu siparişle ilgili canlı destek al
-        </Link>
-        <button
-          type="button"
-          onClick={resetTracking}
-          className="min-h-11 rounded-xl px-3 py-2 text-sm font-semibold text-[#991B1B] underline underline-offset-2 hover:bg-red-50"
-        >
-          Siparişi gizle
-        </button>
       </div>
     </div>
   );

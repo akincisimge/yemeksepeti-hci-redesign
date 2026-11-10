@@ -7,7 +7,11 @@ import {
   validateDemoAccount,
 } from "../src/state/demoAccount.ts";
 import { buildSupportReply, SUPPORT_TOPICS } from "../src/data/supportAssistant.ts";
-import { DEMO_TRACKING_STEPS } from "../src/state/demoOrder.ts";
+import {
+  AUTO_STAGE_THRESHOLDS_MS,
+  DEMO_TRACKING_STEPS,
+  getAutoOrderStage,
+} from "../src/state/demoOrder.ts";
 
 test("demo account validation rejects invalid name, email, or phone and accepts sample account", () => {
   const invalid = validateDemoAccount({ name: "A", email: "bad-email", phone: "123" });
@@ -93,4 +97,14 @@ test("support assistant uses active order, location and account context honestly
   assert.match(accountReply.text, /Ayşe Yılmaz/);
   assert.equal(accountReply.action?.to, "/account");
   assert.equal(DEMO_TRACKING_STEPS.length, 4);
+});
+
+test("order tracking advances automatically through all 4 stages over elapsed time", () => {
+  const createdAt = "2026-11-10T20:00:00.000Z";
+  const base = Date.parse(createdAt);
+  assert.equal(getAutoOrderStage(createdAt, base), 0);
+  assert.equal(getAutoOrderStage(createdAt, base + AUTO_STAGE_THRESHOLDS_MS.preparing), 1);
+  assert.equal(getAutoOrderStage(createdAt, base + AUTO_STAGE_THRESHOLDS_MS.onTheWay), 2);
+  assert.equal(getAutoOrderStage(createdAt, base + AUTO_STAGE_THRESHOLDS_MS.delivered), 3);
+  assert.equal(getAutoOrderStage("invalid-date", base), 0);
 });
