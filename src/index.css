@@ -7,7 +7,7 @@
 @layer base {
   html { scroll-behavior: smooth; }
   body { margin: 0; font-family: var(--font-sans); }
-  button, input, textarea { font: inherit; }
+  button, input, textarea, select { font: inherit; }
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; opacity: .6; }
   :focus-visible { outline: 3px solid #d90049; outline-offset: 3px; }
@@ -16,7 +16,13 @@
   .btn-primary { @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-5 py-3 font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-4 focus-visible:outline-offset-2 disabled:opacity-50; }
   .nav-link { @apply inline-flex min-h-11 items-center rounded-xl px-3 py-2 text-slate-700 hover:bg-pink-50; }
   .nav-link-active { @apply bg-pink-50 text-brand; }
-  .field { @apply w-full min-h-11 rounded-xl border border-slate-400 bg-white px-3 py-3 text-slate-900 focus:border-brand focus:outline-2 focus:outline-offset-2 focus:outline-brand; }
+  .field { @apply w-full min-h-12 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-900 transition hover:border-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15; }
+  .location-select {
+    @apply w-full min-h-12 appearance-none rounded-xl border-2 border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-base font-medium text-slate-900 transition hover:border-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-600;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%23475569' stroke-width='1.8' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 14px center;
+    background-repeat: no-repeat;
+  }
   .filter { @apply min-h-11 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:border-brand; }
   .filter-active { @apply min-h-11 rounded-full border border-brand bg-pink-50 px-4 py-2 text-sm font-semibold text-brand; }
   .quantity { @apply flex h-11 w-11 items-center justify-center rounded-lg border border-slate-300 bg-white text-xl font-bold hover:border-brand; }

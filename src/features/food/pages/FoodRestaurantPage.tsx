@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY, type Product } from "../../../types/domain";
+import StoreSwitchDialog from "../../../components/StoreSwitchDialog";
 import FoodBasket from "../components/FoodBasket";
 import FoodMobileBasketBar from "../components/FoodMobileBasketBar";
 import {
@@ -25,11 +26,10 @@ export default function FoodRestaurantPage() {
   const { restaurantId } = useParams();
   const [searchParams] = useSearchParams();
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
-  const { add, carts, clear } = useCart();
+  const { add, carts } = useCart();
   const [notice, setNotice] = useState("");
   const [activeMenuSection, setActiveMenuSection] = useState("main");
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
-  const [replacementProduct, setReplacementProduct] = useState<Product | null>(null);
   const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
   const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
@@ -40,7 +40,6 @@ export default function FoodRestaurantPage() {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [reviewNotice, setReviewNotice] = useState("");
-  const dialog = useRef<HTMLDialogElement>(null);
   const customizationDialog = useRef<HTMLDialogElement>(null);
   const restaurant = foodRestaurants.find((item) => item.id === restaurantId);
   const campaignRequested = searchParams.get("campaign") === "true";
@@ -61,25 +60,11 @@ export default function FoodRestaurantPage() {
   }, [campaignRequested, restaurantId, setActiveFoodCoupon]);
 
   useEffect(() => {
-    const element = dialog.current;
-    if (!element) return;
-    if (pendingProduct && !element.open) element.showModal();
-    if (!pendingProduct && element.open) element.close();
-  }, [pendingProduct]);
-
-  useEffect(() => {
     const element = customizationDialog.current;
     if (!element) return;
     if (customizingProduct && !element.open) element.showModal();
     if (!customizingProduct && element.open) element.close();
   }, [customizingProduct]);
-
-  useEffect(() => {
-    if (!replacementProduct || carts.food.length > 0) return;
-    const result = add(replacementProduct);
-    setNotice(result === "added" ? `${replacementProduct.name}: Ürün sepete eklendi` : "Sepet değiştirilemedi.");
-    setReplacementProduct(null);
-  }, [add, carts.food.length, replacementProduct]);
 
   if (!restaurant) {
     return (
@@ -207,9 +192,15 @@ export default function FoodRestaurantPage() {
 
   const replaceBasketAndAdd = () => {
     if (!pendingProduct) return;
-    clear("food");
-    setReplacementProduct(pendingProduct);
+    const product = pendingProduct;
     setPendingProduct(null);
+    add(product, { replace: true });
+    setNotice(`${product.name}: Yeni restoran sepeti oluşturuldu ve ürün eklendi.`);
+  };
+
+  const cancelBasketSwitch = () => {
+    setPendingProduct(null);
+    setNotice("Restoran değişikliği iptal edildi. Mevcut sepetin korundu.");
   };
 
   const submitReview = (event: FormEvent<HTMLFormElement>) => {
@@ -233,10 +224,7 @@ export default function FoodRestaurantPage() {
   };
 
   return (
-    <div
-      className="relative left-1/2 max-w-[1400px] -translate-x-1/2 space-y-8 px-4 pb-24 lg:pb-0"
-      style={{ width: "min(1400px, calc(100vw - 2rem))" }}
-    >
+    <div className="space-y-8 pb-24 lg:pb-0">
       <Link to="/food" className="inline-flex min-h-11 items-center font-semibold text-[#D90049] underline underline-offset-4 hover:text-[#B6003C]">
         ← Restoran listesine dön
       </Link>
@@ -271,8 +259,8 @@ export default function FoodRestaurantPage() {
         </section>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)_18rem]">
-        <aside className="order-3 lg:order-1 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:w-72 lg:overflow-y-auto lg:pr-2">
+      <div className="grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)_17rem]">
+        <aside className="order-3 lg:order-1 lg:sticky lg:top-32 lg:max-h-[calc(100vh-9rem)] lg:w-[17rem] lg:overflow-y-auto lg:pr-1">
           <section aria-labelledby="reviews-title" className="space-y-5 rounded-2xl border border-[#CBD5E1] bg-white p-5 shadow-sm">
             <div>
               <h2 id="reviews-title" className="text-xl font-bold text-[#0F172A]">Müşteri Yorumları ve Değerlendirme</h2>
@@ -344,7 +332,7 @@ export default function FoodRestaurantPage() {
                     padding: "10px",
                     borderRadius: "10px",
                   }}
-                  className="w-full text-sm placeholder:text-slate-400 outline-none focus:border-[#D90049]"
+                  className="w-full text-sm placeholder:text-slate-600 outline-none focus:border-[#D90049]"
                 />
               </label>
               <button
@@ -414,7 +402,7 @@ export default function FoodRestaurantPage() {
 
           <section aria-labelledby="menu-title" className="min-w-0">
             <h2 id="menu-title" className="text-2xl font-bold text-[#0F172A]">Menü</h2>
-            <nav aria-label="Menü bölümleri" className="sticky top-16 z-20 mt-3 -mx-1 overflow-x-auto bg-[#F8FAFC]/95 px-1 py-2.5 backdrop-blur">
+            <nav aria-label="Menü bölümleri" className="sticky top-[132px] z-20 mt-3 -mx-1 overflow-x-auto bg-[#F8FAFC]/95 px-1 py-2.5 backdrop-blur">
               <ul className="flex min-w-max gap-2">
                 {menuSections.map((section) => (
                   <li key={section.id}>
@@ -443,7 +431,7 @@ export default function FoodRestaurantPage() {
             <p role="status" aria-live="polite" className="mt-3 min-h-6 font-semibold text-[#166534]">{notice}</p>
             {menuSections.map((section) => (
               <div key={section.id} className="mt-5">
-                <h3 id={`section-${section.id}`} className="scroll-mt-28 mb-3 text-xl font-semibold text-[#0F172A]">{section.title}</h3>
+                <h3 id={`section-${section.id}`} className="scroll-mt-44 mb-3 text-xl font-semibold text-[#0F172A]">{section.title}</h3>
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {section.products.map((product) => (
                     <li
@@ -659,36 +647,13 @@ export default function FoodRestaurantPage() {
         )}
       </dialog>
 
-      <dialog
-        ref={dialog}
-        aria-labelledby="restaurant-switch-title"
-        onClose={() => setPendingProduct(null)}
-        onClick={(event) => {
-          if (event.target === event.currentTarget) dialog.current?.close();
-        }}
-        className="fixed inset-0 m-auto w-[calc(100%_-_24px)] max-w-lg rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-2xl backdrop:bg-[#0F172A]/50"
-      >
-        <h2 id="restaurant-switch-title" className="text-xl font-bold text-[#0F172A]">Restoran değişikliğini onayla</h2>
-        <p className="mt-3 leading-6 text-[#475569]">
-          Sepetinizde başka bir restorana ({foodRestaurants.find((item) => item.id === carts.food[0]?.product.storeId)?.name ?? carts.food[0]?.product.storeName}) ait ürünler var. Aynı anda yalnızca tek bir restorandan sipariş verebilirsiniz.
-        </p>
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={() => dialog.current?.close()}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#CBD5E1] px-4 py-3 font-semibold text-[#0F172A] hover:border-[#D90049]"
-          >
-            Vazgeç / Mevcut Sepeti Koru
-          </button>
-          <button
-            type="button"
-            onClick={replaceBasketAndAdd}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#D90049] px-4 py-3 font-semibold text-white hover:bg-[#B6003C]"
-          >
-            Sepeti Temizle ve Bu Ürünü Ekle
-          </button>
-        </div>
-      </dialog>
+      <StoreSwitchDialog
+        pendingProduct={pendingProduct}
+        currentStoreName={foodRestaurants.find((item) => item.id === carts.food[0]?.product.storeId)?.name ?? carts.food[0]?.product.storeName ?? ""}
+        serviceLabel="restoran"
+        onCancel={cancelBasketSwitch}
+        onConfirm={replaceBasketAndAdd}
+      />
       <FoodMobileBasketBar />
     </div>
   );

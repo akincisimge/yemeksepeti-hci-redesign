@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import CampaignCarousel from "../components/CampaignCarousel";
 import RestaurantCard from "../components/RestaurantCard";
 import RestaurantFilters, { type QuickFilters } from "../components/RestaurantFilters";
@@ -13,6 +13,9 @@ import {
   type FoodSort,
 } from "../data/foodData";
 import { useCart } from "../../../state/CartContext";
+import { useDelivery } from "../../../state/DeliveryContext";
+import { locationLabel } from "../../../data/delivery";
+import type { LayoutContext } from "../../../components/Layout";
 
 const initialQuickFilters: QuickFilters = {
   freeDelivery: false,
@@ -46,21 +49,27 @@ export default function FoodHomePage() {
   const [maxMinBasket, setMaxMinBasket] = useState(maximumBudget);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOption | "custom">("all");
   const { count } = useCart();
+  const { delivery, available } = useDelivery();
+  const { openAddress } = useOutletContext<LayoutContext>();
   const normalizedSearch = search.trim().toLocaleLowerCase("tr");
+  const availableRestaurants = useMemo(
+    () => foodRestaurants.filter((restaurant) => available(restaurant.id)),
+    [available],
+  );
   const quickFilterCounts: Record<keyof QuickFilters, number> = {
-    freeDelivery: foodRestaurants.filter((restaurant) => restaurant.deliveryFee === 0).length,
-    fastDelivery: foodRestaurants.filter(isFoodFastDelivery).length,
-    discount: foodRestaurants.filter(hasFoodDiscount).length,
+    freeDelivery: availableRestaurants.filter((restaurant) => restaurant.deliveryFee === 0).length,
+    fastDelivery: availableRestaurants.filter(isFoodFastDelivery).length,
+    discount: availableRestaurants.filter(hasFoodDiscount).length,
   };
   const ratingCounts: Record<number, number> = {
-    0: foodRestaurants.length,
-    4: foodRestaurants.filter((restaurant) => restaurant.rating >= 4).length,
-    4.5: foodRestaurants.filter((restaurant) => restaurant.rating >= 4.5).length,
-    4.8: foodRestaurants.filter((restaurant) => restaurant.rating >= 4.8).length,
+    0: availableRestaurants.length,
+    4: availableRestaurants.filter((restaurant) => restaurant.rating >= 4).length,
+    4.5: availableRestaurants.filter((restaurant) => restaurant.rating >= 4.5).length,
+    4.8: availableRestaurants.filter((restaurant) => restaurant.rating >= 4.8).length,
   };
 
   const filteredRestaurants = useMemo(() => {
-    const filtered = foodRestaurants.filter((restaurant) => {
+    const filtered = availableRestaurants.filter((restaurant) => {
       const matchesSearch = `${restaurant.name} ${restaurant.cuisine} ${restaurant.description}`
         .toLocaleLowerCase("tr")
         .includes(normalizedSearch);
@@ -78,7 +87,7 @@ export default function FoodHomePage() {
       if (sort === "rating") return second.rating - first.rating;
       return 0;
     });
-  }, [cuisine, maxMinBasket, minimumRating, normalizedSearch, quickFilters, sort]);
+  }, [availableRestaurants, cuisine, maxMinBasket, minimumRating, normalizedSearch, quickFilters, sort]);
 
   const hasActiveFilters = Boolean(
     search.trim() ||
@@ -106,7 +115,39 @@ export default function FoodHomePage() {
   };
 
   return (
-    <div className="space-y-7 pb-24 pt-6 lg:pb-0">
+    <div className="space-y-7 pb-24 lg:pb-0">
+      <Link to="/" className="inline-flex min-h-11 items-center font-semibold text-slate-600 hover:text-brand">
+        ← Hizmet seçimine dön
+      </Link>
+      <header className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+        <p className="font-semibold text-brand">YEMEK</p>
+        <h1 className="mt-2 text-3xl font-bold text-[#0F172A] sm:text-4xl">Restoranları keşfet.</h1>
+        <p className="mt-3 max-w-2xl text-slate-600">
+          Mutfak, bütçe, puan ve kampanyalara göre filtrele; seçtiğin restoranın menüsünden sipariş oluştur.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-4">
+          <div>
+            <p className="text-sm text-slate-600">Teslimat konumun</p>
+            <p className="mt-1 font-semibold text-slate-900">{delivery && locationLabel(delivery)}</p>
+          </div>
+          <button
+            type="button"
+            data-address-trigger="food-home"
+            className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 font-semibold text-brand hover:border-brand"
+            onClick={openAddress}
+          >
+            Konumu değiştir
+          </button>
+        </div>
+      </header>
+      {availableRestaurants.length === 0 ? (
+        <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+          <h2 className="text-xl font-bold text-[#0F172A]">Bu konumda henüz hizmet veren restoran bulunmuyor</h2>
+          <p className="mt-3 text-slate-600">Başka bir teslimat konumu seçerek restoranları keşfedebilirsin.</p>
+          <button type="button" className="btn-primary mt-5" onClick={openAddress}>Konumu değiştir</button>
+        </section>
+      ) : (
+        <>
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="space-y-3">
           <form
@@ -180,7 +221,7 @@ export default function FoodHomePage() {
             Maks. {maxMinBasket} TL
           </span>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2">
           {budgetOptions.map((option) => (
             <button
               type="button"
@@ -281,6 +322,8 @@ export default function FoodHomePage() {
           </section>
         </div>
       </div>
+      </>
+      )}
       <FoodMobileBasketBar />
     </div>
   );

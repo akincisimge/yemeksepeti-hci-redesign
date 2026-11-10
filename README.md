@@ -53,6 +53,7 @@ Mevcut başlangıç iskeleti iki hizmetli giriş, örnek arama/ürün kataloğu,
 
 **Public repo herkese görüntüleme izni verir; doğrudan kod yazma yetkisi vermez.** Ekip üyeleri için Write collaborator daveti veya fork + PR gerekir.
 
-## 5. Güvenlik ve kapsam
+## 5. Güvenlik, veri kaynakları ve kapsam
 
-Gerçek kişisel bilgiler, gerçek adres/telefon, banka/kart verileri ya da hassas ekran görüntüleri Public repoya eklenmez. Mock verilerle simülasyon yapılır. Backend, ödeme sağlayıcısı, gerçek restoran API'si yoktur.
+- **İl, ilçe ve mahalle verisi:** Türkiye'nin 81 il, 973 ilçe ve gerçek mahalle verileri (`src/data/muglaRegions.ts` ve `src/data/turkeyRegionsData.js`), PTT resmî posta kodu veri tabanından (`postakodu.ptt.gov.tr`) derlenen **MIT lisanslı** [`turkey-neighbourhoods`](https://github.com/muratgozel/turkey-neighbourhoods) (`v4.0.3`) paketinden üretilmiştir.
+- **Kapsam:** Gerçek kişisel bilgiler, gerçek ödeme, banka/kart verileri veya canlı restoran teslimatı sunulmaz; sipariş takibi, sepet, profil ve canlı destek tarayıcı depolaması üzerinde çalışır.

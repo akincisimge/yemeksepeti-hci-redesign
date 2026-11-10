@@ -4,17 +4,22 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { DeliveryProvider } from "./state/DeliveryContext";
 import { CartProvider } from "./state/CartContext";
+import { AccountProvider } from "./state/AccountContext";
 import { FoodCouponProvider } from "./features/food/state/FoodCouponContext";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <CartProvider>
-        <FoodCouponProvider>
-          <DeliveryProvider><App /></DeliveryProvider>
-        </FoodCouponProvider>
-      </CartProvider>
+      <AccountProvider>
+        <CartProvider>
+          <FoodCouponProvider>
+            <DeliveryProvider>
+              <App />
+            </DeliveryProvider>
+          </FoodCouponProvider>
+        </CartProvider>
+      </AccountProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
