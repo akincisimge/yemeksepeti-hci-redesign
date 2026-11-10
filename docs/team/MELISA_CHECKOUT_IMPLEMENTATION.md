@@ -1,6 +1,6 @@
 # Ortak sipariş akışı — uygulama ve doğrulama raporu
 
-Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **53/53 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
+Son güncelleme: 10 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Adres/özet, ödeme, sipariş onayı ve durum ekranları tamamlandı. İlk bölüm `97315f3`, ödeme bölümü `aaeff61` commit'inde kayıtlıdır; sonuç/durum bölümü bunların üzerine eklenmiştir. Güncel doğrulama: **53/53 test**, başarılı derleme ve iki servis için masaüstü tarayıcı kontrolleri. Katılımcı testi ve ekip merge işlemi bekliyor.
 
 ## Değişiklik ve gerekçe
 
@@ -17,6 +17,16 @@ Tarih: 9 Kasım 2026. Temel: `main` / `d50e2ad`. Dal: `feat/melisa-checkout`. Ad
 
 Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başlangıç kodundaki hatalar orijinal Yemeksepeti'ne atfedilmez.
 
+## BİM ve CarrefourSA ödeme kapsamı düzeltmesi — 10 Kasım 2026
+
+Kullanıcının BİM ödeme ekranında yalnız online kart görünüyordu. Sebep checkout'ın satıcı eşlemesiydi: önceki değişiklik üç yöntemi yalnız Y-Market'e açmış, BİM/CarrefourSA'yı online kartla sınırlı bırakmıştı. Bu sorun `delivery.ts` birleştirme çakışmasından bağımsızdır.
+
+Artık mevcut üç Market senaryosunda (`ymarket-1`, `bim-1`, `carrefour-1`) online kart, nakit ve kapıda temassız kart birlikte sunulur. Bu, ortak ödeme akışı için seçilen prototip kapsamıdır; gerçek şubelerin ödeme politikası araştırılmış gibi sunulmaz. Tanımlanmamış satıcılarda mevcut online kart varsayılanı korunur. Yemek kartları Market seçeneklerine eklenmez.
+
+**Doğrulama:** 53/53 test ve TypeScript/Vite derlemesi geçti. Mevcut regresyon testleri üç mağazanın seçeneklerini, nakit/kapıda kart tercihinin normalleştirmede kaybolmamasını ve altı mağaza-yöntem birleşiminin sipariş kaydında korunmasını kapsayacak şekilde genişletildi. Kart verisi saklama beyaz listesi değişmedi.
+
+Masaüstü tarayıcı kontrolünde BİM'in üç seçeneği görüldü; kart bilgisi girmeden **234,90 + 24,99 = 259,89 TL nakit** sipariş tamamlandı. CarrefourSA'da üç seçenek görüldü; kapıda kart tercihi ödeme sayfası yenilendiğinde korundu ve **278,00 + 39,99 = 317,99 TL kapıda temassız kart** siparişi tamamlandı. Sonuçta mağaza, toplam ve ödeme yöntemi doğru gösterildi. Bunlar teknik kontrollerdir; katılımcı testi değildir. Figma/ZIP güncellenmedi.
+
 ## Yeni Market referansı ve ödeme UX düzeltmesi — 9 Kasım 2026
 
 **Uygulama öncesi bulgu:** Kullanıcının 23.00 tarihli özgün Market ekranında online kart, nakit ve kapıda temassız kart görülüyor. Önceki yalnız-online varsayımı bu örnek için yanlıştır; tüm gerçek mağazalar hakkında genelleme yapılmaz. Çalışan prototipte 1363 × 936 görünümünde tek ürünle bile onay düğmesi ilk ekranın altında kalıyor. Ödeme ekranında teslimat tahmini yok; yemek kartı kapsamı belirsiz; CVV'nin yeri açıklanmıyor.
@@ -27,7 +37,7 @@ Yararlar hipotezdir; gerçek kullanıcı araştırması sonucu değildir. Başla
 
 
 
-**Kapsam ve veri:** Y-Market (`ymarket-1`) online kart, nakit ve kapıda temassız kart sunar. BİM/CarrefourSA ve tanımlanmamış satıcılar yeni referans olmadan önceki online-only kapsamda kalır; bu gerçek şubelerin kısıtı değil prototipin doğrulanmış kapsamıdır. `paymentModel.ts` içindeki satıcı eşlemesi yeni katalog kimlikleri eklenirse güncellenmelidir. Ortak sipariş parser'ı Market nakit/kapıda kart kayıtlarını kabul eder, Market yemek kartını reddeder.
+**9 Kasım kapsamı (tarihsel):** Bu aşamada Y-Market (`ymarket-1`) online kart, nakit ve kapıda temassız kart sunarken BİM/CarrefourSA önceki online kart kapsamındaydı. 10 Kasım düzeltmesi mevcut üç Market senaryosunu aynı üç yönteme geçirdi; tanımlanmamış satıcıların online kart varsayılanı korundu. `paymentModel.ts` içindeki satıcı eşlemesi yeni katalog kimlikleri eklenirse güncellenmelidir. Ortak sipariş parser'ı Market nakit/kapıda kart kayıtlarını kabul eder, Market yemek kartını reddeder.
 
 İki kurgu restoranın yemek kartı listeleri açıkça gösterilir: Mahalle Mutfağı için Ticket Restaurant, Pluxee, Multinet; Meydan Pizza için Ticket Restaurant, Multinet. Bu listeler ders senaryosu verisidir; gerçek işletmelerin anlaşmaları araştırılmış gibi sunulmaz. Kart sağlayıcı entegrasyonu veya ek kart numarası alanı yoktur.
 
@@ -76,7 +86,7 @@ Tutarlar kuruş cinsinden toplanır. Minimum sepet tutarına teslimat ücreti ka
 - [Figma](https://www.figma.com/design/i6MQxPs8Ne0n8KucRnZlXk) 1440px tasarım referansıdır. Kod mevcut ortak tipografi ve renk token'larını kullanır.
 - Örnek ürün/fiyat yerine güncel sepet verisi gösterilir. Modelde poşet ücreti bulunmadığı için Figma'daki örnek ücret koda sabitlenmez.
 - Üst alanda Figma'nın örnek Yardım/Deniz kontrolleri yerine mevcut çalışan bölge/profil paneli korunur.
-- Kart alanları, bahşiş ve ödeme hata durumları ikinci bölümde uygulandı. İki kurgu restoran dört yöntem, Y-Market üç yöntem sunar; diğer marketler önceki online-only kapsamda kalır. Yemek kartları bu kapsamda teslimatta ödeme seçeneğidir; sağlayıcı/şirket bazında entegrasyon yoktur.
+- Kart alanları, bahşiş ve ödeme hata durumları ikinci bölümde uygulandı. İki kurgu restoran dört yöntem; Yemeksepeti Market, BİM ve CarrefourSA senaryoları aynı üç yöntemi sunar. Yemek kartları bu kapsamda teslimatta ödeme seçeneğidir; sağlayıcı/şirket bazında entegrasyon yoktur.
 - Kurgu kayıtlı kartı seçme/kaldırma ve işlem sürerken iptal etme kontrolleri kısayol ve kullanıcı kontrolünü çalışır hâle getirir.
 - `SuccessPage.tsx` onaylı sipariş alındı/kurye/teslim edildi düzenine geçirildi. Aradaki hazırlanıyor durumu aynı bileşenleri kullanır. Durum, sipariş bilgileri, özet ve yardım alanları çalışır; ürün ekranında demo/HCI etiketi veya elle durum ilerletme düğmesi yoktur.
 - Figma'da üç adres ekranına kısayol kartı eklendi; kurye başlığı ve tek yöntemli Market hata metni düzeltildi; K2 panosu güncellendi. Önce ekranları korundu. Tıklanabilir Figma prototipi/Auto Layout kurulmadı.
@@ -110,7 +120,7 @@ Bu kontroller teknik doğrulamadır. Katılımcı, görev süresi veya kullanıl
 
 - `PaymentForm.tsx` kart sahibi, numara, AA/YY ve gizlenmiş CVV alanlarını; yöntem ve bahşiş seçimlerini içerir. Etiketler ve alan hataları erişilebilir ad/açıklamalarla bağlıdır. Geçersiz formda devam düğmesi pasif olur ve nedeni yanında yazılır.
 - `paymentModel.ts` kart sahibi, 16 haneli numara, geçerli tarih ve 3–4 haneli CVV biçimini kontrol eder. İki numaralık izin listesi kaldırıldı; uygun biçimdeki kurgu bilgilerle yerel işlem başarılı olur. Gerçek kart/banka veya Luhn doğrulaması yapılmaz. `0000 0000 0000 0000` başarılı olur. `0000 0000 0000 0002` aynı açık checkout'taki ilk tamamlanmış denemede hata verir, tekrar denemede başarılı olur. İptal edilen deneme bu senaryoyu tüketmez. Sunum için ad: Deniz Yılmaz, tarih: `12/30`, CVV: `000`. Bunlar banka test kartı değildir; gerçek kart/banka/ödeme servisi kullanılmaz.
-- Yemek yöntemleri: online kart, nakit, kapıda kredi kartı, yemek kartları. Y-Market online kart, nakit ve kapıda temassız kart sunar. Diğer marketlerin prototip kapsamı online karttır. Teslimatta ödeme seçimlerinde online kart alanları aranmaz.
+- Yemek yöntemleri: online kart, nakit, kapıda kredi kartı, yemek kartları. Yemeksepeti Market, BİM ve CarrefourSA senaryoları online kart, nakit ve kapıda temassız kart sunar. Teslimatta ödeme seçimlerinde online kart alanları aranmaz.
 - Bahşiş seçenekleri 0/30/50/75/100 TL'dir. Toplama eklenir; teslimat ücreti gibi minimum ürün tutarını tamamlamaz. “Şimdi değil” toplamı geri alır.
 - Kart alanları React belleğindedir; saklama alanına veya route state'e yazılmaz. Aynı checkout içinde adrese dönüp gelince korunur; sayfadan ayrılma/yenileme sonrasında temizlenir. Bahşiş de yalnız açık akışta tutulur ve yenilemede 0'a döner. Adres taslağı korunur.
 - “Bu kartı sonraki siparişlerim için kaydet”, başarılı işlemden sonra yalnız son dört haneyi ve yerel `presentation-card` / `retry-card` senaryo kimliğini aynı sekmenin sessionStorage alanına yazar. Kısayol maskeli kartı seçer; tam numara, ad ve tarih yeniden doldurulmaz. CVV boş başlar ve odağı alır. “Başka kart kullan” boş formu açar; “Kaydı kaldır” tercihi siler. Eski yalnız kimlik içeren kayıtlar okunur. Gerçek kart saklama/tokenizasyon hizmeti değildir.

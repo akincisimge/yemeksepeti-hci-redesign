@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createDemoOrder, ORDER_STORAGE_KEY, parseDemoOrder, readDemoOrder, resolveDemoOrder, saveDemoOrder } from '../src/state/demoOrder.ts';
 import { confirmationOrder, deliveryTimeLabel, orderStatusDescription } from '../src/features/checkout/orderStatusModel.ts';
 import { deliveryMinutes } from '../src/features/checkout/checkoutModel.ts';
+import { normalizePaymentMethod } from '../src/features/checkout/paymentModel.ts';
 
 const created = new Date('2026-11-09T13:00:00.000Z');
 const input = (service = 'food') => ({
@@ -46,17 +47,22 @@ test('snapshot preserves exact total, tip, note, units, method and service-speci
   assert.match(market.orderId, /^MKT-/);
   assert.deepEqual(market.snapshot.deliveryMinutes, [20, 30]);
 });
-test('Market cash and delivery card orders retain method, prices and checkout estimate after refresh', () => {
-  for (const method of ['cash-demo', 'door-card-demo']) {
-    const source = { ...input('market'), method };
-    const order = createDemoOrder(source);
-    const storage = memory();
-    assert.equal(saveDemoOrder(order, storage), true);
-    const restored = readDemoOrder(storage);
-    assert.equal(restored.method, method);
-    assert.equal(restored.amount, 259.69);
-    assert.deepEqual(restored.snapshot.deliveryMinutes, deliveryMinutes(source.deliveryTime));
-    assert.equal(confirmationOrder(restored).stage, 0);
+test('each Market seller retains cash and delivery-card orders, prices and checkout estimate after refresh', () => {
+  for (const [storeId, storeName] of [['ymarket-1', 'Yemeksepeti Market'], ['bim-1', 'BİM'], ['carrefour-1', 'CarrefourSA']]) {
+    for (const method of ['cash-demo', 'door-card-demo']) {
+      const source = { ...input('market'), method: normalizePaymentMethod(method, 'market', storeId) };
+      assert.equal(source.method, method);
+      source.lines = source.lines.map(line => ({ ...line, product: { ...line.product, storeId, storeName } }));
+      const order = createDemoOrder(source);
+      const storage = memory();
+      assert.equal(saveDemoOrder(order, storage), true);
+      const restored = readDemoOrder(storage);
+      assert.equal(restored.method, method);
+      assert.equal(restored.amount, 259.69);
+      assert.ok(restored.snapshot.lines.every(line => line.product.storeName === storeName));
+      assert.deepEqual(restored.snapshot.deliveryMinutes, deliveryMinutes(source.deliveryTime));
+      assert.equal(confirmationOrder(restored).stage, 0);
+    }
   }
 });
 test('saving and reloading only allow-listed fields never retains card or arbitrary nested fields', () => {

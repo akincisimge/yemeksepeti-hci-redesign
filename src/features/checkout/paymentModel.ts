@@ -18,11 +18,11 @@ const FIXTURES: Record<FixtureId, { number: string; label: string }> = {
 const FOOD_METHODS: PaymentMethod[] = ["card-demo", "cash-demo", "door-card-demo", "meal-card-demo"];
 const MARKET_METHODS: PaymentMethod[] = ["card-demo", "cash-demo", "door-card-demo"];
 // Checkout fixtures, not a claim about real branches or payment-provider contracts.
-// The supplied Y-Market reference verifies cash and contactless payment at delivery.
-// Other Market fixtures retain their existing online-only scope until verified.
+// All three Market scenarios offer the same choices for the shared checkout demo.
+// Unknown sellers still require an explicit configuration before exposing more methods.
 const SELLER_METHODS: Record<Service, Record<string, PaymentMethod[]>> = {
   food: { "f-1": FOOD_METHODS, "f-2": FOOD_METHODS },
-  market: { "ymarket-1": MARKET_METHODS, "carrefour-1": ["card-demo"], "bim-1": ["card-demo"] },
+  market: { "ymarket-1": MARKET_METHODS, "carrefour-1": MARKET_METHODS, "bim-1": MARKET_METHODS },
 };
 const MEAL_CARDS: Record<string, readonly string[]> = {
   "f-1": ["Ticket Restaurant", "Pluxee", "Multinet"],

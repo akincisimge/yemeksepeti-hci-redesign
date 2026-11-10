@@ -46,7 +46,7 @@ Bu görevler masaüstünde kurgu verilerle uygulanacaktır. Henüz katılımcı 
 - Verilen kurgu kartla devam et; CVV eksik olduğunda düğmenin neden pasif olduğunu açıklayıp alanı düzelt.
 - 50 TL bahşiş seç, toplamı söyle, ardından bahşişten vazgeç ve yeni toplamı kontrol et.
 - Başarısız ödeme sonrasında hangi bilgilerin korunduğunu anlat; aynı bilgilerle tekrar dene.
-- Yemek siparişinde teslimatta nakit ödemeyi seç; hangi alanların değiştiğini anlat. Yemeksepeti Market akışında online kart/nakit/kapıda kart seçeneklerini kontrol et; nakit seçerek kart bilgisi girmeden ilerle.
+- Yemek siparişinde teslimatta nakit ödemeyi seç; hangi alanların değiştiğini anlat. Yemeksepeti Market, BİM ve CarrefourSA senaryolarında online kart/nakit/kapıda kart seçeneklerini kontrol et; nakit seçerek kart bilgisi girmeden ilerle.
 - İşlem sürerken iptal et; sipariş oluşup oluşmadığını ve bir sonraki adımını açıkla.
 - Kurgu kart tercihini kaydet, sonraki siparişte kısayolu kullan, güvenlik kodunu gir ve sonra kaydı kaldır.
 

@@ -23,13 +23,15 @@ test('Food exposes four method types; Market allows online card, cash and delive
   assert.equal(normalizePaymentMethod('meal-card-demo', 'market'), 'card-demo');
   assert.equal(normalizePaymentMethod('unknown', 'food'), 'card-demo');
 });
-test('seller capabilities expose the referenced Y-Market choices without inventing support for other branches', () => {
-  assert.deepEqual(paymentMethods('market', 'ymarket-1'), ['card-demo', 'cash-demo', 'door-card-demo']);
-  for (const store of ['bim-1', 'carrefour-1', 'unconfigured-store']) {
-    assert.deepEqual(paymentMethods('market', store), ['card-demo']);
-    assert.equal(normalizePaymentMethod('cash-demo', 'market', store), 'card-demo');
+test('all three Market demo sellers retain cash and delivery-card choices; unknown sellers stay conservative', () => {
+  for (const store of ['ymarket-1', 'bim-1', 'carrefour-1']) {
+    assert.deepEqual(paymentMethods('market', store), ['card-demo', 'cash-demo', 'door-card-demo']);
+    assert.equal(normalizePaymentMethod('cash-demo', 'market', store), 'cash-demo');
+    assert.equal(normalizePaymentMethod('door-card-demo', 'market', store), 'door-card-demo');
+    assert.equal(normalizePaymentMethod('meal-card-demo', 'market', store), 'card-demo');
   }
-  assert.equal(normalizePaymentMethod('cash-demo', 'market', 'ymarket-1'), 'cash-demo');
+  assert.deepEqual(paymentMethods('market', 'unconfigured-store'), ['card-demo']);
+  assert.equal(normalizePaymentMethod('cash-demo', 'market', 'unconfigured-store'), 'card-demo');
   assert.deepEqual(paymentMethods('food', 'unconfigured-store'), ['card-demo']);
 });
 test('meal card choice has explicit seller-specific fixture names and no unsupported unknown seller', () => {

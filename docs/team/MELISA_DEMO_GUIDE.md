@@ -53,7 +53,7 @@ Fiyatlar ekip tarafından değiştirilirse ezberlenen tutar yerine canlı özeti
 ## Ek ödeme UX kontrolleri
 
 - Özetin tahmini teslimat aralığını, toplamı ve aynı karttaki onay düğmesini göster. Dörtten fazla ürün şart değildir; dört çeşit ile ek ürünlerin düğmenin altından açıldığını gösterebilirsin.
-- Y-Market'te nakit veya kapıda temassız kart seçildiğinde online kart bilgisi istenmez. BİM/CarrefourSA için doğrulanmış ek referansımız olmadığı için önceki online kart kapsamı korunur. Bunu gerçek mağazanın kesin ödeme politikası diye anlatma.
+- Yemeksepeti Market, BİM ve CarrefourSA senaryolarının üçünde de online kart, nakit ve kapıda temassız kart görünür. Nakit/kapıda kart online kart bilgisi istemez. Bu ortak demo kapsamıdır; gerçek mağazaların ödeme politikası veya sağlayıcı anlaşması olarak anlatma.
 - Yemek kartını seçince iki kurgu restoran için tanımlanan sağlayıcı adlarını göster; bunlar örnek senaryo verisidir, gerçek anlaşma/entegrasyon değildir.
 - Online kartta “Güvenlik kodu nerede?” yardımını aç. Kart şifresi ile CVV'nin farklı olduğunu açıkla. Kayıt kutusunun isteğe bağlı olduğunu göster.
 - Yeni ödeme düzeni ve animasyon React kodunda günceldir; Figma/ZIP'deki eski ödeme kareleri bu son düzenle henüz eşitlenmedi.

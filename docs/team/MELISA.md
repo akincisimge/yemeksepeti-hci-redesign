@@ -14,7 +14,7 @@
 ## Uygulama sırası
 
 1. **Tamamlanan ilk bölüm:** `/checkout/food` ve `/checkout/market` için ortak adres ve sipariş özeti. Kayıtlı kurgu adres kısayolu, alan hataları, geri dönüşte bilgi koruma, sepetteki ürün/toplam bilgisi ve minimum tutar açıklaması.
-2. **Tamamlanan ikinci bölüm:** Kart alanları ve alan doğrulaması; Yemek için dört yöntem, Y-Market için online kart/nakit/kapıda temassız kart; diğer marketler için online kart; bahşiş, kurgu kayıtlı kart kısayolu, işleniyor/iptal/başarısızlık/tekrar deneme durumları. Yalnız dummy verilerle yerel ödeme simülasyonu çalışır.
+2. **Tamamlanan ikinci bölüm:** Kart alanları ve alan doğrulaması; Yemek için dört yöntem; Yemeksepeti Market, BİM ve CarrefourSA için online kart/nakit/kapıda temassız kart; bahşiş, kurgu kayıtlı kart kısayolu, işleniyor/iptal/başarısızlık/tekrar deneme durumları. Yalnız dummy verilerle yerel ödeme simülasyonu çalışır.
 3. **Tamamlanan üçüncü bölüm:** Onaylı tasarıma göre sipariş sonucu, ürün/ücret/adres/yöntem özeti, yardım bölümü ve dört aşamalı sipariş durumu. Sunumda aktif durum “Sipariş alındı” olarak sabittir; diğer aşamalar sonraki adımları gösterir. Zamanlayıcı kaldırıldı; canlı kurye, GPS, gerçek ödeme veya restoran bağlantısı kurulmaz.
 4. **Hazırlanan teslim belgeleri:** [Sunum rehberi](MELISA_DEMO_GUIDE.md), [katılımcı test protokolü ve boş kayıt tablosu](MELISA_USABILITY_TEST.md). Teknik doğrulama tamamlandı; gerçek katılımcı çalışması henüz yapılmadı. Ana dala birleştirme ekip/Simge koordinasyonundadır.
 
