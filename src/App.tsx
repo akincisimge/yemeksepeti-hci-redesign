@@ -46,6 +46,7 @@ export default function App() {
 
           <Route path="checkout/:service" element={<CheckoutPage />} />
           <Route path="success" element={<SuccessPage />} />
+          <Route path="track" element={<SuccessPage />} />
           <Route path="support" element={<SupportPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -93,6 +93,9 @@ export default function CheckoutPage() {
       stage: 0,
       createdAt: new Date().toISOString(),
       locationLabel: deliveryRegion ?? undefined,
+      storeName: store?.name ?? foodRestaurant?.name ?? lines[0]?.product.storeName,
+      itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
+      customerName: name.trim(),
     };
 
     saveDemoOrder(order);

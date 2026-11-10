@@ -4,7 +4,7 @@ import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
 import LiveSupportChat from "./LiveSupportChat";
 import { useAccount } from "../state/AccountContext";
-import { readDemoOrder } from "../state/demoOrder";
+import { DEMO_TRACKING_STEPS, readDemoOrder } from "../state/demoOrder";
 import { foodCoupons } from "../features/food/data/foodData";
 import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
@@ -182,16 +182,18 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                   <dl className="space-y-3 rounded-xl border border-slate-300 bg-white p-4">
                     <div><dt className="text-sm text-slate-600">Sipariş numarası</dt><dd className="font-bold">{lastOrder.orderId}</dd></div>
                     <div><dt className="text-sm text-slate-600">Hizmet</dt><dd className="font-semibold">{lastOrder.service === "food" ? "YEMEK" : "MARKET"}</dd></div>
+                    <div><dt className="text-sm text-slate-600">Durum</dt><dd className="font-semibold text-brand-dark">{lastOrder.stage + 1}/4 · {DEMO_TRACKING_STEPS[lastOrder.stage].title}</dd></div>
                     {lastOrder.locationLabel && <div><dt className="text-sm text-slate-600">Teslimat bölgesi</dt><dd className="font-semibold">{lastOrder.locationLabel}</dd></div>}
                   </dl>
-                  <Link to="/success" onClick={onClose} className="btn-primary w-full">Sipariş takibini aç</Link>
+                  <Link to="/track" onClick={onClose} className="btn-primary w-full">Sipariş takibini aç</Link>
                 </>
               ) : (
                 <>
                   <p className="rounded-xl bg-slate-50 p-4 text-slate-700">
-                    Henüz demo sipariş oluşturmadın. Sipariş tamamlandıktan sonra takip ekranına buradan tekrar erişebilirsin.
+                    Henüz demo sipariş oluşturmadın. Sipariş takibi sayfasından örnek önizleme başlatabilir veya restoranları keşfedebilirsin.
                   </p>
-                  <Link to="/food" onClick={onClose} className="btn-primary w-full">Yemekleri keşfet</Link>
+                  <Link to="/track" onClick={onClose} className="btn-primary w-full">Sipariş takibi sayfasını aç</Link>
+                  <Link to="/food" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand">Yemekleri keşfet</Link>
                 </>
               )}
             </div>

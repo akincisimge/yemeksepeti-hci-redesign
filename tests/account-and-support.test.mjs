@@ -7,6 +7,7 @@ import {
   validateDemoAccount,
 } from "../src/state/demoAccount.ts";
 import { buildSupportReply, SUPPORT_TOPICS } from "../src/data/supportAssistant.ts";
+import { createSamplePreviewOrder, DEMO_TRACKING_STEPS } from "../src/state/demoOrder.ts";
 
 test("demo account validation rejects invalid name, email, or phone and accepts sample account", () => {
   const invalid = validateDemoAccount({ name: "A", email: "bad-email", phone: "123" });
@@ -91,4 +92,13 @@ test("support assistant uses active order, location and account context honestly
   });
   assert.match(accountReply.text, /Ayşe Yılmaz \(Demo\)/);
   assert.equal(accountReply.action?.to, "/account");
+});
+
+test("sample preview demo order creates valid 4-stage tracking state", () => {
+  assert.equal(DEMO_TRACKING_STEPS.length, 4);
+  const preview = createSamplePreviewOrder("Çarşı, Bodrum, Muğla");
+  assert.match(preview.orderId, /^DEMO-\d{7}$/);
+  assert.equal(preview.stage, 1);
+  assert.equal(preview.locationLabel, "Çarşı, Bodrum, Muğla");
+  assert.equal(preview.service, "food");
 });
