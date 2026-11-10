@@ -3,12 +3,13 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useCart } from "../state/CartContext";
 import { useDelivery } from "../state/DeliveryContext";
 import { useAccount } from "../state/AccountContext";
-import { useDemoOrder } from "../state/demoOrder";
+import { DEMO_TRACKING_STEPS, useDemoOrder } from "../state/demoOrder";
 import { locationLabel } from "../data/delivery";
 import { foodRestaurants } from "../features/food/data/foodData";
 import { marketProducts } from "../features/market/data/marketData";
 import LocationPicker from "./LocationPicker";
 import SidePanel, { type PanelView } from "./SidePanel";
+import FloatingSupportWidget from "./FloatingSupportWidget";
 
 export type LayoutContext = {
   address: string | null;
@@ -16,19 +17,29 @@ export type LayoutContext = {
   openPanel: (view: Exclude<PanelView, null>) => void;
 };
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).slice(0, 2);
+  return parts.map((part) => part[0]?.toLocaleUpperCase("tr") ?? "").join("") || "P";
+}
+
 export default function Layout() {
   const { count, carts } = useCart();
   const { delivery, available, statusMessage, clearStatusMessage } = useDelivery();
-  const { account } = useAccount();
+  const { account, resetAccount } = useAccount();
   const activeOrder = useDemoOrder();
   const address = delivery ? locationLabel(delivery) : null;
   const location = useLocation();
   const [panel, setPanel] = useState<PanelView>(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const returnTriggerAttrRef = useRef<string | null>(null);
+  const profileTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
 
   const open = useCallback((view: Exclude<PanelView, null>) => {
+    setProfileMenuOpen(false);
     if (document.activeElement instanceof HTMLElement) {
       returnFocusRef.current = document.activeElement;
       returnTriggerAttrRef.current = document.activeElement.getAttribute("data-address-trigger");
@@ -63,6 +74,7 @@ export default function Layout() {
 
   useEffect(() => {
     setPanel(null);
+    setProfileMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -70,6 +82,28 @@ export default function Layout() {
     if (!shell) return;
     shell.inert = Boolean(panel);
   }, [panel]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    function handleOutsideClick(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setProfileMenuOpen(false);
+        profileTriggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [profileMenuOpen]);
 
   const path = location.pathname.replace(/\/+$/, "") || "/";
   const isHome = path === "/";
@@ -86,6 +120,7 @@ export default function Layout() {
   const blocked =
     (routeStore && !available(routeStore)) ||
     (checkoutService && carts[checkoutService].some((line) => !available(line.product.storeId)));
+  const liftSupportForMobileBar = path === "/food" || /^\/food\/[^/]+$/.test(path) || /^\/market\/[^/]+$/.test(path);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
@@ -104,7 +139,7 @@ export default function Layout() {
                 className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 transition hover:border-brand hover:bg-[#FFF1F6] sm:px-4"
                 aria-label={"Teslimat konumu: " + (address ?? "Adres seç") + ". Değiştirmek için aç"}
               >
-                <svg className="shrink-0" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <svg className="shrink-0 text-brand" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                   <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
                   <circle cx="12" cy="10" r="2.5" />
                 </svg>
@@ -112,18 +147,131 @@ export default function Layout() {
                   {address ?? "Adres seç"}
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={() => open("profile")}
-                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-brand px-3 py-2 font-semibold text-white transition hover:bg-brand-dark sm:px-5"
-                aria-label="Profil ve hesap menüsünü aç"
-              >
-                <svg className="shrink-0" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21c0-4.5 3-7 8-7s8 2.5 8 7" />
-                </svg>
-                <span className="text-sm">{account ? account.name.split(" ")[0] : "Profil"}</span>
-              </button>
+
+              {!account ? (
+                <button
+                  type="button"
+                  onClick={() => open("account")}
+                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-brand px-4 py-2 font-semibold text-white transition hover:bg-brand-dark sm:px-5"
+                  aria-label="Hesap oluştur"
+                >
+                  <svg className="shrink-0" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 21c0-4.5 3-7 8-7s8 2.5 8 7" />
+                  </svg>
+                  <span className="text-sm">Hesap Oluştur</span>
+                </button>
+              ) : (
+                <div ref={profileMenuRef} className="relative">
+                  <button
+                    ref={profileTriggerRef}
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={profileMenuOpen}
+                    onClick={() => setProfileMenuOpen((prev) => !prev)}
+                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-brand/30 bg-[#FFF1F6] px-3 py-2 font-semibold text-slate-900 transition hover:border-brand sm:px-4"
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-xs font-bold text-white" aria-hidden="true">
+                      {getInitials(account.name)}
+                    </span>
+                    <span className="text-sm">{account.name.split(" ")[0]}</span>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="m4 6 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
+                  {profileMenuOpen && (
+                    <div
+                      role="menu"
+                      aria-label="Profil sekmesi"
+                      className="absolute right-0 top-[calc(100%+8px)] z-40 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+                    >
+                      <div className="mb-1 rounded-xl bg-[#FFF1F6] px-3 py-3">
+                        <p className="font-bold text-slate-900">{account.name}</p>
+                        <p className="truncate text-xs text-slate-600">{account.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => open("account")}
+                        className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                      >
+                        <span>Profil Bilgilerim</span>
+                        <span aria-hidden="true" className="text-slate-500">›</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => open("address")}
+                        className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                      >
+                        <span>Teslimat Adresim</span>
+                        <span aria-hidden="true" className="text-slate-500">›</span>
+                      </button>
+                      {activeOrder ? (
+                        <Link
+                          to="/track"
+                          role="menuitem"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-brand-dark hover:bg-[#FFF1F6]"
+                        >
+                          <span>Sipariş Takibi ({DEMO_TRACKING_STEPS[activeOrder.stage].title})</span>
+                          <span aria-hidden="true">›</span>
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => open("orders")}
+                          className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                        >
+                          <span>Siparişlerim</span>
+                          <span aria-hidden="true" className="text-slate-500">›</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => open("coupons")}
+                        className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                      >
+                        <span>Kuponlarım</span>
+                        <span aria-hidden="true" className="text-slate-500">›</span>
+                      </button>
+                      <div className="my-1 border-t border-slate-100" />
+                      <div className="grid grid-cols-2 gap-1 px-1 py-1">
+                        <Link
+                          to="/cart/food"
+                          role="menuitem"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 px-2 text-xs font-semibold text-slate-700 hover:border-brand"
+                        >
+                          Yemek ({count("food")})
+                        </Link>
+                        <Link
+                          to="/cart/market"
+                          role="menuitem"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 px-2 text-xs font-semibold text-slate-700 hover:border-brand"
+                        >
+                          Market ({count("market")})
+                        </Link>
+                      </div>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          resetAccount();
+                          setProfileMenuOpen(false);
+                        }}
+                        className="mt-1 flex min-h-11 w-full items-center rounded-xl px-3 py-2 text-left text-sm font-semibold text-[#991B1B] hover:bg-red-50"
+                      >
+                        Çıkış Yap
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
           {delivery && (
@@ -139,9 +287,6 @@ export default function Layout() {
                   Sipariş Takibi
                 </NavLink>
               )}
-              <NavLink to="/support" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-medium")}>
-                Canlı Destek
-              </NavLink>
               <div className="ml-auto flex flex-wrap gap-1">
                 <Link to="/cart/food" className="nav-link">Yemek sepeti ({count("food")})</Link>
                 <Link to="/cart/market" className="nav-link">Market sepeti ({count("market")})</Link>
@@ -171,7 +316,7 @@ export default function Layout() {
             <div className="space-y-4">
               <div role="status" className="mx-auto max-w-xl rounded-2xl border border-slate-300 bg-white p-4 text-sm leading-6 text-slate-700">
                 <strong className="text-slate-900">Önce teslimat bölgesi seçmelisin:</strong>{" "}
-                Restoran ve market kapsamını gösterebilmek için bölgeni seç.
+                Restoran ve marketleri gösterebilmek için bölgeni seç.
               </div>
               <LocationPicker />
             </div>
@@ -181,7 +326,7 @@ export default function Layout() {
               <p className="text-slate-700">Seçili konum: <strong>{address}</strong>. Uygun işletmeleri seçebilir veya konumunu değiştirebilirsin.</p>
               <div className="flex flex-wrap gap-3">
                 <button type="button" className="btn-primary" onClick={() => open("address")}>Konumu değiştir</button>
-                <Link className="nav-link border border-slate-300 bg-white font-semibold" to="/">Ana sayfaya ve uygun işletmelere dön</Link>
+                <Link className="nav-link border border-slate-300 bg-white font-semibold" to="/">Ana sayfaya dön</Link>
               </div>
             </section>
           ) : (
@@ -189,17 +334,24 @@ export default function Layout() {
           )}
         </main>
 
-        <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="font-medium text-slate-700">yemeksepeti</p>
-            <nav aria-label="Hızlı bağlantılar" className="flex flex-wrap justify-center gap-2">
+        <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-600">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 sm:flex-row">
+            <p className="font-semibold text-slate-800">yemeksepeti</p>
+            <nav aria-label="Alt bağlantılar" className="flex flex-wrap justify-center gap-2">
+              <Link to="/food" className="nav-link text-sm font-medium">Yemek</Link>
+              <Link to="/market" className="nav-link text-sm font-medium">Market</Link>
               {activeOrder && <Link to="/track" className="nav-link text-sm font-medium">Sipariş Takibi</Link>}
-              <Link to="/account" className="nav-link text-sm font-medium">Hesabım</Link>
-              <Link to="/support" className="nav-link text-sm font-medium">Canlı Destek</Link>
             </nav>
           </div>
         </footer>
       </div>
+
+      <FloatingSupportWidget
+        onOpenAddress={() => open("address")}
+        onOpenCoupons={() => open("coupons")}
+        liftForMobileBar={liftSupportForMobileBar}
+        hidden={Boolean(panel)}
+      />
 
       {panel && (
         <SidePanel

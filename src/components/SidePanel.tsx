@@ -2,13 +2,12 @@ import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
-import LiveSupportChat from "./LiveSupportChat";
 import { useAccount } from "../state/AccountContext";
 import { DEMO_TRACKING_STEPS, useDemoOrder } from "../state/demoOrder";
 import { foodCoupons } from "../features/food/data/foodData";
 import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
-export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | "help" | null;
+export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | null;
 
 type PanelProps = {
   view: Exclude<PanelView, null>;
@@ -91,12 +90,11 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
   const title: Record<Exclude<PanelView, null>, string> = {
     address: "Teslimat konumu",
     profile: "Profil ve hesabım",
-    account: "Hesabım",
+    account: account ? "Profil bilgilerim" : "Hesap oluştur",
     orders: "Siparişlerim",
     coupons: "Kuponlarım",
-    help: "Yardım ve canlı destek",
   };
-  const subpage = view !== "profile" && view !== "address";
+  const subpage = account !== null && view !== "profile" && view !== "address";
   const lastOrder = useDemoOrder();
 
   return (
@@ -138,7 +136,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
             ×
           </button>
         </header>
-        <div className={"min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 " + (view === "help" ? "flex flex-col" : "")}>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
           {view === "address" && <LocationPicker onDone={onClose} />}
           {view === "profile" && (
             <div className="space-y-3">
@@ -163,7 +161,6 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                 onClick={() => onNavigate("orders")}
               />
               <PanelRow label="Tanımlı kuponlarım" detail="Kupon durumlarını incele" onClick={() => onNavigate("coupons")} />
-              <PanelRow label="Yardım / Canlı destek" detail="Hızlı destek asistanı" onClick={() => onNavigate("help")} />
               <div className="border-t border-slate-200 pt-4">
                 <p className="mb-3 text-sm font-semibold text-slate-700">Sepetlerim</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -178,16 +175,7 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
             </div>
           )}
           {view === "account" && (
-            <div className="space-y-4">
-              <Link
-                to="/account"
-                onClick={onClose}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-brand-dark hover:border-brand hover:bg-[#FFF1F6]"
-              >
-                Hesap tam sayfasını aç →
-              </Link>
-              <AccountForm autofocus onSaved={() => onNavigate("profile")} />
-            </div>
+            <AccountForm autofocus onSaved={onClose} />
           )}
           {view === "orders" && (
             <div className="space-y-4">
@@ -254,23 +242,6 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                   </article>
                 );
               })}
-            </div>
-          )}
-          {view === "help" && (
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
-              <Link
-                to="/support"
-                onClick={onClose}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-brand-dark hover:border-brand hover:bg-[#FFF1F6]"
-              >
-                Canlı destek tam sayfasını aç →
-              </Link>
-              <LiveSupportChat
-                compact
-                onOpenAddress={() => onNavigate("address")}
-                onOpenCoupons={() => onNavigate("coupons")}
-                onNavigateAway={onClose}
-              />
             </div>
           )}
         </div>

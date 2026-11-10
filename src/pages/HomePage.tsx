@@ -38,24 +38,24 @@ function MarketArt() {
 const choices = [
   {
     to: "/food",
-    label: "YEMEK",
-    eyebrow: "RESTORANLARDAN SİPARİŞ",
-    description: "Restoranları keşfet, menülere göz at ve sevdiğin yemekleri seç.",
+    label: "Yemek",
+    eyebrow: "RESTORANLAR",
+    description: "Sevdiğin restoranlardan sıcak yemekleri hemen sipariş et.",
     cta: "Restoranları keşfet",
     Art: FoodArt,
   },
   {
     to: "/market",
-    label: "MARKET",
+    label: "Market",
     eyebrow: "GÜNLÜK ALIŞVERİŞ",
-    description: "Yemeksepeti Market veya diğer marketlerden ürünleri kolayca seç.",
+    description: "Yemeksepeti Market ve anlaşmalı marketlerden alışverişini tamamla.",
     cta: "Market alışverişine başla",
     Art: MarketArt,
   },
 ];
 
 export default function HomePage() {
-  const { address, openAddress, openPanel } = useOutletContext<LayoutContext>();
+  const { address, openAddress } = useOutletContext<LayoutContext>();
   const { account } = useAccount();
   const activeOrder = useDemoOrder();
 
@@ -70,70 +70,113 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8 sm:space-y-10">
-      <section className="mx-auto max-w-4xl pt-2 text-center sm:pt-4">
-        <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">
-          Hoş geldin
-        </p>
+      <section className="mx-auto max-w-3xl pt-2 text-center sm:pt-4">
         <h1 className="text-[32px] font-bold leading-[40px] tracking-tight text-slate-900 sm:text-[40px] sm:leading-[48px]">
-          Bugün ne sipariş etmek istersin?
+          {account ? `Merhaba ${account.name.split(" ")[0]}, bugün ne sipariş etmek istersin?` : "Bugün ne sipariş etmek istersin?"}
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base leading-6 text-slate-600">
-          Teslimat konumunu belirle, ihtiyacına uygun bölümü seç.
+        <p className="mx-auto mt-3 max-w-xl text-base leading-6 text-slate-600">
+          Adresini seç, ister sıcak yemek ister günlük market ihtiyaçlarını kapına getirelim.
         </p>
-      </section>
 
-      <section
-        aria-labelledby="address-title"
-        className="mx-auto flex max-w-4xl flex-col gap-4 rounded-2xl border border-slate-300 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6"
-      >
-        <div className="flex min-w-0 items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFF1F6] text-brand" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-              <circle cx="12" cy="10" r="2.5" />
-            </svg>
+        <div className="mx-auto mt-6 flex max-w-xl flex-col gap-3 rounded-2xl border border-slate-300 bg-white p-3 text-left shadow-sm sm:flex-row sm:items-center sm:justify-between sm:pl-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF1F6] text-brand" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-slate-600">Teslimat adresin</p>
+              <p className="truncate font-semibold text-slate-900" aria-live="polite">
+                {address ?? "Henüz teslimat adresi seçilmedi"}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h2 id="address-title" className="text-lg font-bold text-slate-900">Teslimat konumun</h2>
-            <p className="mt-1 break-words font-semibold text-slate-800" aria-live="polite">
-              {address ?? "Henüz konum seçilmedi"}
-            </p>
-            <p className="mt-1 text-sm leading-5 text-slate-600">
-              {address
-                ? "İstersen teslimat konumunu değiştirebilirsin."
-                : "Restoran ve marketleri görmek için teslimat konumunu seç."}
-            </p>
-          </div>
+          <button
+            type="button"
+            data-address-trigger="home"
+            onClick={openAddress}
+            className="btn-primary shrink-0 px-5 py-2.5 text-sm"
+          >
+            {address ? "Değiştir" : "Adres seç"}
+          </button>
         </div>
-        <button
-          type="button"
-          data-address-trigger="home"
-          onClick={openAddress}
-          className="btn-primary w-full shrink-0 sm:w-auto"
-        >
-          {address ? "Konumu değiştir" : "Adres seç"}
-        </button>
       </section>
 
-      <section aria-label="Yemek ve Market hizmet seçimi" className="grid gap-6 md:grid-cols-2">
+      {activeOrder && activeStep && (
+        <section
+          aria-labelledby="active-order-title"
+          className="mx-auto max-w-4xl rounded-2xl border-2 border-brand/30 bg-white p-5 shadow-sm sm:p-6"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
+                SİPARİŞ TAKİBİ
+              </span>
+              <span className="text-sm font-bold text-slate-900">{activeOrder.orderId}</span>
+            </div>
+            <span className="text-sm font-semibold text-slate-700">
+              {activeOrder.storeName ?? (activeOrder.service === "food" ? "Restoran" : "Market")} · {formatTRY(activeOrder.amount)}
+            </span>
+          </div>
+
+          <h2 id="active-order-title" className="mt-3 text-xl font-bold text-slate-900">
+            {activeStep.title}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">{activeStep.detail}</p>
+
+          <div
+            role="progressbar"
+            aria-label="Aktif sipariş ilerleme durumu"
+            aria-valuemin={1}
+            aria-valuemax={4}
+            aria-valuenow={activeOrder.stage + 1}
+            aria-valuetext={`${activeOrder.stage + 1}/4: ${activeStep.title}`}
+            className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
+          >
+            <div
+              className="h-full rounded-full bg-brand transition-all duration-300"
+              style={{ width: `${orderProgress}%` }}
+            />
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link to="/track" className="btn-primary">
+              Sipariş takibini aç →
+            </Link>
+            {activeOrder.stage < 3 && (
+              <button
+                type="button"
+                onClick={advanceOrderStage}
+                className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
+              >
+                Sonraki aşamaya geç
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section aria-label="Hizmet seçimi" className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
         {choices.map(({ to, label, eyebrow, description, cta, Art }) => (
           <article
             key={to}
-            className="group flex min-h-[280px] flex-col justify-between rounded-[24px] border border-slate-300 bg-white p-6 shadow-sm transition duration-200 focus-within:border-brand hover:border-brand hover:shadow-xl sm:p-8"
+            className="group flex min-h-[260px] flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 focus-within:border-brand hover:-translate-y-0.5 hover:border-brand hover:shadow-xl sm:p-8"
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1 pt-1">
-                <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-2 text-xs font-bold tracking-wider text-brand-dark">
+              <div className="min-w-0 flex-1">
+                <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1.5 text-xs font-bold tracking-wider text-brand-dark">
                   {eyebrow}
                 </p>
-                <h2 id={`${label}-title`} className="mt-6 text-[28px] font-bold leading-9 tracking-tight text-slate-900">
+                <h2 id={`${label}-title`} className="mt-5 text-[28px] font-bold leading-9 tracking-tight text-slate-900">
                   {label}
                 </h2>
-                <p className="mt-3 text-base leading-6 text-slate-600">{description}</p>
+                <p className="mt-2 text-base leading-6 text-slate-600">{description}</p>
               </div>
               <Art />
             </div>
-            <div className="mt-8 border-t border-slate-200 pt-5">
+            <div className="mt-6">
               <Link
                 to={to}
                 aria-labelledby={`${label}-title ${label}-action`}
@@ -142,164 +185,9 @@ export default function HomePage() {
                 <span id={`${label}-action`}>{cta}</span>
                 <span aria-hidden="true" className="text-2xl">→</span>
               </Link>
-              <p className="mt-3 text-sm text-slate-600">
-                Yemek ve Market sepetleri ayrı tutulur; istediğin zaman geçiş yapabilirsin.
-              </p>
             </div>
           </article>
         ))}
-      </section>
-
-      <section aria-labelledby="quick-hub-title" className="space-y-4">
-        <div>
-          <h2 id="quick-hub-title" className="text-2xl font-bold text-slate-900">
-            {activeOrder ? "Aktif Siparişin, Hesap ve Canlı Destek" : "Hesap ve Canlı Destek"}
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            {activeOrder
-              ? "Aktif sipariş durumunu takip edebilir, hesabını yönetebilir veya canlı destek alabilirsin."
-              : "Hesabını oluşturarak bilgilerini kaydet veya ihtiyaç duyduğunda canlı destek ekibine ulaş."}
-          </p>
-        </div>
-
-        <div className={activeOrder ? "grid gap-6 lg:grid-cols-3" : "grid gap-6 md:grid-cols-2"}>
-          {activeOrder && activeStep && (
-            <article className="flex flex-col justify-between rounded-2xl border-2 border-brand/30 bg-white p-6 shadow-sm">
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
-                    SİPARİŞ TAKİBİ
-                  </p>
-                  <span className="text-xs font-bold text-slate-700">{activeOrder.orderId}</span>
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-slate-900">
-                  {activeOrder.service === "food" ? "Yemek siparişin" : "Market siparişin"}
-                </h3>
-
-                <div className="mt-3 space-y-3">
-                  <p className="text-sm text-slate-700">
-                    <strong>{activeOrder.storeName ?? (activeOrder.service === "food" ? "Restoran" : "Market")}</strong> ·{" "}
-                    {formatTRY(activeOrder.amount)}
-                  </p>
-                  <div
-                    role="progressbar"
-                    aria-label="Aktif sipariş ilerleme durumu"
-                    aria-valuemin={1}
-                    aria-valuemax={4}
-                    aria-valuenow={activeOrder.stage + 1}
-                    aria-valuetext={`${activeOrder.stage + 1}/4: ${activeStep.title}`}
-                    className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
-                  >
-                    <div
-                      className="h-full rounded-full bg-brand transition-all duration-300"
-                      style={{ width: `${orderProgress}%` }}
-                    />
-                  </div>
-                  <p role="status" className="rounded-xl bg-[#FFF1F6] px-3 py-2 text-sm font-semibold text-brand-dark">
-                    Aşama {activeOrder.stage + 1}/4 · {activeStep.title}
-                  </p>
-                  <ol className="grid grid-cols-4 gap-1 text-center text-[11px] text-slate-600">
-                    {DEMO_TRACKING_STEPS.map((step, index) => (
-                      <li
-                        key={step.title}
-                        className={index <= activeOrder.stage ? "font-bold text-slate-900" : "text-slate-500"}
-                      >
-                        {index + 1}. {step.title.split(" ")[0]}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
-                <Link to="/track" className="btn-primary w-full">
-                  Sipariş takibini aç →
-                </Link>
-                {activeOrder.stage < 3 && (
-                  <button
-                    type="button"
-                    onClick={advanceOrderStage}
-                    className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
-                  >
-                    Sonraki aşamaya geç
-                  </button>
-                )}
-              </div>
-            </article>
-          )}
-
-          {/* Account Creation Card */}
-          <article className="flex flex-col justify-between rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
-            <div>
-              <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
-                HESABIM
-              </p>
-              <h3 className="mt-4 text-xl font-bold text-slate-900">
-                {account ? account.name : "Hesap Oluştur"}
-              </h3>
-              {account ? (
-                <div className="mt-3 space-y-2 text-sm text-slate-700">
-                  <p className="rounded-xl bg-emerald-50 px-3 py-2 font-semibold text-[#166534]">
-                    ✓ Profilin aktif
-                  </p>
-                  <p>{account.email}</p>
-                  <p>{account.phone}</p>
-                  {account.deliveryNote && (
-                    <p className="text-xs text-slate-600">Teslimat notu: {account.deliveryNote}</p>
-                  )}
-                </div>
-              ) : (
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Hesap oluşturarak ad, iletişim ve teslimat notu bilgilerini sipariş sırasında tek tıkla doldurabilirsin.
-                </p>
-              )}
-            </div>
-
-            <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
-              <Link to="/account" className="btn-primary w-full">
-                {account ? "Hesabımı yönet →" : "Hesap oluştur →"}
-              </Link>
-              <button
-                type="button"
-                onClick={() => openPanel("account")}
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
-              >
-                Hızlı yan panelde aç
-              </button>
-            </div>
-          </article>
-
-          {/* Live Support Card */}
-          <article className="flex flex-col justify-between rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
-            <div>
-              <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
-                CANLI DESTEK
-              </p>
-              <h3 className="mt-4 text-xl font-bold text-slate-900">Yardım ve Destek Asistanı</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Sipariş takibi, teslimat bölgesi, kuponlar ve hesabınla ilgili konularda hızlıca destek al.
-              </p>
-              <ul className="mt-3 flex flex-wrap gap-1.5 text-xs">
-                <li className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Sipariş durumu</li>
-                <li className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Adres değişikliği</li>
-                <li className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Kupon yardımı</li>
-              </ul>
-            </div>
-
-            <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
-              <Link to="/support" className="btn-primary w-full">
-                Canlı desteği aç →
-              </Link>
-              <button
-                type="button"
-                onClick={() => openPanel("help")}
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
-              >
-                Sohbet penceresini aç
-              </button>
-            </div>
-          </article>
-        </div>
       </section>
     </div>
   );
