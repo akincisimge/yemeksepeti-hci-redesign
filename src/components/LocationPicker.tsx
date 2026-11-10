@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { filterProvinces } from "../data/provinces";
 import {
-  getProvinceDemoCoverage,
+  createCustomLocation,
   locationLabel,
   locations,
   type LocationChangePlan,
@@ -12,6 +12,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
   const { delivery, previewLocationChange, selectLocation } = useDelivery();
   const [city, setCity] = useState<string>(delivery?.city ?? "");
   const [district, setDistrict] = useState<string>(delivery?.district ?? "");
+  const [neighborhood, setNeighborhood] = useState<string>(delivery?.neighborhood ?? "");
   const [id, setId] = useState<string>(delivery?.id ?? "");
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
@@ -22,11 +23,15 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
 
   const matchingCities = filterProvinces(query);
   const cityLocations = locations.filter((location) => location.city === city);
+  const hasPresetLocations = cityLocations.length > 0;
   const districtOptions = [...new Set(cityLocations.map((location) => location.district))];
   const neighborhoodOptions = cityLocations.filter((location) => location.district === district);
-  const coverage = city ? getProvinceDemoCoverage(city) : null;
-  const unsupported = Boolean(city) && cityLocations.length === 0;
   const trimmedQuery = query.trim();
+
+  const resolvedTargetId = hasPresetLocations
+    ? id
+    : createCustomLocation(city, district, neighborhood)?.id ?? "";
+  const canSubmit = Boolean(city && resolvedTargetId);
 
   useEffect(() => {
     if (pendingPlan) {
@@ -36,8 +41,20 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
 
   function changeCity(value: string) {
     setCity(value);
-    setDistrict("");
-    setId("");
+    const hasPresets = locations.some((location) => location.city === value);
+    if (!value) {
+      setDistrict("");
+      setNeighborhood("");
+      setId("");
+    } else if (hasPresets) {
+      setDistrict("");
+      setNeighborhood("");
+      setId("");
+    } else {
+      setDistrict("Merkez");
+      setNeighborhood("Merkez Mahallesi");
+      setId("");
+    }
     setNotice("");
     setQuery("");
     setPendingPlan(null);
@@ -60,9 +77,9 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!id || unsupported) return;
+    if (!resolvedTargetId) return;
 
-    const plan = previewLocationChange(id);
+    const plan = previewLocationChange(resolvedTargetId);
     if (!plan) return;
 
     if (plan.affected.length > 0) {
@@ -71,7 +88,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
       return;
     }
 
-    if (selectLocation(id, { confirmed: true })) {
+    if (selectLocation(resolvedTargetId, { confirmed: true })) {
       setNotice("");
       onDone?.();
     }
@@ -97,13 +114,13 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
     <form onSubmit={submit} className="mx-auto max-w-xl space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <div>
         <p className="font-semibold text-brand">Teslimat konumun</p>
-        <h2 className="mt-2 text-2xl font-bold text-slate-900">Önce nereye getirelim?</h2>
+        <h2 className="mt-2 text-2xl font-bold text-slate-900">Nereye getirelim?</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          81 il arasından ilini ara ve seç; ardından ilçe ve mahalle seçerek bölgedeki işletmeleri gör.
+          81 il arasından ilini seç, ardından ilçe ve mahalle bilgilerini belirleyerek devam et.
         </p>
         {delivery && (
           <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            Şu anki teslimat konumun: <strong className="text-slate-900">{locationLabel(delivery)}</strong>
+            Mevcut konum: <strong className="text-slate-900">{locationLabel(delivery)}</strong>
           </p>
         )}
       </div>
@@ -123,7 +140,7 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="İl ara · ör. İstanbul, Muğla"
+              placeholder="İl ara · ör. İstanbul, Ankara, Muğla"
               autoComplete="off"
               className="field min-h-12"
               aria-describedby="city-results"
@@ -181,95 +198,89 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
         <p id="city-results" role="status" className="text-xs leading-5 text-slate-600">
           {trimmedQuery
             ? matchingCities.length
-              ? `${matchingCities.length} il bulundu. Listeden veya hızlı düğmeden seçebilirsin.`
+              ? `${matchingCities.length} il bulundu.`
               : "Eşleşen il bulunamadı. Yazımı veya aramayı değiştir."
-            : "Türkiye’nin 81 ili Türkçe alfabetik sırada listelenir."}
+            : "Türkiye’nin 81 ili alfabetik sırada listelenir."}
         </p>
       </fieldset>
 
-      {unsupported && (
-        <div role="status" className="space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
-          <p className="font-bold text-amber-950">{city} için henüz teslimat bölgesi tanımlanmadı.</p>
-          <p>
-            Şu anda yalnızca Muğla ve Adana’daki seçili bölgelere hizmet veriliyor. Mevcut teslimat konumun ve sepetlerin korunuyor;
-            işletmeleri görmek için aşağıdaki illerden birini seçebilirsin.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => changeCity("Muğla")}
-              className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand hover:text-brand"
+      {hasPresetLocations || !city ? (
+        <>
+          <label className="block">
+            <span className="mb-2 block font-semibold text-slate-900">İlçe</span>
+            <select
+              required
+              disabled={!city}
+              className="location-select"
+              value={district}
+              onChange={(event) => changeDistrict(event.target.value)}
             >
-              Muğla seç (Yemek &amp; Market)
-            </button>
-            <button
-              type="button"
-              onClick={() => changeCity("Adana")}
-              className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-900 hover:border-brand hover:text-brand"
+              <option value="">İlçe seç</option>
+              {districtOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block font-semibold text-slate-900">Mahalle</span>
+            <select
+              required
+              disabled={!district}
+              className="location-select"
+              value={id}
+              onChange={(event) => {
+                setId(event.target.value);
+                setNotice("");
+                setPendingPlan(null);
+              }}
             >
-              Adana seç (Yalnız Yemek)
-            </button>
-            {delivery && onDone && (
-              <button
-                type="button"
-                onClick={onDone}
-                className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 hover:border-brand"
-              >
-                Mevcut konumu koru
-              </button>
-            )}
-          </div>
-        </div>
+              <option value="">Mahalle seç</option>
+              {neighborhoodOptions.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.neighborhood}
+                </option>
+              ))}
+            </select>
+          </label>
+        </>
+      ) : (
+        <>
+          <label className="block">
+            <span className="mb-2 block font-semibold text-slate-900">İlçe</span>
+            <input
+              type="text"
+              required
+              className="field min-h-12"
+              value={district}
+              onChange={(event) => {
+                setDistrict(event.target.value);
+                setNotice("");
+                setPendingPlan(null);
+              }}
+              placeholder="İlçe adı gir · ör. Kadıköy"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block font-semibold text-slate-900">Mahalle</span>
+            <input
+              type="text"
+              required
+              className="field min-h-12"
+              value={neighborhood}
+              onChange={(event) => {
+                setNeighborhood(event.target.value);
+                setNotice("");
+                setPendingPlan(null);
+              }}
+              placeholder="Mahalle adı gir · ör. Caferağa"
+            />
+          </label>
+        </>
       )}
-
-      {coverage?.supported && !coverage.hasMarket && (
-        <div role="status" className="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-800">
-          <p className="font-semibold text-slate-900">{city} bölgesi bilgisi</p>
-          <p className="mt-1">
-            Bu bölgede şu anda yalnızca <strong>YEMEK</strong> restoranları hizmet veriyor; <strong>MARKET</strong> teslimatı henüz açık değil.
-          </p>
-        </div>
-      )}
-
-      <label className="block">
-        <span className="mb-2 block font-semibold text-slate-900">İlçe</span>
-        <select
-          required
-          disabled={!city || unsupported}
-          className="location-select"
-          value={district}
-          onChange={(event) => changeDistrict(event.target.value)}
-        >
-          <option value="">{unsupported ? "Bu il için kayıtlı ilçe bulunmuyor" : "İlçe seç"}</option>
-          {districtOptions.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block">
-        <span className="mb-2 block font-semibold text-slate-900">Mahalle</span>
-        <select
-          required
-          disabled={!district || unsupported}
-          className="location-select"
-          value={id}
-          onChange={(event) => {
-            setId(event.target.value);
-            setNotice("");
-            setPendingPlan(null);
-          }}
-        >
-          <option value="">{unsupported ? "Bu il için kayıtlı mahalle bulunmuyor" : "Mahalle seç"}</option>
-          {neighborhoodOptions.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.neighborhood}
-            </option>
-          ))}
-        </select>
-      </label>
 
       {pendingPlan && (
         <section
@@ -331,12 +342,12 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
       )}
 
       {!pendingPlan && (
-        <button ref={submitButtonRef} disabled={!id || unsupported} className="btn-primary w-full" type="submit">
+        <button ref={submitButtonRef} disabled={!canSubmit} className="btn-primary w-full" type="submit">
           {delivery ? "Teslimat konumunu güncelle" : "Bu adrese teslimat yapan işletmeleri göster"}
         </button>
       )}
 
-      {!id && !unsupported && (
+      {!canSubmit && (
         <p className="text-sm text-slate-600">Devam etmek için il, ilçe ve mahalle seç.</p>
       )}
       {notice && (
@@ -344,9 +355,6 @@ export default function LocationPicker({ onDone }: { onDone?: () => void }) {
           {notice}
         </p>
       )}
-      <p className="text-xs leading-5 text-slate-600">
-        81 il listesi Türkiye’nin tüm illerini içerir; ilçe ve mahalle kapsamı seçili teslimat bölgeleriyle sınırlıdır.
-      </p>
     </form>
   );
 }

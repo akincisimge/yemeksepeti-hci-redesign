@@ -4,7 +4,7 @@ import {
   deliversTo,
   formatLocationChangeMessage,
   locationLabel,
-  locations,
+  resolveLocation,
   type DeliveryLocation,
   type LocationChangePlan,
 } from "../data/delivery";
@@ -14,7 +14,7 @@ const KEY = "hci-delivery-location-v1";
 
 function initial(): DeliveryLocation | null {
   try {
-    return locations.find((item) => item.id === localStorage.getItem(KEY)) ?? null;
+    return resolveLocation(localStorage.getItem(KEY));
   } catch {
     return null;
   }

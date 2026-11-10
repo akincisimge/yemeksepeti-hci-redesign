@@ -1,14 +1,22 @@
 import type { Carts, Service } from "../types/domain";
+import { provinces } from "./provinces.ts";
 
-// Fictional delivery coverage for the HCI demo; no live merchant availability.
-export const locations = [
+// Fictional delivery coverage for the prototype; no live merchant availability.
+export type DeliveryLocation = {
+  id: string;
+  city: string;
+  district: string;
+  neighborhood: string;
+};
+
+export const locations: readonly DeliveryLocation[] = [
   { id: "kotekli", city: "Muğla", district: "Menteşe", neighborhood: "Kötekli" },
   { id: "mentese-merkez", city: "Muğla", district: "Menteşe", neighborhood: "Orhaniye" },
   { id: "bodrum-merkez", city: "Muğla", district: "Bodrum", neighborhood: "Çarşı" },
   { id: "adana-merkez", city: "Adana", district: "Seyhan", neighborhood: "Reşatbey" },
-] as const;
+];
 
-export type DeliveryLocation = typeof locations[number];
+const CUSTOM_PREFIX = "tr-custom:";
 
 const coverage: Record<string, readonly string[]> = {
   "f-1": ["kotekli", "mentese-merkez"],
@@ -34,6 +42,8 @@ const coverage: Record<string, readonly string[]> = {
   "bim-1": ["kotekli", "bodrum-merkez"],
 };
 
+const ACTIVE_MARKET_STORES = new Set(["ymarket-1", "carrefour-1", "bim-1"]);
+
 export type AffectedCartInfo = {
   service: Service;
   serviceLabel: string;
@@ -53,8 +63,41 @@ export type ProvinceDemoCoverage = {
   hasMarket: boolean;
 };
 
+export function createCustomLocation(city: string, district: string, neighborhood: string): DeliveryLocation | null {
+  const cleanCity = city.trim();
+  const cleanDistrict = district.trim();
+  const cleanNeighborhood = neighborhood.trim();
+  if (!provinces.includes(cleanCity) || !cleanDistrict || !cleanNeighborhood) return null;
+  const id = `${CUSTOM_PREFIX}${encodeURIComponent(cleanCity)}|${encodeURIComponent(cleanDistrict)}|${encodeURIComponent(cleanNeighborhood)}`;
+  return { id, city: cleanCity, district: cleanDistrict, neighborhood: cleanNeighborhood };
+}
+
+export function resolveLocation(id: string | null | undefined): DeliveryLocation | null {
+  if (!id) return null;
+  const preset = locations.find((item) => item.id === id);
+  if (preset) return preset;
+  if (!id.startsWith(CUSTOM_PREFIX)) return null;
+
+  const parts = id.slice(CUSTOM_PREFIX.length).split("|");
+  if (parts.length !== 3) return null;
+  try {
+    const city = decodeURIComponent(parts[0]);
+    const district = decodeURIComponent(parts[1]);
+    const neighborhood = decodeURIComponent(parts[2]);
+    if (!provinces.includes(city) || !district.trim() || !neighborhood.trim()) return null;
+    return { id, city, district: district.trim(), neighborhood: neighborhood.trim() };
+  } catch {
+    return null;
+  }
+}
+
 export function deliversTo(storeId: string, locationId: string | undefined): boolean {
-  return !!locationId && !!coverage[storeId]?.includes(locationId);
+  if (!locationId) return false;
+  if (locationId.startsWith(CUSTOM_PREFIX)) {
+    if (!resolveLocation(locationId)) return false;
+    return storeId.startsWith("food-") || ACTIVE_MARKET_STORES.has(storeId);
+  }
+  return !!coverage[storeId]?.includes(locationId);
 }
 
 export const locationLabel = (location: DeliveryLocation) =>
@@ -66,16 +109,16 @@ export function getProvinceDemoCoverage(city: string): ProvinceDemoCoverage {
     return { supported: false, hasFood: false, hasMarket: false };
   }
   const hasFood = cityLocations.some((location) =>
-    Object.entries(coverage).some(([storeId, ids]) => storeId.startsWith("food-") && ids.includes(location.id))
+    Object.entries(coverage).some(([storeId, ids]) => storeId.startsWith("food-") && ids.includes(location.id)),
   );
   const hasMarket = cityLocations.some((location) =>
-    ["ymarket-1", "carrefour-1", "bim-1"].some((storeId) => coverage[storeId]?.includes(location.id))
+    ["ymarket-1", "carrefour-1", "bim-1"].some((storeId) => coverage[storeId]?.includes(location.id)),
   );
   return { supported: true, hasFood, hasMarket };
 }
 
 export function analyzeLocationChange(carts: Carts, targetLocationId: string): LocationChangePlan | null {
-  const target = locations.find((item) => item.id === targetLocationId);
+  const target = resolveLocation(targetLocationId);
   if (!target) return null;
 
   const affected: AffectedCartInfo[] = [];

@@ -2,11 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   analyzeLocationChange,
+  createCustomLocation,
   deliversTo,
   formatLocationChangeMessage,
   getProvinceDemoCoverage,
   locationLabel,
   locations,
+  resolveLocation,
 } from "../src/data/delivery.ts";
 
 const sampleMarketProduct = {
@@ -96,4 +98,16 @@ test("location change to unknown location returns null without side effects", ()
     market: [{ product: sampleMarketProduct, quantity: 1 }],
   };
   assert.equal(analyzeLocationChange(carts, "istanbul-merkez"), null);
+});
+
+test("custom locations across all 81 provinces resolve cleanly and enable active food and market stores", () => {
+  const custom = createCustomLocation("İstanbul", "Kadıköy", "Caferağa");
+  assert.ok(custom);
+  assert.equal(locationLabel(custom), "Caferağa, Kadıköy, İstanbul");
+  assert.deepEqual(resolveLocation(custom.id), custom);
+  assert.equal(deliversTo("food-crispy-co", custom.id), true);
+  assert.equal(deliversTo("ymarket-1", custom.id), true);
+  assert.equal(deliversTo("carrefour-1", custom.id), true);
+  assert.equal(deliversTo("unknown-store", custom.id), false);
+  assert.equal(createCustomLocation("NotAProvince", "Merkez", "Merkez"), null);
 });
