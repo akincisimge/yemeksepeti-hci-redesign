@@ -132,6 +132,12 @@ export default function Layout() {
               <NavLink to="/market" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-semibold")}>
                 MARKET
               </NavLink>
+              <NavLink to="/track" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-medium")}>
+                Sipariş Takibi
+              </NavLink>
+              <NavLink to="/support" className={({ isActive }) => (isActive ? "nav-link nav-link-active font-bold" : "nav-link font-medium")}>
+                Canlı Destek
+              </NavLink>
               <div className="ml-auto flex flex-wrap gap-1">
                 <Link to="/cart/food" className="nav-link">Yemek sepeti ({count("food")})</Link>
                 <Link to="/cart/market" className="nav-link">Market sepeti ({count("market")})</Link>
@@ -180,7 +186,14 @@ export default function Layout() {
         </main>
 
         <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
-          Bağımsız HCI öğrenci projesidir. Gerçek sipariş, ödeme veya canlı destek hizmeti sunulmaz.
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+            <p>Bağımsız HCI öğrenci projesidir. Gerçek sipariş, ödeme veya canlı destek hizmeti sunulmaz.</p>
+            <nav aria-label="Hızlı bağlantılar" className="flex flex-wrap justify-center gap-2">
+              <Link to="/track" className="nav-link text-sm font-medium">Sipariş Takibi</Link>
+              <Link to="/account" className="nav-link text-sm font-medium">Demo Hesap</Link>
+              <Link to="/support" className="nav-link text-sm font-medium">Canlı Destek</Link>
+            </nav>
+          </div>
         </footer>
       </div>
 

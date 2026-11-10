@@ -173,7 +173,18 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
               </div>
             </div>
           )}
-          {view === "account" && <AccountForm onSaved={() => onNavigate("profile")} />}
+          {view === "account" && (
+            <div className="space-y-4">
+              <Link
+                to="/account"
+                onClick={onClose}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-brand-dark hover:border-brand hover:bg-[#FFF1F6]"
+              >
+                Hesap tam sayfasını aç →
+              </Link>
+              <AccountForm autofocus onSaved={() => onNavigate("profile")} />
+            </div>
+          )}
           {view === "orders" && (
             <div className="space-y-4">
               {lastOrder ? (

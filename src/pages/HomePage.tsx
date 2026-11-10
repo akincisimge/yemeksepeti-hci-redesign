@@ -1,5 +1,16 @@
+import { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import type { LayoutContext } from "../components/Layout";
+import { useAccount } from "../state/AccountContext";
+import {
+  createSamplePreviewOrder,
+  DEMO_TRACKING_STEPS,
+  readDemoOrder,
+  saveDemoOrder,
+  type DemoOrder,
+  type DemoOrderStage,
+} from "../state/demoOrder";
+import { formatTRY } from "../types/domain";
 
 function FoodArt() {
   return (
@@ -47,10 +58,29 @@ const choices = [
 ];
 
 export default function HomePage() {
-  const { address, openAddress } = useOutletContext<LayoutContext>();
+  const { address, openAddress, openPanel } = useOutletContext<LayoutContext>();
+  const { account } = useAccount();
+  const [demoOrder, setDemoOrder] = useState<DemoOrder | null>(() => readDemoOrder());
+
+  function startPreviewOrder() {
+    const preview = createSamplePreviewOrder(address ?? undefined);
+    saveDemoOrder(preview);
+    setDemoOrder(preview);
+  }
+
+  function advancePreviewStage() {
+    if (!demoOrder) return;
+    const nextStage = Math.min(3, demoOrder.stage + 1) as DemoOrderStage;
+    const updated = { ...demoOrder, stage: nextStage };
+    saveDemoOrder(updated);
+    setDemoOrder(updated);
+  }
+
+  const activeStep = demoOrder ? DEMO_TRACKING_STEPS[demoOrder.stage] : null;
+  const orderProgress = demoOrder ? ((demoOrder.stage + 1) / DEMO_TRACKING_STEPS.length) * 100 : 0;
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-8 sm:space-y-10">
       <section className="mx-auto max-w-4xl pt-2 text-center sm:pt-4">
         <p className="mb-4 inline-flex rounded-full bg-[#FFF1F6] px-5 py-2 text-xs font-bold tracking-[0.12em] text-brand-dark">
           Hoş geldin · HCI Eğitim Prototipi
@@ -129,6 +159,188 @@ export default function HomePage() {
             </div>
           </article>
         ))}
+      </section>
+
+      <section aria-labelledby="quick-hub-title" className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h2 id="quick-hub-title" className="text-2xl font-bold text-slate-900">
+              Sipariş Takibi, Hesap ve Canlı Destek
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Giriş ekranından sipariş durumunu izle, demo profil oluştur veya otomatik destek asistanına ulaş.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Order Tracking Card */}
+          <article className="flex flex-col justify-between rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
+                  SİPARİŞ TAKİBİ · DEMO
+                </p>
+                {demoOrder && (
+                  <span className="text-xs font-bold text-slate-700">{demoOrder.orderId}</span>
+                )}
+              </div>
+              <h3 className="mt-4 text-xl font-bold text-slate-900">
+                {demoOrder ? `${demoOrder.service === "food" ? "Yemek" : "Market"} siparişin` : "Yemek & Market Takibi"}
+              </h3>
+
+              {demoOrder && activeStep ? (
+                <div className="mt-3 space-y-3">
+                  <p className="text-sm text-slate-700">
+                    <strong>{demoOrder.storeName ?? (demoOrder.service === "food" ? "Restoran" : "Market")}</strong> ·{" "}
+                    {formatTRY(demoOrder.amount)}
+                  </p>
+                  <div
+                    role="progressbar"
+                    aria-label="Ana sayfa demo sipariş durumu"
+                    aria-valuemin={1}
+                    aria-valuemax={4}
+                    aria-valuenow={demoOrder.stage + 1}
+                    aria-valuetext={`${demoOrder.stage + 1}/4: ${activeStep.title}`}
+                    className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200"
+                  >
+                    <div
+                      className="h-full rounded-full bg-brand transition-all duration-300"
+                      style={{ width: `${orderProgress}%` }}
+                    />
+                  </div>
+                  <p role="status" className="rounded-xl bg-[#FFF1F6] px-3 py-2 text-sm font-semibold text-brand-dark">
+                    Aşama {demoOrder.stage + 1}/4 · {activeStep.title}
+                  </p>
+                  <ol className="grid grid-cols-4 gap-1 text-center text-[11px] text-slate-600">
+                    {DEMO_TRACKING_STEPS.map((step, index) => (
+                      <li
+                        key={step.title}
+                        className={
+                          index <= demoOrder.stage
+                            ? "font-bold text-slate-900"
+                            : "text-slate-500"
+                        }
+                      >
+                        {index + 1}. {step.title.split(" ")[0]}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  <p className="text-sm leading-6 text-slate-600">
+                    Sipariş verdikten sonra 4 adımlı demo takip durumunu buradan izleyebilir ya da hemen örnek takip önizlemesi başlatabilirsin.
+                  </p>
+                  <ol className="grid grid-cols-2 gap-2 text-xs text-slate-700">
+                    {DEMO_TRACKING_STEPS.map((step, index) => (
+                      <li key={step.title} className="rounded-lg bg-slate-50 px-2.5 py-2 font-medium">
+                        {index + 1}. {step.title}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
+              <Link to="/track" className="btn-primary w-full">
+                {demoOrder ? "Sipariş takibini aç →" : "Takip ekranını aç →"}
+              </Link>
+              {demoOrder ? (
+                demoOrder.stage < 3 && (
+                  <button
+                    type="button"
+                    onClick={advancePreviewStage}
+                    className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
+                  >
+                    Sonraki aşamaya ilerlet
+                  </button>
+                )
+              ) : (
+                <button
+                  type="button"
+                  onClick={startPreviewOrder}
+                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
+                >
+                  Örnek takip başlat (önizleme)
+                </button>
+              )}
+            </div>
+          </article>
+
+          {/* Account Creation Card */}
+          <article className="flex flex-col justify-between rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
+            <div>
+              <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
+                HESAP VE PROFİL · DEMO
+              </p>
+              <h3 className="mt-4 text-xl font-bold text-slate-900">
+                {account ? account.name : "Demo Hesap Oluştur"}
+              </h3>
+              {account ? (
+                <div className="mt-3 space-y-2 text-sm text-slate-700">
+                  <p className="rounded-xl bg-emerald-50 px-3 py-2 font-semibold text-[#166534]">
+                    ✓ Demo profilin aktif
+                  </p>
+                  <p>{account.email}</p>
+                  <p>{account.phone}</p>
+                  {account.deliveryNote && (
+                    <p className="text-xs text-slate-600">Not: {account.deliveryNote}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  Gerçek şifre veya kişisel bilgi girmeden demo profil oluştur; sipariş tamamlamada bilgilerini tek tıkla doldur.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
+              <Link to="/account" className="btn-primary w-full">
+                {account ? "Hesabımı yönet →" : "Hesap oluştur →"}
+              </Link>
+              <button
+                type="button"
+                onClick={() => openPanel("account")}
+                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
+              >
+                Hızlı yan panelde aç
+              </button>
+            </div>
+          </article>
+
+          {/* Live Support Card */}
+          <article className="flex flex-col justify-between rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
+            <div>
+              <p className="inline-block rounded-lg bg-[#FFF1F6] px-3 py-1 text-xs font-bold tracking-wide text-brand-dark">
+                CANLI DESTEK · DEMO
+              </p>
+              <h3 className="mt-4 text-xl font-bold text-slate-900">Yardım ve Destek Asistanı</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Sipariş takibi, teslimat bölgesi, kupon kullanımı ve demo hesap konularında anında otomatik yardım al. Gerçek temsilci değildir.
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-1.5 text-xs">
+                <li className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Siparişim nerede?</li>
+                <li className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Adres değişikliği</li>
+                <li className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Kupon yardımı</li>
+              </ul>
+            </div>
+
+            <div className="mt-6 space-y-2 border-t border-slate-200 pt-4">
+              <Link to="/support" className="btn-primary w-full">
+                Canlı desteği aç →
+              </Link>
+              <button
+                type="button"
+                onClick={() => openPanel("help")}
+                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-brand"
+              >
+                Sohbet penceresini aç
+              </button>
+            </div>
+          </article>
+        </div>
       </section>
     </div>
   );
