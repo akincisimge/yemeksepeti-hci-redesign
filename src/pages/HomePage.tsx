@@ -1,6 +1,7 @@
 import { Link, useOutletContext } from "react-router-dom";
 import type { LayoutContext } from "../components/Layout";
 import { useAccount } from "../state/AccountContext";
+import { formatAddressDetails, useDelivery } from "../state/DeliveryContext";
 import { DEMO_TRACKING_STEPS, useDemoOrders } from "../state/demoOrder";
 
 function FoodArt() {
@@ -50,6 +51,7 @@ const choices = [
 
 export default function HomePage() {
   const { address, openAddress, openPanel } = useOutletContext<LayoutContext>();
+  const { addressDetails } = useDelivery();
   const { account } = useAccount();
   const orders = useDemoOrders();
   const latestOrder = orders[0] ?? null;
@@ -98,7 +100,9 @@ export default function HomePage() {
                       {address}
                     </p>
                     <p className="mt-0.5 text-xs font-medium text-slate-600">
-                      Başka bir adrese göndermek için buraya dokunabilirsin.
+                      {addressDetails
+                        ? formatAddressDetails(addressDetails)
+                        : "Başka bir adrese göndermek için buraya dokunabilirsin."}
                     </p>
                   </>
                 ) : (

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
 import AccountForm from "./AccountForm";
 import { useAccount } from "../state/AccountContext";
+import { formatAddressDetails, useDelivery } from "../state/DeliveryContext";
 import { DEMO_TRACKING_STEPS, useDemoOrders } from "../state/demoOrder";
 import { formatTRY } from "../types/domain";
 import { foodCoupons } from "../features/food/data/foodData";
@@ -38,6 +39,7 @@ function PanelRow({ label, detail, onClick }: { label: string; detail?: string; 
 export default function SidePanel({ view, onClose, onNavigate, address, foodCount, marketCount }: PanelProps) {
   const navigate = useNavigate();
   const { account } = useAccount();
+  const { addressDetails } = useDelivery();
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const panelRef = useRef<HTMLElement | null>(null);
 
@@ -189,7 +191,17 @@ export default function SidePanel({ view, onClose, onNavigate, address, foodCoun
                   {account ? "Profil bilgilerimi düzenle" : "Hesap oluştur"}
                 </button>
               </div>
-              <PanelRow label="Kayıtlı adreslerim" detail={address ?? "Henüz adres seçilmedi"} onClick={() => onNavigate("address")} />
+              <PanelRow
+                label="Kayıtlı adreslerim"
+                detail={
+                  address
+                    ? addressDetails
+                      ? `${address} · ${formatAddressDetails(addressDetails)}`
+                      : address
+                    : "Henüz adres seçilmedi"
+                }
+                onClick={() => onNavigate("address")}
+              />
               <PanelRow
                 label="Siparişlerim"
                 detail={lastOrder ? `${lastOrder.orderId} · ${DEMO_TRACKING_STEPS[lastOrder.stage].title}` : "Aktif ve geçmiş siparişlerin"}

@@ -8,26 +8,29 @@ import {
   type LocationChangePlan,
 } from "../data/delivery";
 import {
+  areAllRegionsLoaded,
   getCachedTurkeyRegions,
   getDistrictsForCity,
   getNeighborhoodsForDistrict,
   loadTurkeyRegions,
   type TurkeyRegionsMap,
 } from "../data/regions";
-import { useDelivery } from "../state/DeliveryContext";
+import { formatAddressDetails, useDelivery, type AddressDetails } from "../state/DeliveryContext";
 
 type LocationPickerProps = {
   onDone?: () => void;
   variant?: "modal" | "page";
 };
 
+type DetailsFieldKey = "street" | "buildingNo" | "floor" | "apartmentNo";
+
 function matchInitialNeighborhood(
-  regions: TurkeyRegionsMap | null,
+  regions: TurkeyRegionsMap,
   city: string,
   district: string,
   currentNeighborhood: string,
 ): string {
-  if (!regions || !city || !district || !currentNeighborhood) return currentNeighborhood;
+  if (!city || !district || !currentNeighborhood) return currentNeighborhood;
   const list = getNeighborhoodsForDistrict(regions, city, district);
   if (list.includes(currentNeighborhood)) return currentNeighborhood;
   const base = stripNeighborhoodSuffix(currentNeighborhood);
@@ -35,8 +38,10 @@ function matchInitialNeighborhood(
 }
 
 export default function LocationPicker({ onDone, variant = "page" }: LocationPickerProps) {
-  const { delivery, previewLocationChange, selectLocation } = useDelivery();
-  const [regions, setRegions] = useState<TurkeyRegionsMap | null>(getCachedTurkeyRegions);
+  const { delivery, addressDetails, previewLocationChange, selectLocation } = useDelivery();
+  const [regions, setRegions] = useState<TurkeyRegionsMap>(getCachedTurkeyRegions);
+  const [allRegionsReady, setAllRegionsReady] = useState<boolean>(areAllRegionsLoaded);
+
   const [city, setCity] = useState<string>(delivery?.city ?? "");
   const [district, setDistrict] = useState<string>(delivery?.district ?? "");
   const [neighborhood, setNeighborhood] = useState<string>(() =>
@@ -47,19 +52,32 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
       delivery?.neighborhood ?? "",
     ),
   );
+
+  const [street, setStreet] = useState<string>(addressDetails?.street ?? "");
+  const [buildingNo, setBuildingNo] = useState<string>(addressDetails?.buildingNo ?? "");
+  const [floor, setFloor] = useState<string>(addressDetails?.floor ?? "");
+  const [apartmentNo, setApartmentNo] = useState<string>(addressDetails?.apartmentNo ?? "");
+  const [note, setNote] = useState<string>(addressDetails?.note ?? "");
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<DetailsFieldKey, string>>>({});
+
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
   const [pendingPlan, setPendingPlan] = useState<LocationChangePlan | null>(null);
 
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const submitButtonRef = useRef<HTMLButtonElement | null>(null);
+  const streetInputRef = useRef<HTMLInputElement | null>(null);
+  const buildingInputRef = useRef<HTMLInputElement | null>(null);
+  const floorInputRef = useRef<HTMLInputElement | null>(null);
+  const apartmentInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (regions) return;
+    if (allRegionsReady) return;
     let active = true;
     loadTurkeyRegions().then((loaded) => {
       if (!active) return;
       setRegions(loaded);
+      setAllRegionsReady(true);
       if (delivery?.city && delivery?.district && delivery?.neighborhood) {
         setNeighborhood((prev) => matchInitialNeighborhood(loaded, delivery.city, delivery.district, prev));
       }
@@ -67,7 +85,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
     return () => {
       active = false;
     };
-  }, [regions, delivery]);
+  }, [allRegionsReady, delivery]);
 
   const matchingCities = useMemo(() => filterProvinces(query), [query]);
   const districtOptions = useMemo(() => getDistrictsForCity(regions, city), [regions, city]);
@@ -81,13 +99,23 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
     () => resolveLocationIdForSelection(city, district, neighborhood) ?? "",
     [city, district, neighborhood],
   );
-  const targetPreviewLabel = useMemo(() => {
+  const regionPreviewLabel = useMemo(() => {
     if (!resolvedTargetId) return null;
     const resolved = resolveLocation(resolvedTargetId);
     return resolved ? locationLabel(resolved) : null;
   }, [resolvedTargetId]);
 
-  const canSubmit = Boolean(city && district && neighborhood && resolvedTargetId);
+  const trimmedDetails: AddressDetails | null = useMemo(() => {
+    const s = street.trim();
+    const b = buildingNo.trim();
+    const f = floor.trim();
+    const a = apartmentNo.trim();
+    const n = note.trim();
+    if (!s || !b || !f || !a) return null;
+    return n ? { street: s, buildingNo: b, floor: f, apartmentNo: a, note: n } : { street: s, buildingNo: b, floor: f, apartmentNo: a };
+  }, [street, buildingNo, floor, apartmentNo, note]);
+
+  const hasRegionSelected = Boolean(city && district && neighborhood && resolvedTargetId);
 
   useEffect(() => {
     if (pendingPlan) {
@@ -119,9 +147,45 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
     }
   }
 
+  function clearFieldError(key: DetailsFieldKey) {
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  }
+
+  function validateDetails(): AddressDetails | null {
+    const errors: Partial<Record<DetailsFieldKey, string>> = {};
+    if (!street.trim()) errors.street = "Cadde veya sokak adı zorunlu.";
+    if (!buildingNo.trim()) errors.buildingNo = "Apartman / Bina No zorunlu.";
+    if (!floor.trim()) errors.floor = "Kat No zorunlu.";
+    if (!apartmentNo.trim()) errors.apartmentNo = "Daire No zorunlu.";
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      if (errors.street) streetInputRef.current?.focus();
+      else if (errors.buildingNo) buildingInputRef.current?.focus();
+      else if (errors.floor) floorInputRef.current?.focus();
+      else if (errors.apartmentNo) apartmentInputRef.current?.focus();
+      return null;
+    }
+
+    setFieldErrors({});
+    const cleanNote = note.trim();
+    return {
+      street: street.trim(),
+      buildingNo: buildingNo.trim(),
+      floor: floor.trim(),
+      apartmentNo: apartmentNo.trim(),
+      ...(cleanNote ? { note: cleanNote } : {}),
+    };
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!resolvedTargetId) return;
+
+    const validDetails = validateDetails();
+    if (!validDetails) return;
 
     const plan = previewLocationChange(resolvedTargetId);
     if (!plan) return;
@@ -132,7 +196,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
       return;
     }
 
-    if (selectLocation(resolvedTargetId, { confirmed: true })) {
+    if (selectLocation(resolvedTargetId, { confirmed: true, details: validDetails })) {
       setNotice("");
       onDone?.();
     }
@@ -147,7 +211,12 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
 
   function confirmPendingChange() {
     if (!pendingPlan) return;
-    if (selectLocation(pendingPlan.target.id, { confirmed: true })) {
+    const validDetails = validateDetails();
+    if (!validDetails) {
+      setPendingPlan(null);
+      return;
+    }
+    if (selectLocation(pendingPlan.target.id, { confirmed: true, details: validDetails })) {
       setPendingPlan(null);
       setNotice("");
       onDone?.();
@@ -156,25 +225,28 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
 
   const formClasses =
     variant === "modal"
-      ? "space-y-5"
+      ? "space-y-4"
       : "mx-auto max-w-xl space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8";
 
+  const districtsLoading = Boolean(city) && districtOptions.length === 0 && !allRegionsReady;
+  const neighborhoodsLoading = Boolean(district) && neighborhoodOptions.length === 0 && !allRegionsReady;
+
   return (
-    <form onSubmit={submit} className={formClasses}>
+    <form onSubmit={submit} noValidate className={formClasses}>
       {variant === "page" && (
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Teslimat Adresini Seç</h2>
-          <p className="mt-1.5 text-sm text-slate-600">Önce şehrini seç, ardından gerçek ilçe ve mahalleni belirle.</p>
+          <p className="mt-1.5 text-sm text-slate-600">İl, ilçe, mahalle ve apartman bilgilerini girerek devam et.</p>
         </div>
       )}
 
-      <fieldset className="min-w-0 space-y-3.5 rounded-2xl border border-slate-200 bg-slate-50/75 p-4">
+      <fieldset className="min-w-0 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/75 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <legend className="flex items-center gap-2 text-base font-bold text-slate-900">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
               1
             </span>
-            <span>Şehir Seç</span>
+            <span>Şehir Seç *</span>
           </legend>
           {city ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
@@ -208,7 +280,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Ör. İstanbul, Muğla..."
+                placeholder="Ör. Muğla, İstanbul..."
                 autoComplete="off"
                 className={trimmedQuery ? "field pl-10 pr-16 text-sm" : "field pl-10 pr-3 text-sm"}
                 aria-describedby="city-results"
@@ -282,7 +354,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
                 2
               </span>
-              <span>İlçe</span>
+              <span>İlçe *</span>
             </span>
             {city && districtOptions.length > 0 && (
               <span className="text-xs font-medium text-slate-500">{districtOptions.length} ilçe</span>
@@ -290,13 +362,13 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
           </span>
           <select
             required
-            disabled={!city || !regions}
+            disabled={!city || districtsLoading}
             className="location-select"
             value={district}
             onChange={(event) => changeDistrict(event.target.value)}
           >
             <option value="">
-              {!city ? "Önce şehir seçin" : !regions ? "İlçeler yükleniyor..." : "İlçe seçin"}
+              {!city ? "Önce şehir seçin" : districtsLoading ? "İlçeler hazırlanıyor..." : "İlçe seçin"}
             </option>
             {districtOptions.map((name) => (
               <option key={name} value={name}>
@@ -312,7 +384,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
                 3
               </span>
-              <span>Mahalle</span>
+              <span>Mahalle *</span>
             </span>
             {district && neighborhoodOptions.length > 0 && (
               <span className="text-xs font-medium text-slate-500">{neighborhoodOptions.length} mahalle</span>
@@ -320,7 +392,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
           </span>
           <select
             required
-            disabled={!district || !regions}
+            disabled={!district || neighborhoodsLoading}
             className="location-select"
             value={neighborhood}
             onChange={(event) => {
@@ -330,7 +402,7 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
             }}
           >
             <option value="">
-              {!district ? "Önce ilçe seçin" : !regions ? "Mahalleler yükleniyor..." : "Mahalle seçin"}
+              {!district ? "Önce ilçe seçin" : neighborhoodsLoading ? "Mahalleler hazırlanıyor..." : "Mahalle seçin"}
             </option>
             {neighborhoodOptions.map((name) => (
               <option key={name} value={name}>
@@ -340,6 +412,121 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
           </select>
         </label>
       </div>
+
+      <fieldset className="min-w-0 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/75 p-4">
+        <legend className="flex items-center gap-2 text-base font-bold text-slate-900">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800">
+            4
+          </span>
+          <span>Bina ve Daire Bilgileri *</span>
+        </legend>
+
+        <label className="block min-w-0">
+          <span className="mb-1 block text-xs font-semibold text-slate-700">Cadde / Sokak / Site *</span>
+          <input
+            ref={streetInputRef}
+            type="text"
+            name="street"
+            required
+            value={street}
+            onChange={(e) => {
+              setStreet(e.target.value);
+              clearFieldError("street");
+            }}
+            aria-invalid={Boolean(fieldErrors.street)}
+            placeholder="Ör. Atatürk Cad. / 12. Sokak"
+            className={fieldErrors.street ? "field border-[#991B1B] text-sm" : "field text-sm"}
+          />
+          {fieldErrors.street && (
+            <span role="alert" className="mt-1 block text-xs font-semibold text-[#991B1B]">
+              {fieldErrors.street}
+            </span>
+          )}
+        </label>
+
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+          <label className="block min-w-0">
+            <span className="mb-1 block text-xs font-semibold text-slate-700">Apartman / Bina No *</span>
+            <input
+              ref={buildingInputRef}
+              type="text"
+              name="buildingNo"
+              required
+              value={buildingNo}
+              onChange={(e) => {
+                setBuildingNo(e.target.value);
+                clearFieldError("buildingNo");
+              }}
+              aria-invalid={Boolean(fieldErrors.buildingNo)}
+              placeholder="Ör. No: 14"
+              className={fieldErrors.buildingNo ? "field border-[#991B1B] text-sm" : "field text-sm"}
+            />
+            {fieldErrors.buildingNo && (
+              <span role="alert" className="mt-1 block text-xs font-semibold text-[#991B1B]">
+                {fieldErrors.buildingNo}
+              </span>
+            )}
+          </label>
+
+          <label className="block min-w-0">
+            <span className="mb-1 block text-xs font-semibold text-slate-700">Kat No *</span>
+            <input
+              ref={floorInputRef}
+              type="text"
+              name="floor"
+              required
+              value={floor}
+              onChange={(e) => {
+                setFloor(e.target.value);
+                clearFieldError("floor");
+              }}
+              aria-invalid={Boolean(fieldErrors.floor)}
+              placeholder="Ör. 3"
+              className={fieldErrors.floor ? "field border-[#991B1B] text-sm" : "field text-sm"}
+            />
+            {fieldErrors.floor && (
+              <span role="alert" className="mt-1 block text-xs font-semibold text-[#991B1B]">
+                {fieldErrors.floor}
+              </span>
+            )}
+          </label>
+
+          <label className="block min-w-0">
+            <span className="mb-1 block text-xs font-semibold text-slate-700">Daire No *</span>
+            <input
+              ref={apartmentInputRef}
+              type="text"
+              name="apartmentNo"
+              required
+              value={apartmentNo}
+              onChange={(e) => {
+                setApartmentNo(e.target.value);
+                clearFieldError("apartmentNo");
+              }}
+              aria-invalid={Boolean(fieldErrors.apartmentNo)}
+              placeholder="Ör. 7"
+              className={fieldErrors.apartmentNo ? "field border-[#991B1B] text-sm" : "field text-sm"}
+            />
+            {fieldErrors.apartmentNo && (
+              <span role="alert" className="mt-1 block text-xs font-semibold text-[#991B1B]">
+                {fieldErrors.apartmentNo}
+              </span>
+            )}
+          </label>
+        </div>
+
+        <label className="block min-w-0">
+          <span className="mb-1 block text-xs font-semibold text-slate-700">Adres tarifi (isteğe bağlı)</span>
+          <input
+            type="text"
+            name="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ör. Mavi kapı, zile basınız"
+            className="field text-sm"
+          />
+        </label>
+      </fieldset>
 
       {pendingPlan && (
         <section
@@ -402,25 +589,30 @@ export default function LocationPicker({ onDone, variant = "page" }: LocationPic
 
       {!pendingPlan && (
         <div className="space-y-3 pt-1">
-          {targetPreviewLabel && (
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white" aria-hidden="true">
+          {regionPreviewLabel && (
+            <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white" aria-hidden="true">
                 ✓
               </span>
-              <p className="min-w-0 leading-snug">
-                <span className="block text-xs font-medium text-emerald-800">Seçilen teslimat adresi</span>
-                <strong className="text-base font-bold text-slate-900">{targetPreviewLabel}</strong>
-              </p>
+              <div className="min-w-0 leading-snug">
+                <span className="block text-xs font-medium text-emerald-800">Teslimat adresi önizlemesi</span>
+                <strong className="block text-base font-bold text-slate-900">{regionPreviewLabel}</strong>
+                {trimmedDetails && (
+                  <span className="mt-0.5 block text-xs font-medium text-emerald-900">
+                    {formatAddressDetails(trimmedDetails)}
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
-          <button ref={submitButtonRef} disabled={!canSubmit} className="btn-primary min-h-13 w-full text-base" type="submit">
+          <button ref={submitButtonRef} disabled={!hasRegionSelected} className="btn-primary min-h-13 w-full text-base" type="submit">
             {delivery ? "Bu Adresi Kaydet" : "Adresi Onayla ve Devam Et"}
           </button>
 
-          {!canSubmit && (
+          {!hasRegionSelected && (
             <p className="text-center text-sm font-medium text-slate-600">
-              Devam etmek için yukarıdan şehir, ilçe ve mahalle seçin.
+              Devam etmek için şehir, ilçe, mahalle ve apartman bilgilerini doldurun.
             </p>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { useCart } from "../state/CartContext";
-import { useDelivery } from "../state/DeliveryContext";
+import { formatAddressDetails, useDelivery } from "../state/DeliveryContext";
 import { useAccount } from "../state/AccountContext";
 import { locationLabel } from "../data/delivery";
 import { formatTRY, type PaymentMethod, type Service } from "../types/domain";
@@ -17,14 +17,14 @@ export default function CheckoutPage() {
   const service: Service = segment === "market" ? "market" : "food";
 
   const { carts, total, clear } = useCart();
-  const { delivery } = useDelivery();
+  const { delivery, addressDetails } = useDelivery();
   const { account } = useAccount();
   const { openAddress } = useOutletContext<LayoutContext>();
   const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(() => (addressDetails ? formatAddressDetails(addressDetails) : ""));
   const [method, setMethod] = useState<PaymentMethod>("cash-demo");
   const [fieldErrors, setFieldErrors] = useState<{ name?: string; address?: string }>({});
   const [error, setError] = useState("");
