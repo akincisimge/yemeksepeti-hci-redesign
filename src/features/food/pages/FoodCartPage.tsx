@@ -1,10 +1,19 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY } from "../../../types/domain";
+import FoodCustomizationDetails from "../components/FoodCustomizationDetails";
+import FoodCouponSelector from "../components/FoodCouponSelector";
+import { calculateFoodCouponDiscount, foodRestaurants } from "../data/foodData";
+import { useFoodCoupon } from "../state/FoodCouponContext";
 
 export default function FoodCartPage() {
   const { carts, change, total } = useCart();
+  const { activeFoodCoupon } = useFoodCoupon();
   const lines = carts.food;
+  const restaurant = foodRestaurants.find((item) => item.id === lines[0]?.product.storeId);
+  const subtotal = total("food");
+  const deliveryFee = restaurant?.deliveryFee ?? 0;
+  const couponDiscount = calculateFoodCouponDiscount(activeFoodCoupon, lines).discount;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -29,6 +38,7 @@ export default function FoodCartPage() {
               <li key={product.id} className="flex flex-wrap items-center justify-between gap-4 py-5">
                 <div className="min-w-0 flex-1">
                   <h2 className="text-base font-semibold leading-6 text-[#0F172A]">{product.name}</h2>
+                  <FoodCustomizationDetails product={product} />
                   <p className="mt-1 text-sm leading-5 text-[#475569]">{product.storeName}</p>
                   <p className="mt-1 text-sm leading-5 text-[#475569]">Birim fiyat: {formatTRY(product.price)}</p>
                   <p className="mt-1 font-semibold text-[#0F172A]">Satır tutarı: {formatTRY(product.price * quantity)}</p>
@@ -43,10 +53,22 @@ export default function FoodCartPage() {
             ))}
           </ul>
           <section className="rounded-2xl border border-[#CBD5E1] bg-white p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-4 text-lg text-[#0F172A]">
-              <span>Ara toplam</span><strong>{formatTRY(total("food"))}</strong>
+            <FoodCouponSelector lines={lines} />
+            <div className="mt-4 flex items-center justify-between gap-4 text-sm text-[#0F172A]">
+              <span>Ürün toplamı</span><strong>{formatTRY(subtotal)}</strong>
             </div>
-            <p className="mt-2 text-sm leading-5 text-[#475569]">Teslimat ücreti, sipariş onayından önce ayrıca gösterilir.</p>
+            {couponDiscount > 0 && activeFoodCoupon && (
+              <div className="mt-3 flex items-center justify-between gap-4 text-sm font-semibold text-emerald-700">
+                <span>Kupon indirimi ({activeFoodCoupon.code})</span><strong>−{formatTRY(couponDiscount)}</strong>
+              </div>
+            )}
+            <div className="mt-3 flex items-center justify-between gap-4 text-sm text-[#0F172A]">
+              <span>Teslimat ücreti</span><strong>{deliveryFee === 0 ? "Ücretsiz" : formatTRY(deliveryFee)}</strong>
+            </div>
+            <div className="flex items-center justify-between gap-4 text-lg text-[#0F172A]">
+              <span>Genel toplam</span><strong>{formatTRY(subtotal + deliveryFee - couponDiscount)}</strong>
+            </div>
+            <p className="mt-2 text-sm leading-5 text-[#475569]">{restaurant?.name ?? "Restoran"} için teslimat ücreti ve kupon indirimi hesaba katıldı.</p>
             <Link to="/checkout/food" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#D90049] px-5 py-3 text-center font-semibold text-white hover:bg-[#B6003C]">
               Siparişi gözden geçir
             </Link>

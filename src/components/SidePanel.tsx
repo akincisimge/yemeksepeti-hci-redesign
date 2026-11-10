@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LocationPicker from "./LocationPicker";
 import { readDemoOrder } from "../state/demoOrder";
+import { foodCoupons } from "../features/food/data/foodData";
+import { useFoodCoupon } from "../features/food/state/FoodCouponContext";
 
 export type PanelView = "address" | "profile" | "account" | "orders" | "coupons" | "help" | null;
 export type DemoAccount = { name: string; email: string; phone: string };
@@ -20,7 +22,7 @@ type PanelProps = {
 const TOPICS = [
   { name: "Siparişimi takip etmek istiyorum", answer: "Demo sipariş tamamlandıktan sonra takip ekranında dört örnek aşamayı izleyebilirsin. Son siparişine Profil → Önceki siparişlerim bölümünden de dönebilirsin." },
   { name: "Teslimat adresimi değiştirmek istiyorum", answer: "Ana sayfadaki Adres seç butonundan örnek teslimat konumunu değiştirebilirsin. Siparişi tamamlarken ayrıntılı demo adresini ayrıca düzenleyebilirsin." },
-  { name: "Kuponumla ilgili yardım istiyorum", answer: "Bu öğrenci prototipinde gerçek kupon kullanımı yok. Kuponlarım alanında örnek kupon durumları gösteriliyor." },
+  { name: "Kuponumla ilgili yardım istiyorum", answer: "Yemek kuponunu Profil → Kuponlarım alanından seçebilirsin. İndirim, uygun restoranın kampanyalı menüsünde ve minimum sepet koşulu sağlandığında sepette uygulanır." },
   { name: "Siparişimi iptal veya iade etmek istiyorum", answer: "Bu uygulama gerçek sipariş oluşturmadığı için para çekme, iptal veya iade işlemi yapılmaz." },
   { name: "Başka bir konuda yardım istiyorum", answer: "Bu bir otomatik demo sohbetidir. Gerçek müşteri temsilcisine mesaj gönderilmez. Yardım seçeneklerini inceleyebilir veya yeni konu seçebilirsin." }
 ];
@@ -114,6 +116,8 @@ function HelpView() {
 }
 
 export default function SidePanel({ view, onClose, onNavigate, address, account, onSaveAccount, foodCount, marketCount }: PanelProps) {
+  const navigate = useNavigate();
+  const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const panelRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     const oldOverflow = document.body.style.overflow;
@@ -184,10 +188,43 @@ export default function SidePanel({ view, onClose, onNavigate, address, account,
               <Link to="/food" onClick={onClose} className="btn-primary w-full">Yemekleri keşfet</Link>
             </>}
           </div>}
-          {view === "coupons" && <div className="space-y-4">
-            <p className="rounded-xl bg-slate-50 p-4 text-slate-700">Bu eğitim simülasyonunda henüz tanımlı gerçek veya kullanılabilir kupon yok.</p>
-            <div className="rounded-xl border border-dashed border-slate-300 p-5"><p className="font-semibold">Kuponun yok</p><p className="mt-2 text-sm text-slate-600">Aktif, kullanılmış ve süresi dolmuş kupon durumları sonraki sürümde gösterilecek.</p></div>
-          </div>}
+                  {view === "coupons" && <div className="space-y-4">
+                    <p className="rounded-xl bg-[#FFF1F6] p-4 text-sm leading-5 text-slate-700">Yemek kuponunu seç; ilgili restoranın kampanyalı menüsüne gidip indirimi sepetinde kullan.</p>
+                    {foodCoupons.map((coupon) => {
+                      const isActive = activeFoodCoupon?.code === coupon.code;
+                      return (
+                        <article key={coupon.code} className={`rounded-2xl border p-4 ${isActive ? "border-[#D90049] bg-[#FFF0F5]" : "border-slate-200 bg-white"}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900">{coupon.title}</p>
+                              <p className="mt-2 text-sm leading-5 text-slate-600">{coupon.description}</p>
+                            </div>
+                            <span className="shrink-0 rounded-lg border border-dashed border-[#D90049] bg-white px-2.5 py-1.5 font-mono text-sm font-bold text-[#D90049]">{coupon.code}</span>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+                            <strong className="text-[#D90049]">
+                              {coupon.discountType === "percentage" ? `%${coupon.discountValue} indirim` : `${coupon.discountValue} TL indirim`}
+                            </strong>
+                            <span className="text-slate-600">Min. {coupon.minimumSubtotal} TL</span>
+                          </div>
+                          <button
+                            type="button"
+                            aria-pressed={isActive}
+                            onClick={() => {
+                              setActiveFoodCoupon(coupon.code);
+                              onClose();
+                              navigate(`/food/${coupon.primaryRestaurantId}?campaign=true`);
+                            }}
+                            className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-2 font-semibold ${
+                              isActive ? "border border-emerald-200 bg-emerald-50 text-emerald-800" : "bg-[#D90049] text-white hover:bg-[#B6003C]"
+                            }`}
+                          >
+                            {isActive ? "Aktif ✓" : "Kuponu Seç & Restorana Git"}
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>}
           {view === "help" && <HelpView />}
         </div>
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs text-slate-600 sm:px-6">Bağımsız HCI öğrenci projesi · Gerçek müşteri desteği değildir.</div>

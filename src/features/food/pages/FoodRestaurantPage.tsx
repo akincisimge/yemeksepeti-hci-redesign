@@ -1,31 +1,48 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCart } from "../../../state/CartContext";
 import { formatTRY, type Product } from "../../../types/domain";
 import FoodBasket from "../components/FoodBasket";
+import FoodMobileBasketBar from "../components/FoodMobileBasketBar";
 import {
+  createCustomizedFoodProduct,
+  foodCoupons,
   foodProducts,
   foodRestaurants,
   foodReviews,
+  getFoodCustomizationOptions,
+  getFoodCouponCampaignProducts,
   getFoodProductFallbackImage,
   getFoodRestaurantFallbackImage,
   recoverFoodImage,
+  type FoodCustomization,
+  type FoodPreference,
   type FoodReview,
 } from "../data/foodData";
+import { useFoodCoupon } from "../state/FoodCouponContext";
 
 export default function FoodRestaurantPage() {
   const { restaurantId } = useParams();
+  const [searchParams] = useSearchParams();
+  const { activeFoodCoupon, setActiveFoodCoupon } = useFoodCoupon();
   const { add, carts, clear } = useCart();
   const [notice, setNotice] = useState("");
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const [replacementProduct, setReplacementProduct] = useState<Product | null>(null);
+  const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
+  const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const [preference, setPreference] = useState<FoodPreference>("Normal");
+  const [orderNote, setOrderNote] = useState("");
   const [reviews, setReviews] = useState<FoodReview[]>(() => foodReviews[restaurantId ?? ""] ?? []);
   const [reviewRating, setReviewRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [reviewNotice, setReviewNotice] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
+  const customizationDialog = useRef<HTMLDialogElement>(null);
   const restaurant = foodRestaurants.find((item) => item.id === restaurantId);
+  const campaignRequested = searchParams.get("campaign") === "true";
 
   useEffect(() => {
     setReviews(foodReviews[restaurantId ?? ""] ?? []);
@@ -36,11 +53,24 @@ export default function FoodRestaurantPage() {
   }, [restaurantId]);
 
   useEffect(() => {
+    if (!campaignRequested || !restaurantId) return;
+    const coupon = foodCoupons.find((item) => item.primaryRestaurantId === restaurantId);
+    if (coupon) setActiveFoodCoupon(coupon.code);
+  }, [campaignRequested, restaurantId, setActiveFoodCoupon]);
+
+  useEffect(() => {
     const element = dialog.current;
     if (!element) return;
     if (pendingProduct && !element.open) element.showModal();
     if (!pendingProduct && element.open) element.close();
   }, [pendingProduct]);
+
+  useEffect(() => {
+    const element = customizationDialog.current;
+    if (!element) return;
+    if (customizingProduct && !element.open) element.showModal();
+    if (!customizingProduct && element.open) element.close();
+  }, [customizingProduct]);
 
   useEffect(() => {
     if (!replacementProduct || carts.food.length > 0) return;
@@ -61,8 +91,26 @@ export default function FoodRestaurantPage() {
     );
   }
 
-  const menu = foodProducts.filter((product) => product.storeId === restaurant.id);
+  const restaurantCoupon = foodCoupons.find((coupon) => coupon.restaurantIds.includes(restaurant.id));
+  const selectedRestaurantCoupon = activeFoodCoupon?.restaurantIds.includes(restaurant.id)
+    ? activeFoodCoupon
+    : restaurantCoupon;
+  const campaignProducts = selectedRestaurantCoupon
+    ? getFoodCouponCampaignProducts(selectedRestaurantCoupon, restaurant.id)
+    : [];
+  const campaignProductIds = new Set(campaignProducts.map((product) => product.id));
+  const menu = foodProducts
+    .filter((product) => product.storeId === restaurant.id)
+    .sort((first, second) => Number(campaignProductIds.has(second.id)) - Number(campaignProductIds.has(first.id)));
   const categories = Array.from(new Set(menu.map((product) => product.category)));
+  const customizationOptions = customizingProduct
+    ? getFoodCustomizationOptions(customizingProduct, restaurant.cuisine)
+    : null;
+  const customizationTotal = customizingProduct && customizationOptions
+    ? customizingProduct.price + customizationOptions.extras
+      .filter((extra) => selectedExtras.includes(extra.name))
+      .reduce((sum, extra) => sum + extra.price, 0)
+    : 0;
 
   const addProduct = (productId: string) => {
     const product = menu.find((item) => item.id === productId);
@@ -73,6 +121,44 @@ export default function FoodRestaurantPage() {
       setNotice("");
       return;
     }
+    const result = add(product);
+    setNotice(result === "added" ? `${product.name}: Ürün sepete eklendi` : "Sepet değiştirilmedi; mevcut ürünler korundu.");
+  };
+
+  const requestProduct = (product: Product) => {
+    if (product.category.toLocaleLowerCase("tr").includes("içecek")) {
+      addProduct(product.id);
+      return;
+    }
+
+    setRemovedIngredients([]);
+    setSelectedExtras([]);
+    setPreference("Normal");
+    setOrderNote("");
+    setCustomizingProduct(product);
+  };
+
+  const submitCustomization = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!customizingProduct) return;
+
+    const customization: FoodCustomization = {
+      removedIngredients,
+      extras: selectedExtras,
+      preference,
+      note: orderNote.trim(),
+    };
+    const options = getFoodCustomizationOptions(customizingProduct, restaurant.cuisine);
+    const product = createCustomizedFoodProduct(customizingProduct, customization, options);
+    const currentRestaurantId = carts.food[0]?.product.storeId;
+
+    setCustomizingProduct(null);
+    if (currentRestaurantId && currentRestaurantId !== product.storeId) {
+      setPendingProduct(product);
+      setNotice("");
+      return;
+    }
+
     const result = add(product);
     setNotice(result === "added" ? `${product.name}: Ürün sepete eklendi` : "Sepet değiştirilmedi; mevcut ürünler korundu.");
   };
@@ -106,12 +192,42 @@ export default function FoodRestaurantPage() {
 
   return (
     <div
-      className="relative left-1/2 max-w-[1400px] -translate-x-1/2 space-y-8 px-4"
+      className="relative left-1/2 max-w-[1400px] -translate-x-1/2 space-y-8 px-4 pb-24 lg:pb-0"
       style={{ width: "min(1400px, calc(100vw - 2rem))" }}
     >
       <Link to="/food" className="inline-flex min-h-11 items-center font-semibold text-[#D90049] underline underline-offset-4 hover:text-[#B6003C]">
         ← Restoran listesine dön
       </Link>
+
+      {selectedRestaurantCoupon && (
+        <section className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${
+          activeFoodCoupon?.code === selectedRestaurantCoupon.code
+            ? "border-emerald-200 bg-emerald-50"
+            : "border-[#FBCFE8] bg-[#FFF0F5]"
+        }`}>
+          <div>
+            <p className={`font-bold ${activeFoodCoupon?.code === selectedRestaurantCoupon.code ? "text-emerald-800" : "text-[#9F1239]"}`}>
+              {activeFoodCoupon?.code === selectedRestaurantCoupon.code
+                ? `🎉 ${selectedRestaurantCoupon.code} Kuponu Aktif!`
+                : `${selectedRestaurantCoupon.code} kupon fırsatı`}
+            </p>
+            <p className="mt-1 text-sm leading-5 text-[#334155]">
+              Kampanyalı menüyü sepetine ekle; {selectedRestaurantCoupon.discountType === "percentage"
+                ? `%${selectedRestaurantCoupon.discountValue}`
+                : `${formatTRY(selectedRestaurantCoupon.discountValue)}`} ekstra indirim uygula. Min. sepet {formatTRY(selectedRestaurantCoupon.minimumSubtotal)}.
+            </p>
+          </div>
+          {activeFoodCoupon?.code !== selectedRestaurantCoupon.code && (
+            <button
+              type="button"
+              onClick={() => setActiveFoodCoupon(selectedRestaurantCoupon.code)}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-[#D90049] px-4 py-2 font-semibold text-white hover:bg-[#B6003C]"
+            >
+              Kuponu Uygula
+            </button>
+          )}
+        </section>
+      )}
 
       <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)_18rem]">
         <aside className="order-3 lg:order-1 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:w-72 lg:overflow-y-auto lg:pr-2">
@@ -262,7 +378,20 @@ export default function FoodRestaurantPage() {
                 <h3 className="mb-3 text-xl font-semibold text-[#0F172A]">{category}</h3>
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {menu.filter((product) => product.category === category).map((product) => (
-                    <li key={product.id} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                    <li
+                      key={product.id}
+                      className={`flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-sm transition-all hover:shadow-md ${
+                        product.campaignOriginalPrice ? "border-[#D90049] ring-1 ring-[#FBCFE8]" : "border-slate-200"
+                      }`}
+                    >
+                      {product.campaignOriginalPrice && (
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                          <span className="inline-flex min-h-8 items-center rounded-full bg-[#D90049] px-3 py-1 text-xs font-bold text-white">
+                            🔥 Günün Kampanyalı Menüsü
+                          </span>
+                          <span className="text-xs font-semibold text-[#9F1239]">{product.campaignCouponCode} kuponuna uygun</span>
+                        </div>
+                      )}
                       {product.image && (
                         <img
                           src={product.image}
@@ -277,15 +406,43 @@ export default function FoodRestaurantPage() {
                           <h4 className="text-base font-bold leading-6 text-slate-900">{product.name}</h4>
                           <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{product.description}</p>
                         </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <strong className="text-lg font-bold text-slate-900">{formatTRY(product.price)}</strong>
-                          <button
-                            type="button"
-                            onClick={() => addProduct(product.id)}
-                            className="inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-[#D90049] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B6003C]"
-                          >
-                            Sepete ekle
-                          </button>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex flex-wrap items-baseline gap-2">
+                            {product.campaignOriginalPrice && (
+                              <del className="text-sm text-slate-500">{formatTRY(product.campaignOriginalPrice)}</del>
+                            )}
+                            <strong className={`text-lg font-bold ${product.campaignOriginalPrice ? "text-[#D90049]" : "text-slate-900"}`}>
+                              {formatTRY(product.price)}
+                            </strong>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {product.category.toLocaleLowerCase("tr").includes("içecek") ? (
+                              <button
+                                type="button"
+                                onClick={() => requestProduct(product)}
+                                className="inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-[#D90049] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B6003C]"
+                              >
+                                Sepete ekle
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => requestProduct(product)}
+                                  className="inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-[#D90049] px-3 py-2 text-sm font-semibold text-[#D90049] hover:bg-rose-50"
+                                >
+                                  İçindekileri Seç
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => requestProduct(product)}
+                                  className="inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-[#D90049] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B6003C]"
+                                >
+                                  Sepete ekle
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </li>
@@ -306,6 +463,133 @@ export default function FoodRestaurantPage() {
           <FoodBasket onNotice={setNotice} />
         </aside>
       </div>
+
+      <dialog
+        ref={customizationDialog}
+        aria-labelledby="food-customization-title"
+        onClose={() => setCustomizingProduct(null)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) customizationDialog.current?.close();
+        }}
+        className="fixed inset-0 m-auto max-h-[90vh] w-[calc(100%_-_24px)] max-w-xl overflow-y-auto rounded-2xl border border-[#CBD5E1] bg-white p-0 shadow-2xl backdrop:bg-[#0F172A]/50"
+      >
+        {customizingProduct && customizationOptions && (
+          <form onSubmit={submitCustomization} className="space-y-5 p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-[#D90049]">Ürününü dilediğin gibi hazırla</p>
+                <h2 id="food-customization-title" className="mt-1 text-xl font-bold text-[#0F172A]">
+                  {customizingProduct.name}
+                </h2>
+                <p className="mt-1 text-sm text-[#475569]">İçindekileri çıkarabilir, ekstra ekleyebilirsin.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => customizationDialog.current?.close()}
+                aria-label="Özelleştirme penceresini kapat"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl text-[#475569] hover:bg-slate-100"
+              >
+                ×
+              </button>
+            </div>
+
+            <fieldset>
+              <legend className="font-semibold text-[#0F172A]">İçindekilerden Çıkar <span className="text-sm font-normal text-[#166534]">(Ücretsiz)</span></legend>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {customizationOptions.ingredients.map((ingredient) => {
+                  const included = !removedIngredients.includes(ingredient);
+                  return (
+                    <label
+                      key={ingredient}
+                      className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm ${
+                        included ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-slate-300 bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={included}
+                        onChange={(event) => setRemovedIngredients((current) => event.target.checked
+                          ? current.filter((item) => item !== ingredient)
+                          : [...current, ingredient])}
+                        className="accent-[#D90049]"
+                      />
+                      <span className={included ? "" : "line-through"}>{ingredient}</span>
+                      <span className="text-xs">{included ? "İçinde var" : "Çıkarıldı"}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend className="font-semibold text-[#0F172A]">Ekstra malzeme / yan seçim <span className="text-sm font-normal text-[#475569]">(İsteğe bağlı)</span></legend>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {customizationOptions.extras.map((extra) => (
+                  <label key={extra.name} className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-xl border border-[#CBD5E1] px-3 py-2 text-sm text-[#0F172A] hover:border-[#D90049]">
+                    <span className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedExtras.includes(extra.name)}
+                        onChange={(event) => setSelectedExtras((current) => event.target.checked
+                          ? [...current, extra.name]
+                          : current.filter((item) => item !== extra.name))}
+                        className="accent-[#D90049]"
+                      />
+                      {extra.name}
+                    </span>
+                    <span className="shrink-0 text-[#475569]">+{formatTRY(extra.price)}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend className="font-semibold text-[#0F172A]">Porsiyon / acı tercihi</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(["Normal", "Bol Acılı", "Acısız"] as const).map((option) => (
+                  <label key={option} className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm ${preference === option ? "border-[#D90049] bg-rose-50 font-semibold text-[#9F1239]" : "border-[#CBD5E1] text-[#475569]"}`}>
+                    <input
+                      type="radio"
+                      name="food-preference"
+                      value={option}
+                      checked={preference === option}
+                      onChange={() => setPreference(option)}
+                      className="accent-[#D90049]"
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <label className="block">
+              <span className="font-semibold text-[#0F172A]">Sipariş notu <span className="text-sm font-normal text-[#475569]">(İsteğe bağlı)</span></span>
+              <textarea
+                value={orderNote}
+                onChange={(event) => setOrderNote(event.target.value)}
+                maxLength={120}
+                rows={2}
+                placeholder="Zile basmayın, bol peçete olsun…"
+                className="mt-2 w-full resize-y rounded-xl border border-[#CBD5E1] px-3 py-2 text-sm text-[#0F172A] outline-none focus:border-[#D90049] focus:ring-2 focus:ring-rose-100"
+              />
+              <span className="mt-1 block text-right text-xs text-[#64748B]">{orderNote.length}/120</span>
+            </label>
+
+            <div className="flex flex-col-reverse gap-3 border-t border-[#E2E8F0] pt-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => customizationDialog.current?.close()}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#CBD5E1] px-4 py-3 font-semibold text-[#0F172A] hover:border-[#D90049]"
+              >
+                Vazgeç
+              </button>
+              <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#D90049] px-5 py-3 font-semibold text-white hover:bg-[#B6003C]">
+                Sepete ekle · {formatTRY(customizationTotal)}
+              </button>
+            </div>
+          </form>
+        )}
+      </dialog>
 
       <dialog
         ref={dialog}
@@ -337,6 +621,7 @@ export default function FoodRestaurantPage() {
           </button>
         </div>
       </dialog>
+      <FoodMobileBasketBar />
     </div>
   );
 }

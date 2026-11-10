@@ -9,14 +9,273 @@ export type FoodRestaurant = Store & {
   ratingCount: string;
   deliveryMinutes: number;
   deliveryTime: string;
+  fastDelivery?: boolean;
   deliveryFee: number;
   minBasket: number;
   image: string;
   imageLabel: string;
   highlight: string;
   discount: string;
+  discountText?: string;
   campaigns: FoodCampaign[];
 };
+
+export type FoodCoupon = {
+  code: string;
+  title: string;
+  description: string;
+  discountType: "fixed" | "percentage";
+  discountValue: number;
+  minimumSubtotal: number;
+  primaryRestaurantId: string;
+  restaurantIds: string[];
+  campaignProductNames: Record<string, string>;
+};
+
+export type FoodMenuProduct = Product & {
+  campaignOriginalPrice?: number;
+  campaignCouponCode?: string;
+};
+
+export const foodCoupons: FoodCoupon[] = [
+  {
+    code: "BURGER75",
+    title: "Burger Fırsatı: 75 TL İndirim",
+    description: "Crispy Co Burger ve Burger House 48 kampanyalı menülerinde ekstra 75 TL indirim.",
+    discountType: "fixed",
+    discountValue: 75,
+    minimumSubtotal: 250,
+    primaryRestaurantId: "food-crispy-co",
+    restaurantIds: ["food-crispy-co", "food-burger-house-48"],
+    campaignProductNames: {
+      "food-crispy-co": "Double Cheddar Menü",
+      "food-burger-house-48": "Big House Menü",
+    },
+  },
+  {
+    code: "PIZZA25",
+    title: "Pizza Keyfi: %25 Ekstra Kupon İndirimi",
+    description: "Meydan Pizza ve Napoli Pizza'nın kampanyalı pizzalarında %25 kupon indirimi.",
+    discountType: "percentage",
+    discountValue: 25,
+    minimumSubtotal: 200,
+    primaryRestaurantId: "food-meydan-pizza",
+    restaurantIds: ["food-meydan-pizza", "food-napoli-pizza"],
+    campaignProductNames: {
+      "food-meydan-pizza": "Büyük Boy Karışık Pizza Menüsü",
+      "food-napoli-pizza": "Napoli Diavola",
+    },
+  },
+  {
+    code: "DONER50",
+    title: "Döner & İskender: 50 TL İndirim",
+    description: "Gültepe Dönercisi ve Usta Yaprak Döner'in seçili menülerinde 50 TL indirim.",
+    discountType: "fixed",
+    discountValue: 50,
+    minimumSubtotal: 180,
+    primaryRestaurantId: "food-usta-yaprak-doner",
+    restaurantIds: ["food-gultepe-doner", "food-usta-yaprak-doner"],
+    campaignProductNames: {
+      "food-gultepe-doner": "Pilav Üstü Döner",
+      "food-usta-yaprak-doner": "Tereyağlı İskender",
+    },
+  },
+  {
+    code: "KEBAP60",
+    title: "Ocakbaşı & Kebap: 60 TL İndirim",
+    description: "Çıtır Çıtır Antep Sofrası ve Ocakbaşı Öz Urfa'da seçili kebap menülerinde 60 TL indirim.",
+    discountType: "fixed",
+    discountValue: 60,
+    minimumSubtotal: 220,
+    primaryRestaurantId: "food-citir-antep",
+    restaurantIds: ["food-citir-antep", "food-ocakbasi-urfa"],
+    campaignProductNames: {
+      "food-citir-antep": "Karışık Kebap & Lahmacun Menüsü",
+      "food-ocakbasi-urfa": "Karışık Ocakbaşı Tabağı",
+    },
+  },
+  {
+    code: "EVYEMEGI40",
+    title: "Anne Eli & Ev Yemekleri: 40 TL İndirim",
+    description: "Anne Eli Zeytinyağlı ve Mahalle Mutfağı'nda seçili ev yemeği menülerinde 40 TL indirim.",
+    discountType: "fixed",
+    discountValue: 40,
+    minimumSubtotal: 160,
+    primaryRestaurantId: "food-anne-eli",
+    restaurantIds: ["food-anne-eli", "food-mahalle-mutfagi"],
+    campaignProductNames: {
+      "food-anne-eli": "Günün Ev Yemeği Menüsü",
+      "food-mahalle-mutfagi": "Kuru Fasulye & Pilav",
+    },
+  },
+  {
+    code: "TATLI35",
+    title: "Tatlı & Waffle Molası: 35 TL İndirim",
+    description: "Tatlıcı Köşk ve Antep Baklava & Künefe Sarayı'nın seçili tatlılarında 35 TL indirim.",
+    discountType: "fixed",
+    discountValue: 35,
+    minimumSubtotal: 140,
+    primaryRestaurantId: "food-tatlici-kosk",
+    restaurantIds: ["food-tatlici-kosk", "food-antep-baklava"],
+    campaignProductNames: {
+      "food-tatlici-kosk": "Belçika Çikolatalı Waffle",
+      "food-antep-baklava": "Fıstıklı Baklava 4 Dilim",
+    },
+  },
+];
+
+export function findFoodCoupon(code: string | null | undefined): FoodCoupon | null {
+  return foodCoupons.find((coupon) => coupon.code === code) ?? null;
+}
+
+export function getFoodDeliveryStartMinutes(restaurant: FoodRestaurant): number {
+  const firstRangeValue = restaurant.deliveryTime.match(/\d+/)?.[0];
+  return firstRangeValue ? Number.parseInt(firstRangeValue, 10) : restaurant.deliveryMinutes;
+}
+
+export function isFoodFastDelivery(restaurant: FoodRestaurant): boolean {
+  if (restaurant.fastDelivery) return true;
+  const range = restaurant.deliveryTime.match(/(\d+)\s*-\s*(\d+)/);
+  return range ? Number.parseInt(range[2], 10) <= 30 : restaurant.deliveryMinutes <= 30;
+}
+
+export function hasFoodDiscount(restaurant: FoodRestaurant): boolean {
+  const discount = restaurant.discountText || restaurant.discount;
+  return /(?:%|yüzde\s*)(?:10|15|20|25)\b/i.test(discount);
+}
+
+export type FoodPreference = "Normal" | "Bol Acılı" | "Acısız";
+
+export type FoodCustomization = {
+  removedIngredients: string[];
+  extras: string[];
+  preference: FoodPreference;
+  note: string;
+};
+
+export type FoodCustomizationExtra = {
+  name: string;
+  price: number;
+};
+
+export type FoodCustomizationOptions = {
+  ingredients: string[];
+  extras: FoodCustomizationExtra[];
+};
+
+export type CustomizedFoodProduct = Product & {
+  foodCustomization: FoodCustomization;
+};
+
+const foodCustomizationGroups: Record<string, FoodCustomizationOptions> = {
+  pizza: {
+    ingredients: ["Mozarella Peyniri", "Mantar", "Yeşil Biber", "Siyah Zeytin", "Mısır", "Domates Sosu", "Kekik"],
+    extras: [
+      { name: "Ekstra Mozarella Peyniri", price: 35 },
+      { name: "Ekstra Mantar", price: 15 },
+      { name: "Ekstra Mısır", price: 15 },
+    ],
+  },
+  kebab: {
+    ingredients: ["Soğan", "Közlenmiş Biber", "Közlenmiş Domates", "Maydanoz", "Sumak", "Acı Sos", "Turşu"],
+    extras: [
+      { name: "Ekstra Lavaş", price: 20 },
+      { name: "Haydari", price: 25 },
+    ],
+  },
+  doner: {
+    ingredients: ["Soğan", "Közlenmiş Biber", "Közlenmiş Domates", "Maydanoz", "Sumak", "Acı Sos", "Turşu"],
+    extras: [
+      { name: "Ekstra Sos", price: 10 },
+      { name: "Ekstra Turşu", price: 15 },
+    ],
+  },
+  burger: {
+    ingredients: ["Soğan", "Turşu", "Marul", "Domates", "Cheddar Peyniri", "Özel Burger Sosu", "Ketçap", "Mayonez"],
+    extras: [
+      { name: "Ekstra Cheddar Peyniri", price: 25 },
+      { name: "Karamelize Soğan", price: 20 },
+    ],
+  },
+  chicken: {
+    ingredients: ["Soğan", "Turşu", "Marul", "Domates", "Cheddar Peyniri", "Özel Burger Sosu", "Ketçap", "Mayonez"],
+    extras: [
+      { name: "Ekstra Dip Sos", price: 15 },
+      { name: "Ekstra Cheddar Peyniri", price: 25 },
+    ],
+  },
+  home: {
+    ingredients: ["Sarımsak", "Dereotu", "Acı Pul Biber", "Tereyağı Sosu", "Limon"],
+    extras: [
+      { name: "Yoğurt", price: 20 },
+      { name: "Ekstra Pilav", price: 35 },
+    ],
+  },
+  dessert: {
+    ingredients: ["Çikolata Sosu", "Çilek", "Muz", "Antep Fıstığı", "Fındık Parçacıkları"],
+    extras: [
+      { name: "Ekstra Dondurma Topu", price: 30 },
+      { name: "Ekstra Çikolata Sosu", price: 20 },
+    ],
+  },
+};
+
+export function getFoodCustomizationOptions(product: Product, cuisine: string): FoodCustomizationOptions {
+  const name = product.name.toLocaleLowerCase("tr");
+  const menuCategory = cuisine.toLocaleLowerCase("tr");
+  const group = name.includes("pizza") || menuCategory.includes("pizza") ? "pizza"
+    : name.includes("döner") || name.includes("iskender") || (name.includes("dürüm") && menuCategory.includes("döner")) || menuCategory.includes("döner") ? "doner"
+      : name.includes("kebap") || name.includes("lahmacun") || name.includes("pide") || menuCategory.includes("kebap") ? "kebab"
+        : name.includes("burger") || menuCategory.includes("burger") ? "burger"
+          : name.includes("tavuk") || menuCategory.includes("tavuk") ? "chicken"
+            : name.includes("waffle") || name.includes("tatlı") || name.includes("baklava") || name.includes("künefe") || name.includes("brownie") || name.includes("cheesecake") || menuCategory.includes("tatlı") ? "dessert"
+              : "home";
+  return foodCustomizationGroups[group];
+}
+
+export function getFoodCustomization(product: Product): FoodCustomization | undefined {
+  if (!("foodCustomization" in product)) return undefined;
+  const value = product.foodCustomization;
+  if (!value || typeof value !== "object") return undefined;
+
+  const customization = value as FoodCustomization;
+  if (
+    !Array.isArray(customization.removedIngredients) ||
+    !customization.removedIngredients.every((item) => typeof item === "string") ||
+    !Array.isArray(customization.extras) ||
+    !customization.extras.every((item) => typeof item === "string") ||
+    !["Normal", "Bol Acılı", "Acısız"].includes(customization.preference) ||
+    typeof customization.note !== "string"
+  ) return undefined;
+
+  return customization;
+}
+
+export function createCustomizedFoodProduct(
+  product: Product,
+  customization: FoodCustomization,
+  options: FoodCustomizationOptions,
+): CustomizedFoodProduct {
+  const extrasPrice = options.extras
+    .filter((extra) => customization.extras.includes(extra.name))
+    .reduce((sum, extra) => sum + extra.price, 0);
+  const variant = JSON.stringify([
+    customization.removedIngredients,
+    customization.extras,
+    customization.preference,
+    customization.note,
+  ]);
+  const hash = Array.from(variant).reduce((value, character) => (
+    Math.imul(value ^ character.charCodeAt(0), 16777619) >>> 0
+  ), 2166136261).toString(36);
+
+  return {
+    ...product,
+    id: `${product.id}-custom-${hash}`,
+    price: product.price + extrasPrice,
+    foodCustomization: customization,
+  };
+}
 
 const foodImage = (id: string, width = 900) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=85`;
@@ -70,6 +329,7 @@ const foodPhotoReserve = [
 
 export function getFoodProductFallbackImage(productName: string): string {
   const name = productName.toLocaleLowerCase("tr");
+  if (name.includes("double cheddar")) return productPhoto("photo-1568901346375-23c9450c58cd");
   if (name.includes("coca-cola zero")) return productPhotos.colaZero;
   if (name.includes("coca-cola")) return productPhotos.cola;
   if (name.includes("fanta")) return productPhotos.fanta;
@@ -135,17 +395,17 @@ export const foodRestaurants: FoodRestaurant[] = [
     description: "El yapımı burger ekmeği, günlük hazırlanan köfte ve özel soslar.",
     service: "food",
     cuisine: "Burger",
-    rating: 4.6,
+    rating: 4.3,
     ratingCount: "185+",
     deliveryMinutes: 32,
     deliveryTime: "30-40 dk",
-    deliveryFee: 16.99,
+    deliveryFee: 0,
     minBasket: 190,
     image: foodImage("photo-1550547660-d9450f859349"),
     imageLabel: "Doyurucu ev yapımı burger",
     highlight: "Ev Yapımı",
-    discount: "%15 indirim",
-    campaigns: ["selected-menu"],
+    discount: "",
+    campaigns: ["selected-menu", "free-delivery"],
   },
   {
     id: "food-meydan-pizza",
@@ -153,10 +413,10 @@ export const foodRestaurants: FoodRestaurant[] = [
     description: "Taş fırında pişen ince hamurlu pizzalar ve günlük hazırlanan salatalar.",
     service: "food",
     cuisine: "Pizza",
-    rating: 4.7,
+    rating: 4.3,
     ratingCount: "180+",
     deliveryMinutes: 32,
-    deliveryTime: "30-40 dk",
+    deliveryTime: "20-30 dk",
     deliveryFee: 19.99,
     minBasket: 180,
     image: foodImage("photo-1574071318508-1cdbab80d002"),
@@ -175,13 +435,13 @@ export const foodRestaurants: FoodRestaurant[] = [
     ratingCount: "340+",
     deliveryMinutes: 38,
     deliveryTime: "35-45 dk",
-    deliveryFee: 19.99,
+    deliveryFee: 0,
     minBasket: 230,
     image: foodImage("photo-1571407970349-bc81e7e96d47"),
     imageLabel: "Odun ateşinde pişmiş Napoli usulü pizza",
     highlight: "Odun Ateşi",
-    discount: "%10 indirim",
-    campaigns: ["selected-menu", "value-menu"],
+    discount: "%20 indirim",
+    campaigns: ["selected-menu", "free-delivery", "value-menu"],
   },
   {
     id: "food-gultepe-doner",
@@ -189,7 +449,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     description: "Günlük hazırlanan döner, taze lavaş ve ev yapımı soslar.",
     service: "food",
     cuisine: "Döner",
-    rating: 4.6,
+    rating: 4.1,
     ratingCount: "320+",
     deliveryMinutes: 24,
     deliveryTime: "20-30 dk",
@@ -198,7 +458,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     image: foodImage("photo-1561651823-34feb02250e4"),
     imageLabel: "Lavaş içinde döner ve taze sebzeler",
     highlight: "Hızlı Teslimat",
-    discount: "%10 indirim",
+    discount: "%15 indirim",
     campaigns: ["free-delivery"],
   },
   {
@@ -207,7 +467,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     description: "Günlük kesilen yaprak döner, tereyağlı sos ve taze pide.",
     service: "food",
     cuisine: "Döner",
-    rating: 4.7,
+    rating: 4.3,
     ratingCount: "275+",
     deliveryMinutes: 34,
     deliveryTime: "30-40 dk",
@@ -216,7 +476,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     image: foodImage("photo-1561651823-34feb02250e4"),
     imageLabel: "Taze lavaşta yaprak döner",
     highlight: "Usta İşi",
-    discount: "%10 indirim",
+    discount: "",
     campaigns: ["value-menu"],
   },
   {
@@ -229,13 +489,13 @@ export const foodRestaurants: FoodRestaurant[] = [
     ratingCount: "410+",
     deliveryMinutes: 35,
     deliveryTime: "30-40 dk",
-    deliveryFee: 14.99,
+    deliveryFee: 0,
     minBasket: 150,
     image: foodImage("photo-1547592180-85f173990554"),
     imageLabel: "Renkli ev yemeği ve taze sebzeler",
     highlight: "Ev Usulü",
     discount: "%15 indirim",
-    campaigns: ["selected-menu", "value-menu"],
+    campaigns: ["selected-menu", "free-delivery", "value-menu"],
   },
   {
     id: "food-anne-eli",
@@ -245,8 +505,8 @@ export const foodRestaurants: FoodRestaurant[] = [
     cuisine: "Ev Yemekleri",
     rating: 4.8,
     ratingCount: "230+",
-    deliveryMinutes: 29,
-    deliveryTime: "25-35 dk",
+    deliveryMinutes: 22,
+    deliveryTime: "15-25 dk",
     deliveryFee: 14.99,
     minBasket: 160,
     image: foodImage("photo-1547592180-85f173990554"),
@@ -265,13 +525,13 @@ export const foodRestaurants: FoodRestaurant[] = [
     ratingCount: "290+",
     deliveryMinutes: 38,
     deliveryTime: "35-45 dk",
-    deliveryFee: 24.99,
+    deliveryFee: 0,
     minBasket: 200,
     image: foodImage("photo-1544025162-d76694265947"),
     imageLabel: "Izgara kebap ve közlenmiş sebzeler",
     highlight: "Usta İşi",
-    discount: "%15 indirim",
-    campaigns: ["value-menu"],
+    discount: "",
+    campaigns: ["value-menu", "free-delivery"],
   },
   {
     id: "food-ocakbasi-urfa",
@@ -279,7 +539,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     description: "Köz ateşinde hazırlanan kebaplar, zırh kıyması ve taze mezeler.",
     service: "food",
     cuisine: "Kebap & Lahmacun",
-    rating: 4.6,
+    rating: 4.1,
     ratingCount: "195+",
     deliveryMinutes: 40,
     deliveryTime: "35-45 dk",
@@ -288,7 +548,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     image: foodImage("photo-1544025162-d76694265947"),
     imageLabel: "Közlenmiş sebzelerle ocakbaşı kebabı",
     highlight: "Köz Ateşi",
-    discount: "%12 indirim",
+    discount: "%20 indirim",
     campaigns: ["value-menu"],
   },
   {
@@ -336,13 +596,13 @@ export const foodRestaurants: FoodRestaurant[] = [
     rating: 4.7,
     ratingCount: "215+",
     deliveryMinutes: 28,
-    deliveryTime: "25-35 dk",
+    deliveryTime: "20-30 dk",
     deliveryFee: 12.99,
     minBasket: 140,
     image: foodImage("photo-1488477181946-6428a0291777"),
     imageLabel: "Taze meyvelerle hazırlanan tatlı",
     highlight: "Tatlı Molası",
-    discount: "%15 indirim",
+    discount: "",
     campaigns: ["selected-menu"],
   },
   {
@@ -360,7 +620,7 @@ export const foodRestaurants: FoodRestaurant[] = [
     image: foodImage("photo-1576618148400-f54bed99fcfd"),
     imageLabel: "Fıstıklı şerbetli Antep tatlısı",
     highlight: "Antep Usulü",
-    discount: "%10 indirim",
+    discount: "%15 indirim",
     campaigns: ["value-menu"],
   },
 ];
@@ -505,6 +765,7 @@ const restaurantMenus: RestaurantMenuSeed[] = [
   {
     restaurantId: "food-meydan-pizza",
     mains: [
+      ["Büyük Boy Karışık Pizza Menüsü", "Büyük boy taş fırın pizzası, mozzarella ve seçili taze malzemeler.", 355],
       ["Margherita Pizza", "Domates sosu, mozzarella ve taze fesleğen.", 265],
       ["Akdeniz Pizza", "Renkli biber, zeytin, mantar ve mozzarella.", 285],
       ["Sucuklu Pizza", "Fırınlanmış sucuk, mozzarella ve özel domates sosu.", 310],
@@ -575,6 +836,7 @@ const restaurantMenus: RestaurantMenuSeed[] = [
   {
     restaurantId: "food-anne-eli",
     mains: [
+      ["Günün Ev Yemeği Menüsü", "Günün tencere yemeği, pilav ve ev yapımı cacık.", 245],
       ["Zeytinyağlı Yaprak Sarma", "Asma yaprağına sarılmış pirinçli ev usulü sarma.", 195],
       ["Anne Eli Sebze Çorbası", "Günlük sebzelerle hazırlanan sıcacık çorba.", 110],
       ["Etli Nohut & Pilav", "Lokum gibi nohut, dana eti ve tereyağlı pilav.", 245],
@@ -589,6 +851,7 @@ const restaurantMenus: RestaurantMenuSeed[] = [
   {
     restaurantId: "food-citir-antep",
     mains: [
+      ["Karışık Kebap & Lahmacun Menüsü", "Adana kebap, lahmacun, köz sebzeler ve sıcak tırnak pide.", 425],
       ["Adana Kebap", "Zırhta çekilmiş kıyma, köz domates ve tırnak pide.", 340],
       ["Antep Lahmacun", "İnce hamurda zengin baharatlı kıyma ve yeşillik.", 165],
       ["Fındık Lahmacun 4'lü", "Küçük boy, çıtır kenarlı Antep usulü lahmacun.", 190],
@@ -732,6 +995,9 @@ const menuSeeds: MenuSeed[] = restaurantMenus.flatMap(({ restaurantId, mains, si
       price,
       category,
       imageUrl: (() => {
+        if (name.toLocaleLowerCase("tr").includes("double cheddar menü")) {
+          return productPhoto("photo-1568901346375-23c9450c58cd");
+        }
         const candidates = getProductImageCandidates(name, cuisine, index);
         const preferred = getFoodProductFallbackImage(name);
         const image = [preferred, ...candidates].find((candidate) => !usedImageUrls.has(candidate))
@@ -746,13 +1012,77 @@ const menuSeeds: MenuSeed[] = restaurantMenus.flatMap(({ restaurantId, mains, si
 
 const restaurantNames = new Map(foodRestaurants.map(({ id, name }) => [id, name]));
 
-export const foodProducts: Product[] = menuSeeds.map(({ restaurantId, imageUrl: image, ...product }) => ({
-  ...product,
-  image,
-  storeId: restaurantId,
-  storeName: restaurantNames.get(restaurantId) ?? "Restoran",
-  service: "food",
-}));
+export const foodProducts: FoodMenuProduct[] = menuSeeds.map(({ restaurantId, imageUrl: image, ...product }) => {
+  const coupon = foodCoupons.find((item) => item.campaignProductNames[restaurantId] === product.name);
+  const campaignOriginalPrice = coupon ? Number((product.price / 0.9).toFixed(2)) : undefined;
+  return {
+    ...product,
+    image,
+    storeId: restaurantId,
+    storeName: restaurantNames.get(restaurantId) ?? "Restoran",
+    service: "food",
+    ...(campaignOriginalPrice ? { campaignOriginalPrice, campaignCouponCode: coupon?.code } : {}),
+  };
+});
+
+export function getFoodCouponCampaignProducts(coupon: FoodCoupon, restaurantId: string): FoodMenuProduct[] {
+  if (!coupon.restaurantIds.includes(restaurantId)) return [];
+  const featuredName = coupon.campaignProductNames[restaurantId];
+  return foodProducts.filter((product) =>
+    product.storeId === restaurantId &&
+    product.category === "Ana Lezzetler" &&
+    product.name === featuredName
+  );
+}
+
+export type FoodCouponApplication = {
+  discount: number;
+  applicable: boolean;
+  message: string;
+};
+
+export function calculateFoodCouponDiscount(
+  coupon: FoodCoupon | null,
+  lines: { product: Product; quantity: number }[],
+): FoodCouponApplication {
+  if (!coupon) return { discount: 0, applicable: false, message: "Kupon seçerek indirimden yararlan." };
+  if (!lines.length) return { discount: 0, applicable: false, message: `${coupon.code} kuponu için önce ürün ekle.` };
+
+  const restaurantId = lines[0].product.storeId;
+  if (!coupon.restaurantIds.includes(restaurantId)) {
+    return { discount: 0, applicable: false, message: `${coupon.code} yalnızca ilgili restoranlarda kullanılabilir.` };
+  }
+
+  const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  if (subtotal < coupon.minimumSubtotal) {
+    return {
+      discount: 0,
+      applicable: false,
+      message: `${coupon.code} için en az ${coupon.minimumSubtotal} TL sepet tutarı gerekli.`,
+    };
+  }
+
+  const campaignProducts = getFoodCouponCampaignProducts(coupon, restaurantId);
+  const eligibleSubtotal = lines.reduce((sum, line) => {
+    const isEligible = campaignProducts.some((product) =>
+      line.product.id === product.id || line.product.id.startsWith(`${product.id}-custom-`)
+    );
+    return sum + (isEligible ? line.product.price * line.quantity : 0);
+  }, 0);
+
+  if (eligibleSubtotal === 0) {
+    return { discount: 0, applicable: false, message: `${coupon.code} kampanyalı menü ürünlerinde geçerlidir.` };
+  }
+
+  const discount = coupon.discountType === "percentage"
+    ? Number((eligibleSubtotal * coupon.discountValue / 100).toFixed(2))
+    : Math.min(coupon.discountValue, eligibleSubtotal);
+  return {
+    discount,
+    applicable: true,
+    message: `${coupon.code} kampanyalı menüye uygulandı.`,
+  };
+}
 
 export const cuisineOptions = [
   { name: "Tümü", icon: "🍽️" },
